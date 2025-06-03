@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ccchallenge</title>
+
+    <!-- Inter Font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- KaTeX for LaTeX math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+        integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"
+        integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8"
+        crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+        integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05"
+        crossorigin="anonymous"></script>
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body class="bg-[#0c63bb] text-[#faf8f6] antialiased">
+    <nav class="shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+            <div class="flex justify-between items-center h-16">
+                <a href="/" class="text-white text-xl font-semibold hover:text-gray-300 transition-colors">
+                    The Collatz Conjecture Challenge
+                </a>
+                <ul class="flex space-x-2">
+                    <li><a href="/"
+                            class="hover:text-gray-300 px-3 py-2 rounded-md  font-medium transition-colors">Story</a>
+                    </li>
+                    <li><a href="/about"
+                            class="hover:text-gray-300 text-white px-3 py-2 rounded-md font-medium transition-colors">Method</a>
+                    </li>
+                    <li><a href="/about"
+                            class="hover:text-gray-300 text-white px-3 py-2 rounded-md font-medium transition-colors">Contribute</a>
+                    </li>
+                    <li><a href="/about"
+                            class="hover:text-gray-300 text-white px-3 py-2 rounded-md font-medium transition-colors">Forum</a>
+                    </li>
+                    <li><a href="/about"
+                            class="hover:text-gray-300 text-white px-3 py-2 rounded-md font-medium transition-colors">Wiki</a>
+                    </li>
+                    <div class="flex items-center space-x-5">
+                        <li>
+                            <a href="https://github.com/bbchallenge" class="cursor-pointer"><img
+                                    class="w-[23px] lg:w-[26px]" src="./GitHub-Mark-Light-32px.png"
+                                    alt="Github logo" /></a>
+                        </li>
+                        <li>
+                            <a href="https://discord.gg/3uqtPJA9Uv" class="cursor-pointer"><img
+                                    class="w-[23px] lg:w-[26px]" src="./Discord-Logo-White.png" alt="Github logo" /></a>
+                        </li>
+                    </div>
+                    {% block nav_links %}{% endblock %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+        {% block content %}
+        <div class="text-center">
+            <h1 class="text-4xl font-semibold text-gray-900 mb-4">Welcome to our website!</h1>
+            <p class="text-lg text-gray-600">This is the default content. Override the content block in your template.
+            </p>
+        </div>
+        {% endblock %}
+    </main>
+
+    <!-- <footer class="text-center py-8 mt-16" x-data="{ year: new Date().getFullYear() }">
+        <p>© <span x-text="year"></span> The Collatz Conjecture Challenge. All rights reserved.</p>
+    </footer> -->
+
+    <script>
+        // Initialize KaTeX auto-rendering when page loads
+        document.addEventListener("DOMContentLoaded", function () {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: "$$", right: "$$", display: true },
+                    { left: "$", right: "$", display: false },
+                    { left: "\\(", right: "\\)", display: false },
+                    { left: "\\[", right: "\\]", display: true }
+                ],
+                throwOnError: false
+            });
+        });
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+
+</html>

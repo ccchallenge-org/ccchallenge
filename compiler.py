@@ -1,0 +1,162 @@
+import jinja2  # type: ignore
+from pathlib import Path
+import shutil
+import bibtexparser  # type: ignore
+
+
+def parse_bibliography():
+    """Parse the Collatz.bib file and return a list of papers."""
+    bib_file = Path("Collatz.bib")
+    if not bib_file.exists():
+        print("Warning: Collatz.bib not found!")
+        return []
+
+    # Read the file content
+    with open(bib_file, "r", encoding="utf-8") as f:
+        bib_content = f.read()
+
+    # Parse with bibtexparser
+    bib_database = bibtexparser.loads(bib_content)
+
+    papers = []
+    for entry in bib_database.entries:
+        # Clean up author names and handle special characters
+        authors = entry.get("author", "Unknown Authors")
+        authors = authors.replace('\\"o', "ö").replace("\\_", "_").replace("\\", "")
+
+        # Determine venue/publisher info
+        venue = entry.get("journal", "")
+        if not venue:
+            venue = entry.get("booktitle", "")
+        if not venue:
+            venue = entry.get("publisher", "")
+
+        # Build venue info with volume/pages if available
+        venue_info = venue
+        if entry.get("volume"):
+            venue_info += f", Vol. {entry.get('volume')}"
+        if entry.get("number"):
+            venue_info += f"({entry.get('number')})"
+        if entry.get("pages"):
+            venue_info += f", pp. {entry.get('pages')}"
+
+        # Extract raw BibTeX entry for this paper
+        entry_id = entry.get("ID", "")
+        raw_bibtex = extract_raw_bibtex_entry(bib_content, entry_id)
+
+        paper = {
+            "id": entry.get("ID", ""),
+            "title": entry.get("title", "No Title"),  # Keep original title with LaTeX
+            "authors": authors,
+            "year": entry.get("year", "Unknown"),
+            "venue": venue_info,
+            "doi": entry.get("doi", ""),
+            "url": entry.get("url", ""),
+            "abstract": entry.get("abstract", ""),
+            "type": entry.get("ENTRYTYPE", "article"),
+            "raw_bibtex": raw_bibtex,
+            "formalisations_count": 0,  # Number of proof assistant formalisations (Lean, Coq, etc.)
+        }
+        papers.append(paper)
+
+    # Sort papers by year (newest first)
+    papers.sort(
+        key=lambda x: int(x["year"]) if x["year"].isdigit() else 0, reverse=True
+    )
+
+    return papers
+
+
+def extract_raw_bibtex_entry(bib_content, entry_id):
+    """Extract the raw BibTeX entry for a specific ID from the full content."""
+    lines = bib_content.split("\n")
+    entry_lines = []
+    in_entry = False
+    brace_count = 0
+
+    for line in lines:
+        if f"@" in line and entry_id in line:
+            in_entry = True
+            brace_count = 0
+
+        if in_entry:
+            entry_lines.append(line)
+            brace_count += line.count("{") - line.count("}")
+
+            # If we've closed all braces, we're done with this entry
+            if brace_count == 0 and len(entry_lines) > 1:
+                break
+
+    return "\n".join(entry_lines)
+
+
+def compile_template(template_path, context=None):
+    """
+    Compile a Jinja2 template with proper template inheritance support.
+
+    Args:
+        template_path: Path to the template file (relative to routes directory)
+        context: Dictionary of variables to pass to the template
+
+    Returns:
+        Rendered HTML string
+    """
+    if context is None:
+        context = {}
+
+    # Set up Jinja2 environment with template loader for inheritance support
+    template_dir = Path("routes")
+    env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
+
+    # Get template name (remove routes/ prefix if present)
+    template_name = template_path
+    if template_name.startswith("routes/"):
+        template_name = template_name[7:]  # Remove "routes/" prefix
+
+    # Load and render template
+    template = env.get_template(template_name)
+    return template.render(context)
+
+
+def build_site():
+    """Build the site by compiling templates to the build directory."""
+    build_dir = Path("build")
+    build_dir.mkdir(exist_ok=True)
+
+    # Parse bibliography
+    print("Parsing Collatz.bib...")
+    papers = parse_bibliography()
+    print(f"Found {len(papers)} papers")
+
+    # Compile index.html with papers data
+    print("Compiling routes/index.html...")
+    context = {"papers": papers}
+    result = compile_template("index.html", context)
+
+    # Save to build directory
+    output_path = build_dir / "index.html"
+    with open(output_path, "w") as f:
+        f.write(result)
+
+    # Copy static files to build directory if they exist
+    static_dir = Path("static")
+    if static_dir.exists():
+        for file in static_dir.glob("*"):
+            if file.is_file():
+                shutil.copy(file, build_dir / file.name)
+
+    print(f"✅ Compiled to {output_path} ({len(result)} characters)")
+    return result
+
+
+if __name__ == "__main__":
+    # Build the site and show preview
+    result = build_site()
+
+    # Show a preview of the compiled output
+    print("\n=== Preview ===")
+    lines = result.split("\n")
+    for i, line in enumerate(lines[:10]):  # Show first 10 lines
+        print(f"{i+1:2d}: {line}")
+    if len(lines) > 10:
+        print(f"... ({len(lines) - 10} more lines)")
