@@ -1,5 +1,9 @@
+deploy.sh
 .idea/
 
+node_modules/*
+package-lock.json
+package.json
 # Created by https://www.gitignore.io/api/macos,linux,django,python,pycharm
 
 ### Django ###
@@ -212,3 +216,5 @@ ENV/
 /site
 
 # End of https://www.gitignore.io/api/macos,linux,django,python,pycharm
+# Local Netlify folder
+.netlify

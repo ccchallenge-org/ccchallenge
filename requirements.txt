@@ -1,3 +1,5 @@
+bibtexparser==1.4.3
 Jinja2==3.1.6
-watchdog
-bibtexparser
+MarkupSafe==3.0.2
+pyparsing==3.2.3
+watchdog==6.0.0
