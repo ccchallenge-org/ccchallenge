@@ -2119,3 +2119,807 @@ _**Assistant**_
 
 ---
 
+Looking at your code, I can see the issue. The LaTeX rendering isn't working because there are timing issues with KaTeX loading and the JavaScript has some syntax problems. Let me fix the JavaScript to ensure KaTeX re-renders properly when changing the dropdown.
+
+---
+
+```diff
+  
+  <script>
+-     // Store all papers data for filtering - fix template syntax
+-     const allPapers = {{ papers| tojson | safe }};
++     // Store all papers data for filtering
++     const allPapers = {{ papers|tojson|safe }};
+  
+-     // Function to render math in element
++     // Function to render math in element - use KaTeX auto-render
+      function renderMathInElement(element) {
++         // Wait for KaTeX to be loaded
+          if (typeof window.renderMathInElement === 'function') {
+              window.renderMathInElement(element, {
+```
+
+```diff
+                  throwOnError: false
+              });
++         } else {
++             // If KaTeX isn't loaded yet, try again after a short delay
++             setTimeout(() => renderMathInElement(element), 100);
+          }
+      }
+```
+
+```diff
+      // Helper function to create venue HTML
+      function createVenueHtml(venue) {
+-         if (!venue) return '';
+-         return `<p class="text-xs text-gray-600 mb-4 max-w-xl truncate">
++         if (!venue) return '<div class="venue-section"></div>';
++         return `<div class="venue-section">
++                     <p class="text-xs text-gray-600 mb-4 max-w-xl truncate">
+                          <span class="font-medium" title="${venue.replace(/"/g, '&quot;')}">${venue}</span>
+-                 </p>`;
++                     </p>
++                 </div>`;
++     }
++ 
++     // Helper function to escape HTML and handle quotes in BibTeX
++     function escapeBibtex(bibtex) {
++         return bibtex.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+  
+```
+
+```diff
+  
+                          <button class="download-bibtex inline-flex items-center px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-medium rounded transition-colors border border-blue-200"
+-                                 data-id="${paper.id}" data-bibtex="${paper.raw_bibtex.replace(/"/g, '&quot;')}">
++                                 data-id="${paper.id}" data-bibtex="${escapeBibtex(paper.raw_bibtex)}">
+                              📋 BibTeX
+                          </button>
+```
+
+```diff
+          if (curationSlug) {
+              const selectedOption = select.querySelector(`option[value="${curationSlug}"]`);
++             if (selectedOption && selectedOption.dataset.papers) {
+                  const paperIds = selectedOption.dataset.papers.split(',');
+                  filteredPapers = allPapers.filter(paper => paperIds.includes(paper.id));
++             }
+          }
+  
+          // Update the grid
+          grid.innerHTML = filteredPapers.map(createPaperElement).join('');
+  
+-         // Re-render math in the new content
++         // Re-render math in the new content - use a small delay to ensure DOM is updated
++         setTimeout(() => {
+              renderMathInElement(grid);
++         }, 10);
+  
+          // Update counts
+```
+
+```diff
+          filterPapers(defaultCuration);
+  
+-         // Render math in initial content
++         // Also render math in initial static content
++         setTimeout(() => {
+              renderMathInElement(document.body);
++         }, 100);
++     });
++ 
++     // Also re-render when KaTeX is fully loaded (backup)
++     if (typeof window.renderMathInElement === 'function') {
++         document.addEventListener('DOMContentLoaded', () => {
++             setTimeout(() => renderMathInElement(document.body), 200);
+          });
++     }
+  </script>
+  {% endblock %}
+```
+
+---
+
+The linter errors are still complaining about the Jinja2 template syntax. Let me compile the site to see if the actual functionality works:
+
+---
+
+```bash
+python3 compiler.py
+```
+
+---
+
+_**User**_
+
+Instead of doing const allPapers = {{ papers| tojson }};
+
+can you put {{ papers| tojson }} in a div data and fetch it with alpine
+
+---
+
+_**Assistant**_
+
+
+
+---
+
+Great idea! That will solve the template syntax issue and make the code cleaner. Let me modify the approach to use Alpine.js with data attributes.
+
+---
+
+```diff
+  
+  {% block content %}
+- <div>
++ <!-- Hidden data container for Alpine.js -->
++ <div id="papers-data" data-papers="{{ papers|tojson|e }}" style="display: none;"></div>
++ 
++ <div x-data="paperManager()">
+      <!-- Header Section -->
+      <div class="text-left mb-8 px-2 font-mono">
+          <h1 class="underline">Challenge goal</h1>
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <p class="text-blue-100 max-w-4xl">
+-                 Formalised results: <span id="formalised-count">{{ papers|selectattr('formalisations_count', 'gt',
+-                     0)|list|length }}</span> /
+-                 <span id="total-count">{{ papers|length }}</span>.
++                 Formalised results: <span x-text="formalisedCount"></span> /
++                 <span x-text="filteredPapers.length"></span>.
+              </p>
+- 
+- 
+          </div>
+      </div>
+```
+
+```diff
+          <div class="flex items-center gap-2">
+              <label for="curation-select" class="text-blue-100 text-sm">Curation:</label>
+-             <select id="curation-select"
++             <select x-model="selectedCuration" @change="filterPapers(); $nextTick(() => renderMath())"
+                  class="bg-white text-gray-900 px-3 py-1 rounded border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  {% for curation in curations %}
+-                 <option value="{{ curation.slug }}" data-papers="{{ curation.curation|join(',') }}" {% if
+-                     curation.slug=='ccchallenge' %}selected{% endif %}>
++                 <option value="{{ curation.slug }}" data-papers="{{ curation.curation|join(',') }}">
+                      {{ curation.name }} ({{ curation.curation|length }})
+                  </option>
+```
+
+```diff
+  
+      <!-- Papers Grid -->
+-     <div id="papers-grid" class="grid grid-cols-1 gap-4 max-w-3xl mx-auto">
+-         {% for paper in papers %}
+-         <div id="{{ paper.id }}"
++     <div class="grid grid-cols-1 gap-4 max-w-3xl mx-auto">
++         <template x-for="paper in filteredPapers" :key="paper.id">
++             <div :id="paper.id"
+                  class="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-4 pb-2">
+                  <!-- Paper Type Badge -->
+                  <div class="flex justify-between items-start mb-3">
+                      <div class="flex space-x-3">
+                          <span
+-                         class="inline-block bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded uppercase">
+-                         {{ paper.type }}
++                             class="inline-block bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded uppercase"
++                             x-text="paper.type">
+                          </span>
+                          <!-- BibKey -->
+                          <code
+                              class="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono text-gray-700 select-all cursor-pointer"
+-                         title="Click to select citation key">{{ paper.id }}</code>
+- 
++                             title="Click to select citation key" x-text="paper.id"></code>
+                      </div>
+-                 <span class="text-sm font-semibold text-gray-900">{{ paper.year }}</span>
++                     <span class="text-sm font-semibold text-gray-900" x-text="paper.year"></span>
+                  </div>
+  
+                  <!-- Title -->
+-             <h3 class="text-lg font-semibold text-gray-900 leading-tight math-content">
+-                 {{ paper.title }}
++                 <h3 class="text-lg font-semibold text-gray-900 leading-tight math-content" x-text="paper.title">
+                  </h3>
+  
+                  <!-- Authors -->
+                  <p class="text-sm text-gray-600">
+-                 <span class="font-medium">Authors:</span> {{ paper.authors }}
++                     <span class="font-medium">Authors:</span> <span x-text="paper.authors"></span>
+                  </p>
+  
+                  <!-- Venue Information -->
+-             <div class="venue-section">
+-                 {% if paper.venue %}
++                 <div class="venue-section" x-show="paper.venue">
+                      <p class="text-xs text-gray-600 mb-4 max-w-xl truncate">
+-                     <span class="font-medium" title="{{ paper.venue }}">{{ paper.venue }}</span>
++                         <span class="font-medium" :title="paper.venue" x-text="paper.venue"></span>
+                      </p>
+-                 {% endif %}
+                  </div>
+- 
+-             <!-- Abstract Preview -->
+-             <!-- {% if paper.abstract %}
+-             <p class="text-sm text-gray-700 mb-4 line-clamp-3">
+-                 {{ paper.abstract[:150] }}{% if paper.abstract|length > 150 %}...{% endif %}
+-             </p>
+-             {% endif %} -->
+  
+                  <!-- Links -->
+                  <div class="flex flex-wrap gap-2 mt-auto justify-between items-center">
+                      <!-- Left-hand side buttons (discrete) -->
+                      <div class="flex flex-wrap gap-2">
+-                     {% if paper.doi %}
+-                     <a href="{{ paper.doi if paper.doi.startswith('http') else 'https://doi.org/' + paper.doi }}"
++                         <template x-if="paper.doi">
++                             <a :href="paper.doi.startsWith('http') ? paper.doi : 'https://doi.org/' + paper.doi"
+                                  target="_blank"
+                                  class="inline-flex items-center px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-medium rounded transition-colors border border-blue-200">
+                                  📄 DOI
+                              </a>
+-                     {% else %}
++                         </template>
++                         <template x-if="!paper.doi">
+                              <span
+-                         class="inline-flex items-center px-3 py-1 bg-blue-25  text-gray-400 text-xs font-medium rounded border border-blue-100">
++                                 class="inline-flex items-center px-3 py-1 bg-blue-25 text-gray-400 text-xs font-medium rounded border border-blue-100">
+                                  📄 DOI
+                              </span>
+-                     {% endif %}
++                         </template>
+  
+-                     {% if paper.url %}
+-                     <a href="{{ paper.url }}" target="_blank"
++                         <template x-if="paper.url">
++                             <a :href="paper.url" target="_blank"
+                                  class="inline-flex items-center px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-medium rounded transition-colors border border-blue-200">
+                                  🔗 URL
+                              </a>
+-                     {% else %}
++                         </template>
++                         <template x-if="!paper.url">
+                              <span
+                                  class="inline-flex items-center px-3 py-1 bg-blue-25 text-gray-400 text-xs font-medium rounded border border-blue-100">
+                                  🔗 URL
+                              </span>
+-                     {% endif %}
++                         </template>
+  
+-                     <button
+-                         class="download-bibtex inline-flex items-center px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-medium rounded transition-colors border border-blue-200"
+-                         data-id="{{ paper.id }}" data-bibtex="{{ paper.raw_bibtex|e }}">
++                         <button @click="downloadBibtex(paper)"
++                             class="inline-flex items-center px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-medium rounded transition-colors border border-blue-200">
+                              📋 BibTeX
+                          </button>
+```
+
+```diff
+                          <button
+                              class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm">
+-                         {{ paper.formalisations_count }} Formal Proofs
++                             <span x-text="paper.formalisations_count"></span> Formal Proofs
+                          </button>
++                     </div>
+                  </div>
+              </div>
+-         </div>
+-         {% endfor %}
++         </template>
+      </div>
+  
+      <!-- No Papers Message -->
+-     {% if not papers %}
+-     <div class="text-center py-12">
++     <div x-show="filteredPapers.length === 0" class="text-center py-12">
+          <div class="text-gray-400 text-6xl mb-4">📚</div>
+          <h3 class="text-xl font-medium text-white mb-2">No Papers Found</h3>
+-         <p class="text-blue-100">The Collatz_conjecture.bib file couldn't be loaded or is empty.</p>
++         <p class="text-blue-100">No papers match the selected curation.</p>
+      </div>
+-     {% endif %}
+  </div>
+  
+```
+
+```diff
+  
+  <script>
+-     // Store all papers data for filtering
+-     const allPapers = {{ papers| tojson }};
+- 
+-     // Handle BibTeX download buttons
+-     function setupBibtexButtons() {
+-         document.querySelectorAll('.download-bibtex').forEach(button => {
+-             button.addEventListener('click', function () {
+-                 const paperId = this.dataset.id;
+-                 const bibtexContent = this.dataset.bibtex;
+- 
+-                 // Create a downloadable file
+-                 const blob = new Blob([bibtexContent], { type: 'text/plain' });
++     function paperManager() {
++         return {
++             allPapers: [],
++             filteredPapers: [],
++             selectedCuration: 'ccchallenge',
++             
++             get formalisedCount() {
++                 return this.filteredPapers.filter(p => p.formalisations_count > 0).length;
++             },
++ 
++             init() {
++                 // Load papers data from hidden div
++                 const papersDataDiv = document.getElementById('papers-data');
++                 try {
++                     this.allPapers = JSON.parse(papersDataDiv.dataset.papers);
++                 } catch (e) {
++                     console.error('Failed to parse papers data:', e);
++                     this.allPapers = [];
++                 }
++                 
++                 // Initial filter and math rendering
++                 this.filterPapers();
++                 this.$nextTick(() => {
++                     this.renderMath();
++                 });
++             },
++ 
++             filterPapers() {
++                 if (!this.selectedCuration) {
++                     this.filteredPapers = [...this.allPapers];
++                     return;
++                 }
++ 
++                 // Find the curation data from the select options
++                 const select = document.querySelector('select');
++                 const selectedOption = select.querySelector(`option[value="${this.selectedCuration}"]`);
++                 
++                 if (selectedOption && selectedOption.dataset.papers) {
++                     const paperIds = selectedOption.dataset.papers.split(',').filter(id => id.trim());
++                     this.filteredPapers = this.allPapers.filter(paper => paperIds.includes(paper.id));
++                 } else {
++                     this.filteredPapers = [...this.allPapers];
++                 }
++             },
++ 
++             renderMath() {
++                 // Wait a bit for DOM to update, then render math
++                 setTimeout(() => {
++                     if (typeof window.renderMathInElement === 'function') {
++                         window.renderMathInElement(document.body, {
++                             delimiters: [
++                                 { left: "$$", right: "$$", display: true },
++                                 { left: "$", right: "$", display: false },
++                                 { left: "\\(", right: "\\)", display: false },
++                                 { left: "\\[", right: "\\]", display: true }
++                             ],
++                             throwOnError: false
++                         });
++                     }
++                 }, 50);
++             },
++ 
++             downloadBibtex(paper) {
++                 const blob = new Blob([paper.raw_bibtex], { type: 'text/plain' });
+                  const url = window.URL.createObjectURL(blob);
+- 
+-                 // Create a temporary link and click it
+                  const link = document.createElement('a');
+                  link.href = url;
+-                 link.download = `${paperId}.bib`;
++                 link.download = `${paper.id}.bib`;
+                  document.body.appendChild(link);
+                  link.click();
+- 
+-                 // Clean up
+                  document.body.removeChild(link);
+                  window.URL.revokeObjectURL(url);
+-             });
+-         });
++             }
++         }
+      }
+- 
+-     // Helper function to create venue HTML
+-     function createVenueHtml(venue) {
+-         if (!venue) return '';
+-         return `<p class="text-xs text-gray-600 mb-4 max-w-xl truncate">
+-                     <span class="font-medium" title="${venue.replace(/"/g, '&quot;')}">${venue}</span>
+-                 </p>`;
+-     }
+- 
+-     // Create paper HTML element
+-     function createPaperElement(paper) {
+-         return `
+-             <div id="${paper.id}" class="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-4 pb-2">
+-                 <!-- Paper Type Badge -->
+-                 <div class="flex justify-between items-start mb-3">
+-                     <div class="flex space-x-3">
+-                         <span class="inline-block bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded uppercase">
+-                             ${paper.type}
+-                         </span>
+-                         <!-- BibKey -->
+-                         <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono text-gray-700 select-all cursor-pointer" title="Click to select citation key">${paper.id}</code>
+-                     </div>
+-                     <span class="text-sm font-semibold text-gray-900">${paper.year}</span>
+-                 </div>
+- 
+-                 <!-- Title -->
+-                 <h3 class="text-lg font-semibold text-gray-900 leading-tight math-content">
+-                     ${paper.title}
+-                 </h3>
+- 
+-                 <!-- Authors -->
+-                 <p class="text-sm text-gray-600">
+-                     <span class="font-medium">Authors:</span> ${paper.authors}
+-                 </p>
+- 
+-                 <!-- Venue Information -->
+-                 ${createVenueHtml(paper.venue)}
+- 
+-                 <!-- Links -->
+-                 <div class="flex flex-wrap gap-2 mt-auto justify-between items-center">
+-                     <!-- Left-hand side buttons (discrete) -->
+-                     <div class="flex flex-wrap gap-2">
+-                         ${paper.doi ? `
+-                         <a href="${paper.doi.startsWith('http') ? paper.doi : 'https://doi.org/' + paper.doi}"
+-                             target="_blank"
+-                             class="inline-flex items-center px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-medium rounded transition-colors border border-blue-200">
+-                             📄 DOI
+-                         </a>
+-                         ` : `
+-                         <span class="inline-flex items-center px-3 py-1 bg-blue-25 text-gray-400 text-xs font-medium rounded border border-blue-100">
+-                             📄 DOI
+-                         </span>
+-                         `}
+- 
+-                         ${paper.url ? `
+-                         <a href="${paper.url}" target="_blank"
+-                             class="inline-flex items-center px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-medium rounded transition-colors border border-blue-200">
+-                             🔗 URL
+-                         </a>
+-                         ` : `
+-                         <span class="inline-flex items-center px-3 py-1 bg-blue-25 text-gray-400 text-xs font-medium rounded border border-blue-100">
+-                             🔗 URL
+-                         </span>
+-                         `}
+- 
+-                         <button class="download-bibtex inline-flex items-center px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-medium rounded transition-colors border border-blue-200"
+-                                 data-id="${paper.id}" data-bibtex="${paper.raw_bibtex.replace(/"/g, '&quot;')}">
+-                             📋 BibTeX
+-                         </button>
+-                     </div>
+- 
+-                     <!-- Right-hand side button (important) -->
+-                     <div class="flex items-center">
+-                         <button class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm">
+-                             ${paper.formalisations_count} Formal Proofs
+-                         </button>
+-                     </div>
+-                 </div>
+-             </div>
+-         `;
+-     }
+- 
+-     // Filter papers based on curation
+-     function filterPapers(curationSlug) {
+-         const grid = document.getElementById('papers-grid');
+-         const select = document.getElementById('curation-select');
+- 
+-         let filteredPapers = allPapers;
+- 
+-         if (curationSlug) {
+-             const selectedOption = select.querySelector(`option[value="${curationSlug}"]`);
+-             const paperIds = selectedOption.dataset.papers.split(',');
+-             filteredPapers = allPapers.filter(paper => paperIds.includes(paper.id));
+-         }
+- 
+-         // Update the grid
+-         grid.innerHTML = filteredPapers.map(createPaperElement).join('');
+- 
+-         // Update counts
+-         const formalised = filteredPapers.filter(p => p.formalisations_count > 0).length;
+-         document.getElementById('formalised-count').textContent = formalised;
+-         document.getElementById('total-count').textContent = filteredPapers.length;
+- 
+-         // Re-setup bibtex buttons for new elements
+-         setupBibtexButtons();
+-     }
+- 
+-     // Initialize everything when page loads
+-     document.addEventListener('DOMContentLoaded', function () {
+-         // Setup initial bibtex buttons
+-         setupBibtexButtons();
+- 
+-         // Setup curation selector
+-         const curationSelect = document.getElementById('curation-select');
+-         curationSelect.addEventListener('change', function () {
+-             filterPapers(this.value);
+-         });
+- 
+-         // Initial render with default selected curation (ccchallenge)
+-         const defaultCuration = curationSelect.value || 'ccchallenge';
+-         filterPapers(defaultCuration);
+-     });
+  </script>
+  {% endblock %}
+```
+
+---
+
+Perfect! Now let's compile and test the site to see if the LaTeX rendering works properly with Alpine.js:
+
+---
+
+```bash
+python3 compiler.py
+```
+
+```
+(venv) ➜  ccchallenge git:(main) ✗ python3 compiler.py
+Parsing Collatz_conjecture.bib...
+Found 337 papers
+Parsing curations...
+Found 3 curations
+Compiling routes/index.html...
+✅ Compiled to build/index.html (223219 characters)
+
+=== Preview ===
+ 1: <!DOCTYPE html>
+ 2: <html lang="en">
+ 3: 
+ 4: <head>
+ 5:     <meta charset="UTF-8">
+ 6:     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ 7:     <title>ccchallenge</title>
+ 8: 
+ 9:     <!-- Inter Font from Google Fonts -->
+10:     <link rel="preconnect" href="https://fonts.googleapis.com">
+... (325 more lines)
+(venv) ➜  ccchallenge git:(main) ✗
+```
+
+---
+
+Great! The compilation worked without any errors. Now let's check if the math rendering is working by looking at a specific section of the compiled HTML to see how the LaTeX is being processed:
+
+---
+
+<details>
+            <summary>Grep search for "\$3x" • **0** files</summary>
+        
+No results found
+</details>
+
+---
+
+Let me check for a broader LaTeX pattern and also look at the actual JavaScript data:
+
+---
+
+<details>
+            <summary>Grep search for "3x\+1" • **0** files</summary>
+        
+No results found
+</details>
+
+---
+
+Cancelled
+
+---
+
+_**User**_
+
+Failed to parse papers data: SyntaxError: Expected property name or '}' in JSON at position 2 (line 1 column 3)
+
+---
+
+_**Assistant**_
+
+
+
+---
+
+The issue is with the JSON escaping. The `|e` filter is HTML-escaping the JSON data which breaks the JSON syntax. Let me fix this:
+
+---
+
+```diff
+  {% block content %}
+  <!-- Hidden data container for Alpine.js -->
+- <div id="papers-data" data-papers="{{ papers|tojson|e }}" style="display: none;"></div>
++ <div id="papers-data" data-papers="{{ papers|tojson|safe }}" style="display: none;"></div>
+  
+  <div x-data="paperManager()">
+```
+
+---
+
+Now let's recompile and test:
+
+---
+
+```bash
+python3 compiler.py
+```
+
+```
+(venv) ➜  ccchallenge git:(main) ✗ python3 compiler.py
+Parsing Collatz_conjecture.bib...
+Found 337 papers
+Parsing curations...
+Found 3 curations
+Compiling routes/index.html...
+✅ Compiled to build/index.html (223219 characters)
+
+=== Preview ===
+ 1: <!DOCTYPE html>
+ 2: <html lang="en">
+ 3: 
+ 4: <head>
+ 5:     <meta charset="UTF-8">
+ 6:     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ 7:     <title>ccchallenge</title>
+ 8: 
+ 9:     <!-- Inter Font from Google Fonts -->
+10:     <link rel="preconnect" href="https://fonts.googleapis.com">
+... (325 more lines)
+(venv) ➜  ccchallenge git:(main) ✗
+```
+
+---
+
+Perfect! Now let's check if the JSON data is being properly formatted in the compiled HTML by looking at a small section:
+
+---
+
+Read file: build/index.html
+
+---
+
+Perfect! I can see that the JSON data is now properly formatted without HTML escaping. The LaTeX content like `"$3x  +  1$"` is preserved correctly in the JSON. Now let's test it:
+
+---
+
+```bash
+open build/index.html
+```
+
+---
+
+_**User**_
+
+Failed to parse papers data: SyntaxError: Expected property name or '}' in JSON at position 2 (line 1 column 3)
+    at JSON.parse (<anonymous>)
+    at Proxy.init (index.html:248:43)
+    at cdn.min.js:5:411
+    at or (cdn.min.js:1:4957)
+    at R (cdn.min.js:5:143)
+    at Function.<anonymous> (cdn.min.js:5:34365)
+    at r (cdn.min.js:5:2323)
+    at n (cdn.min.js:5:2353)
+    at fr (cdn.min.js:5:2363)
+    at S (cdn.min.js:5:5131)
+
+---
+
+_**Assistant**_
+
+
+
+---
+
+I see the issue! Even with the `|safe` filter, there might still be HTML escaping issues when embedding JSON in HTML data attributes. Let me check what's actually being generated and fix this by using a different approach.
+
+---
+
+Read file: build/index.html
+
+---
+
+I can see the issue! The problem is that the JSON is getting cut off. The data attribute is being clipped because the JSON is too large and the HTML line is too long. This is causing an incomplete JSON string which results in a parsing error.
+
+Let me try a different approach - use base64 encoding or put the data in a script tag instead:
+
+---
+
+Cancelled
+
+---
+
+_**User**_
+
+Failed to parse papers data: SyntaxError: Expected property name or '}' in JSON at position 2 (line 1 column 3)
+    at JSON.parse (<anonymous>)
+    at Proxy.init (index.html:248:43)
+    at cdn.min.js:5:411
+    at or (cdn.min.js:1:4957)
+    at R (cdn.min.js:5:143)
+    at Function.<anonymous> (cdn.min.js:5:34365)
+    at r (cdn.min.js:5:2323)
+    at n (cdn.min.js:5:2353)
+    at fr (cdn.min.js:5:2363)
+    at S (cdn.min.js:5:5131)
+init @ index.html:250
+(anonymous) @ cdn.min.js:5
+or @ cdn.min.js:1
+R @ cdn.min.js:5
+(anonymous) @ cdn.min.js:5
+r @ cdn.min.js:5
+n @ cdn.min.js:5
+fr @ cdn.min.js:5
+S @ cdn.min.js:5
+(anonymous) @ cdn.min.js:5
+gr @ cdn.min.js:5
+(anonymous) @ cdn.min.js:5Understand this error
+
+<div id="papers-data" data-papers="[{" abstract":="" "",="" "authors":="" "sergio="" albeverio="" and="" danilo="" merlini="" remiglio="" tartini",="" "doi":="" "formalisations_count":="" 0,="" "id":="" "albeveriomerlinitartini1989",="" "raw_bibtex":="" "@article{albeveriomerlinitartini1989,\n="" author="{Sergio" tartini},\n="" title="{{Una" breve="" introduzione="" a="" diffusioni="" su="" insiemi="" frattali="" e="" ad="" alcuni="" essempi="" di="" sistemi="" dinamici="" semplici}},\n="" journal="{Note" matematica="" fisica},\n="" publisher="{Edizioni" cerfim="" locarno},\n="" volume="{3},\n" year="{1989},\n" pages="{1--39}\n}&quot;," "title":="" "una="" semplici",="" "type":="" "article",="" "url":="" "venue":="" "note="" fisica,="" vol.="" 3,="" pp.="" 1--39",="" "year":="" "1989"},="" {"abstract":="" "jean-paul="" allouche",="" "allouche1979",="" "@incollection{allouche1979,\n="" allouche},\n="" la="" conjecture="" de="" ``syracuse-kakutani-collatz\u0027\u0027}},\n="" booktitle="{S\\\u0027{e}minaire" th\\\u0027{e}orie="" des="" nombres="" 1978--1979,="" expose="" no.="" 9},\n="" talence="" (france)},\n="" note="{MR" 81g:10014}\n}",="" "sur="" ``syracuse-kakutani-collatz\u0027\u0027",="" "incollection",="" "s\u00e9minaire="" th\u00e9orie="" 9",="" "1979"},="" "amal="" s.="" amleh="" edward="" a.="" grove="" candace="" m.="" kent="" gerasimos="" ladas",="" "amlehgrovekentladas1998",="" "@article{amlehgrovekentladas1998,\n="" ladas},\n="" some="" difference="" equations="" with="" eventually="" periodic="" solutions}},\n="" math.="" anal.="" appl.},\n="" 99f:39002}\n}",="" "on="" solutions",="" "j.="" appl.,="" 223,="" 196--215",="" "1998"},="" "s.="" anderson",="" "anderson1987",="" "@article{anderson1987,\n="" anderson},\n="" the="" $3x="" +="" 1$="" problem}},\n="" gazette},\n="" "struggling="" problem",="" "math.="" gazette,="" 71,="" 271--274",="" "1987"},="" "stefan="" andrei="" cristian="" masalagiu",="" "andreimasalagiu1998",="" "@article{andreimasalagiu1998,\n="" masalagiu},\n="" collatz="" conjecture}},\n="" informatica},\n="" 99d:68097}\n}",="" "about="" conjecture",="" "acta="" informatica,="" 35,="" 167--179",="" "david="" applegate="" jeffrey="" c.="" lagarias",="" "applegatelagarias1995a",="" "@article{applegatelagarias1995a,\n="" lagarias},\n="" bounds="" for="" $3x+1$="" problem="" i.="" tree-search="" method}},\n="" comp.},\n="" 95c:11024}\n}",="" "density="" method",="" comp.,="" 64,="" 411--426",="" "1995"},="" "applegatelagarias1995b",="" "@article{applegatelagarias1995b,\n="" ii.\\="" krasikov="" inequalities}},\n="" 95c:11025}\n}",="" inequalities",="" 427--438",="" "applegatelagarias1995c",="" "@article{applegatelagarias1995c,\n="" distribution="" of="" trees}},\n="" mathematics},\n="" 97e:11033}\n}",="" trees",="" "experimental="" mathematics,="" 4,="" 101--117",="" "jacques="" arsac",="" "arsac1986",="" "@article{arsac1986,\n="" arsac},\n="" pour="" v\\\u0027erifier="" syracuse}},\n="" r.="" acad.="" sci.="" paris},\n="" rairo,="" inf.="" th\\\u0027{e}or.="" appl.="" {\\bf="" 21}="" (1987),="" 3--9.="" mr="" 87m:11128}\n}",="" "algorithmes="" v\u00e9rifier="" syracuse",="" "c.="" paris,="" 303,="" 155--159",="" "1986"},="" "charles="" ashbacher",="" "ashbacher1992",="" "@article{ashbacher1992,\n="" ashbacher},\n="" investigations="" wondrous="" numbers}},\n="" recreational="" math.},\n="" "further="" numbers",="" math.,="" 24,="" 1--15",="" "1992"},="" "arthur="" oliver="" lonsdale="" atkin",="" "atkin1966",="" "@article{atkin1966,\n="" atkin},\n="" on="" $63-13^{*}$}},\n="" review},\n="" "comment="" $63-13^*$",="" "siam="" review,="" 8,="" 234--236",="" "1966"},="" "michael="" avidon",="" "avidon1997",="" "@article{avidon1997,\n="" avidon},\n="" primitive="" $3$-smooth="" partitions="" $n$}},\n="" j.="" combinatorics},\n="" 98a:11136}\n}",="" $n$",="" "electronic="" combinatorics,="" 4",="" "1997"},="" "claudio="" baiocchi",="" "baiocchi1998",="" "@incollection{baiocchi1998,\n="" baiocchi},\n="" utm="" tag-systems}},\n="" dell\u0027universit\\`{a}="" \"la="" sapienza\"="" roma},\n="" "3n+1,="" tag-systems",="" "dipartimento="" dell\u0027universit\u00e0="" roma",="" "ranan="" b.="" banerji",="" "banerji1996",="" "@article{banerji1996,\n="" banerji},\n="" properties="" $3n+1$="" function}},\n="" systems},\n="" "some="" function",="" "cybernetics="" systems,="" 27,="" 473--486",="" "1996"},="" "enzo="" barone",="" "barone1999",="" "@article{barone1999,\n="" barone},\n="" heuristic="" probabilistic="" argument="" sequence}},\n="" pure="" 2000d:11033}\n}",="" "a="" sequence",="" "ital.="" 151--153",="" "1999"},="" beeler="" william="" gosper="" richard="" schroeppel",="" "beelergosperschroeppel1972",="" "@incollection{beelergosperschroeppel1972,\n="" schroeppel},\n="" 239,="" artificial="" intelligence="" laboratory,="" mit},\n="" contract="" n00014-70-a-0362-0002}\n}",="" "hakmem",="" "memo="" mit",="" "1972"},="" "edward="" belaga",="" "belaga1998",="" "@incollection{belaga1998,\n="" belaga},\n="" mystery:="" outline="" scenario-="" improbable="" or="" realistic?}},\n="" strasbourg="" report},\n="" url="{http://hal.archives-ouvertes.fr/IRMA-ACF," file="" hal-0012576}\n}",="" "reflecting="" realistic?",="" "http:="" hal.archives-ouvertes.fr="" irma-acf,="" hal-0012576",="" "u.="" report",="" belaga="" maurice="" mignotte",="" "belagamignotte1999",="" "@article{belagamignotte1999,\n="" mignotte},\n="" in="" $3x+d$="" context}},\n="" 200d:11034}\n}",="" "embedding="" context",="" 7,="" 145--151",="" "stefano="" beltraminelli="" luca="" rusconi",="" "beltraminellimerlinirusconi1994",="" "@article{beltraminellimerlinirusconi1994,\n="" rusconi},\n="" inverse="" nel="" problema="" del="" $3n+1$}},\n="" edizioni="" "orbite="" $3n+1$",="" locarno,="" 325--357",="" "1994"},="" "lothar="" berg="" g\u00fcnter="" meinardus",="" "bergmeinardus1994",="" "@article{bergmeinardus1994,\n="" g\\\"{u}nter="" meinardus},\n="" connected="" 95d:11025}\n}",="" "functional="" "results="" 25,="" 1--12",="" "bergmeinardus1995",="" "@article{bergmeinardus1995,\n="" 3n+1="" functional="" equations}},\n="" kolloq.},\n="" 97e:11034}\n}",="" "the="" equations",="" "rostock="" kolloq.,="" 48,="" 11--18",="" "daniel="" bernstein",="" "bernstein1994",="" "@article{bernstein1994,\n="" bernstein},\n="" non-iterative="" 2-adic="" statement="" amer.="" soc.},\n="" 94h:11108}\n}",="" "proc.="" soc.,="" 121,="" 405--408",="" bernstein="" "bernsteinlagarias1996",="" "@article{bernsteinlagarias1996,\n="" conjugacy="" map}},\n="" 98a:11027}\n}",="" map",="" "canadian="" 1154--1169",="" "jacek="" b\u0142="" a\u017cewitz="" alberto="" pettorossi",="" "blazewitzpettorossi1983",="" "@article{blazewitzpettorossi1983,\n="" b\\l="" a\\.{z}ewitz="" pettorossi},\n="" binary="" sequences="" useful="" proving="" collatz\u0027s="" found.="" control="" engr.},\n="" 85e:11010,="" zbl.="" 547.10000}\n}",="" engr.,="" 53--63",="" "1983"},="" "richard="" blecksmith,="" michael="" mccallum,="" john="" l.="" selfridge",="" "blecksmithmccallumselfridge1998",="" "@article{blecksmithmccallumselfridge1998,\n="" selfridge},\n="" representations="" integers}},\n="" monthly},\n="" 2000a:11019}\n}",="" "3-smooth="" integers",="" "american="" monthly,="" 105,="" 529--543",="" "corrado="" b\u00f6hm="" giovanna="" sontacchi",="" "bohmsontacchi1978",="" "@article{bohmsontacchi1978,\n="" b\\\"{o}hm="" sontacchi},\n="" existence="" cycles="" given="" length="" integer="" like="" $x_{n+1}="x_n/2$" if="" $x_n$="" even,="" otherwise}},\n="" accad.="" naz.="" lincei="" rend.="" cl.="" fis.="" mat.="" natur.},\n="" 83h:10030}\n}",="" $x_n+1="x_n/2$" otherwise",="" "atti="" natur.,="" 260--264",="" "1978"},="" w.="" boyd",="" "boyd1985",="" "@article{boyd1985,\n="" boyd},\n="" rationals="" are="" ratios="" pisot="" sequences?}},\n="" bull.},\n="" 86j:11078}\n}",="" "which="" sequences?",="" "canad.="" bull.,="" 28,="" 343--349",="" "1985"},="" "monique="" bringer",="" "bringer1969",="" "@article{bringer1969,\n="" bringer},\n="" un="" probl\\`{e}me="" queneau}},\n="" et="" sciences="" humaines="" [mathematics="" social="" science]},\n="" probl\u00e8me="" queneau",="" "math\u00e9matiques="" science],="" 13--20",="" "1969"},="" brocco",="" "brocco1995",="" "@article{brocco1995,\n="" brocco},\n="" mignosi\u0027s="" generalization="" number="" theory},\n="" 96d:11025}\n}",="" theory,="" 52,="" 173--178",="" "serge="" burckel",="" "burckel1994",="" "@article{burckel1994,\n="" burckel},\n="" associated="" congruential="" functions}},\n="" computer="" science},\n="" 94m.11147}\n}",="" functions",="" "theoretical="" science,="" 123,="" 397--406",="" "robert="" n.="" buttsworth="" keith="" matthews",="" "buttsworthmatthews1990",="" "@article{buttsworthmatthews1990,\n="" matthews},\n="" markov="" matrices="" arising="" from="" generalized="" mapping}},\n="" arithmetica},\n="" 92a:11016}\n}",="" mapping",="" arithmetica,="" 55,="" 43--57",="" "1990"},="" cadogan",="" "cadogan1984",="" "@article{cadogan1984,\n="" cadogan},\n="" 87a:11013}\n}",="" "caribbean="" 3(2),="" 69--72",="" "1984"},="" "cadogan1991",="" "@inproceedings{cadogan1991,\n="" observations="" sixth="" caribbean="" conference="" combinatorics="" \\\u0026="" computing},\n="" west="" indies:="" st.="" augustine="" trinidad}\n}",="" "inproceedings",="" \u0026="" computing,="" 84--91",="" "1991"},="" "cadogan1996",="" "@article{cadogan1996,\n="" i}},\n="" comput.="" sci.},\n="" 2001k:11032}\n}",="" "exploring="" i",="" sci.,="" 6,="" 10--18",="" "marc="" chamberland",="" "chamberland1996",="" "@article{chamberland1996,\n="" chamberland},\n="" continuous="" extension="" to="" real="" line}},\n="" continuous,="" discrete="" impulsive="" dynamical="" 97f:39031}\n}",="" line",="" "dynamics="" 2,="" 495--509",="" "busiso="" p.="" chisala",="" "chisala1994",="" "@article{chisala1994,\n="" chisala},\n="" sequences}},\n="" debrecen},\n="" 95h:11019}\n}",="" "cycles="" sequences",="" "publ.="" debrecen,="" 45,="" 35--39",="" "vasik="" chvatal,="" david="" klarner="" donald="" e.="" knuth",="" "chvatalklarnerknuth1972",="" "@techreport{chvatalklarnerknuth1972,\n="" knuth},\n="" combinatorial="" research="" problems}},\n="" institution="{Stanford" science="" dept.},\n="" "selected="" problems",="" "techreport",="" "(stan-cs-72-292)",="" "dean="" clark",="" "clark1995",="" "@article{clark1995,\n="" clark},\n="" related="" 96e:11031}\n}",="" "second-order="" 1,="" 73--85",="" clark="" james="" t.="" lewis",="" "clarklewis1995",="" "@inproceedings{clarklewis1995,\n="" lewis},\n="" collatz-type="" equation}},\n="" twenty-sixth="" internationsal="" graph="" theory="" computing="" (boca="" raton="" 1995)},\n="" 98b:11008}\n}",="" equation",="" 1995),="" 111,="" 129--135",="" "clarklewis1998",="" "@inproceedings{clarklewis1998,\n="" solutions="" collatz-like="" system="" twenty-ninth="" (baton="" rouge="" 1998)},\n="" 99i:00021}\n}",="" "symmetric="" 1998),="" 131,="" 101--114",="" "thomas="" cloney="" eric="" goles="" g\u00e9rard="" y.="" vichniac",="" "cloneygolesvichniac1987",="" "@article{cloneygolesvichniac1987,\n="" g\\\u0027{e}rard="" vichniac},\n="" problem:="" quasi-cellular="" automaton}},\n="" 88d:68080}\n}",="" automaton",="" "complex="" 349--360",="" collatz",="" "collatz1986",="" "@article{collatz1986,\n="" collatz},\n="" motivation="" origin="" $(3n="" 1)$-problem}},\n="" qufu="" normal="" university,="" natural="" edition="" [qufu="" shi="" fan="" da="" xue="" bao.="" zi="" ran="" ke="" ban]},\n="" transcribed="" by="" zhi-ping="" ren}\n}",="" 1)$-problem",="" ban],="" 12(3),="" 9--11",="" "john="" h.="" conway",="" "conway1972",="" "@inproceedings{conway1972,\n="" conway},\n="" iterations}},\n="" 1972="" conference,="" university="" colorado},\n="" 52="" \\#13717}\n}",="" "unpredicatable="" iterations",="" colorado,="" 49--52",="" "conway1987",="" "@incollection{conway1987,\n="" simple="" universal="" language="" arithmetic}},\n="" problems="" communication="" computation},\n="" 89c:94003}\n}",="" "fractran-="" arithmetic",="" "open="" computation,="" 3--27",="" "don="" coppersmith",="" "coppersmith1975",="" "@article{coppersmith1975,\n="" coppersmith},\n="" complement="" certain="" recursively="" defined="" sets}},\n="" series="" a},\n="" 51="" $\\#$5477}\n}",="" sets",="" a,="" 18(3),="" 243--251",="" "1975"},="" "h.="" coxeter",="" "coxeter1971",="" "@article{coxeter1971,\n="" coxeter},\n="" frieze="" patterns,="" (the="" fourth="" felix="" behrend="" memorial="" lecture)}},\n="" "cyclic="" lecture)",="" "vinculum,="" 4--7",="" "1971"},="" crandall",="" "crandall1978",="" "@article{crandall1978,\n="" crandall},\n="" ``$3x="" 1$\u0027\u0027="" 58="" \\#494}\n}",="" 32,="" 1281--1292",="" leslie="" davison",="" "davison1977",="" "@inproceedings{davison1977,\n="" davison},\n="" comments="" an="" iteration="" 6-th="" manitoba="" conf.="" numerical="" (univ.="" manitoba-winnipeg="" 1976),="" congressus="" numerantium="" xviii},\n="" \\#31773}\n}",="" xviii,="" 55--59",="" "1977"},="" "philippe="" devienne,="" patrick="" leb\u00e8gue,="" jean-chrisophe="" routier",="" "deviennelebegueroutier1993",="" "@inproceedings{deviennelebegueroutier1993,\n="" leb\\`egue,="" routier},\n="" one="" horn="" clause="" is="" undecidable}},\n="" stacs="" 1993},\n="" 95e:03114}\n}",="" "halting="" undecidable",="" "proceedings="" 1993,="" 48--57",="" "1993"},="" "james="" dolan,="" albert="" f.="" gilman="" shan="" manickam",="" "dolangilmanmanickam1987",="" "@article{dolangilmanmanickam1987,\n="" manickam},\n="" everett\u0027s="" result="" 89a:11018}\n}",="" "adv.="" 405--409",="" dunn",="" "dunn1973",="" "@article{dunn1973,\n="" dunn},\n="" ulam\u0027s="" boulder,="" technical="" report="" cu-cs-011-73},\n="" "department="" cu-cs-011-73,="" 15",="" "1973"},="" "peter="" eisele="" karl-peter="" hadeler",="" "eiselehadeler1990",="" "@article{eiselehadeler1990,\n="" hadeler},\n="" cards,="" characterization="" floor="" ceiling="" 91h:58086}\n}",="" "game="" "amer.="" 97,="" 466--477",="" "shalom="" eliahou",="" "eliahou1993",="" "@article{eliahou1993,\n="" eliahou},\n="" new="" lower="" nontrivial="" cycle="" lengths}},\n="" 94h:11017}\n}",="" lengths",="" "discrete="" 118,="" 45--56",="" d.="" elliott",="" "elliott1985",="" "@book{elliott1985,\n="" elliott},\n="" functions="" products}},\n="" 86j:11095}\n}",="" "arithmetic="" products",="" "book",="" "springer-verlag",="" "paul="" erd\u0151s="" graham",="" "erdosgraham1979",="" "@article{erdosgraham1979,\n="" erd\\h{o}s="" graham},\n="" results="" theory:="" van="" der="" waerden\u0027s="" theorem="" topics}},\n="" 81f:10005}\n}",="" "old="" topics",="" "enseign.="" 25(3-4),="" 325--344",="" "erdosgraham1980",="" "@book{erdosgraham1980,\n="" theory}},\n="" 28="" l\u0027enseignement="" math\\\u0027{e}matique,="" kundig},\n="" theory",="" "monographie="" math\u00e9matique,="" kundig",="" "1980"},="" everett",="" "everett1977",="" "@article{everett1977,\n="" everett},\n="" theoretic="" function="" $f(2n)="n," f(2n+1)="3n+2$}},\n" 56\\#15552}\n}",="" "iteration="" "advances="" 42--45",="" "carolyn="" farruggia,="" lawrence="" brian="" waterhouse",="" "farruggialawrencewaterhouse1996",="" "@article{farruggialawrencewaterhouse1996,\n="" waterhouse},\n="" elimination="" family="" parity="" vectors="" mu="" epsilon="" j.},\n="" "pi="" j.,="" 10,="" 275--280",="" feix,="" amador="" muriel,="" merlini,="" "feixmurielmerlinitartini1995",="" "@incollection{feixmurielmerlinitartini1995,\n="" $(3x="" 1)="" 2$="" statistical="" approach}},\n="" processes,="" physics="" geometry~ii,="" locarno="" 1991},\n="" scientific},\n="" approach",="" "stochastic="" 1991,="" 289--300",="" muriel="" jean-louis="" rouet",="" "feixmurielrouet1994",="" "@article{feixmurielrouet1994,\n="" rouet},\n="" iterated="" arithmetic="" stat.="" phys.},\n="" 96b:11021}\n}",="" "statistical="" phys.,="" 76,="" 725--741",="" "piero="" filipponi",="" "filipponi1991",="" "@article{filipponi1991,\n="" filipponi},\n="" something="" old,="" new}},\n="" mathematica,="" serie="" vii,="" 92i:11031}\n}",="" new",="" "rendiconti="" roma,="" 11,="" 85--103",="" "leopold="" flatto",="" "flatto1992",="" "@incollection{flatto1992,\n="" flatto},\n="" $\\beta$-transformations}},\n="" dynamics="" its="" applications="" (new="" haven,="" ct,="" 1991)},\n="" providence,="" ri},\n="" "$z$-numbers="" $\u03b2$-transformations",="" "symbolic="" 1991),="" 135,="" 181--201",="" "zachary="" franco",="" "franco1990",="" "@misc{franco1990,\n="" franco},\n="" approximation="" $qx="" thesis,="" univ.="" calif.="" at="" berkeley="" 1990.="" (h.="" helson,="" advisor)}\n}",="" "diophantine="" "misc",="" franco="" carl="" pomerance",="" "francopomerance1995",="" "@article{francopomerance1995,\n="" pomerance},\n="" crandall="" concerning="" 5j:11019}\n}",="" 1333--1336",="" fredman",="" "fredman1972",="" "@misc{fredman1972,\n="" fredman},\n="" class="" stanford="" june="" 1972,="" 81="" pages}\n}",="" "growth="" fredman="" "fredmanknuth1974",="" "@article{fredmanknuth1974,\n="" relations="" based="" minimization}},\n="" 57\\#12364}\n}",="" "recurrence="" minimization",="" 534--559",="" "1974"},="" gale",="" "gale1991",="" "@article{gale1991,\n="" gale},\n="" entertainments:="" more="" mysteries}},\n="" intelligencer},\n="" "mathematical="" mysteries",="" intelligencer,="" 13(3),="" 54--55",="" "guo-gang="" gao",="" "gao1993",="" "@article{gao1993,\n="" gao},\n="" consecutive="" numbers="" same="" height="" 94i:11018}\n}",="" 112,="" 261--267",="" "manuel="" v.="" garcia="" fabio="" tal",="" "garciatal1999",="" "@article{garciatal1999,\n="" tal},\n="" $3n="" arith.},\n="" 2000i:11019}\n}",="" arith.,="" 90(3),="" 245--250",="" "martin="" gardner",="" "gardner1972",="" "@article{gardner1972,\n="" gardner},\n="" games}},\n="" american},\n="" games",="" "scientific="" american,="" 226(6),="" 114--118",="" "lynn="" garner",="" "garner1981",="" "@article{garner1981,\n="" garner},\n="" algorithm}},\n="" 82j:10090}\n}",="" algorithm",="" 82,="" 19--22",="" "1981"},="" "garner1985",="" "@article{garner1985,\n="" heights="" 86j:11005}\n}",="" 57--64",="" "wolfgang="" gasch\u00fctz",="" "gaschutz1982",="" "@article{gaschutz1982,\n="" gasch\\\"{u}tz},\n="" abgeschlossene="" zahlenmengen="" [linearly="" closed="" sets="" i.]}},\n="" reine="" angew.="" 83m:10095}\n}",="" "linear="" i.]",="" 330,="" 143--158",="" "1982"},="" glaser="" hans-georg="" weigand",="" "glaserweigand1989",="" "@article{glaserweigand1989,\n="" weigand},\n="" problem-computergest\\\"utze="" entdeckungen}},\n="" (didaktik="" mathematik)},\n="" "das-ulam="" problem-computergest\u00fctze="" entdeckungen",="" "ddm="" mathematik),="" 17(2),="" 114--134",="" "gaston="" gonnet",="" "gonnet1991",="" "@article{gonnet1991,\n="" gonnet},\n="" newsletter},\n="" "computations="" "maple="" newsletter,="" 0(6)",="" k.="" guy",="" "guy1981",="" "@book{guy1981,\n="" guy},\n="" york},\n="" edition:="" 1994.="" third="" 2004}\n}",="" "unsolved="" "springer-verlag,="" york",="" "guy1983a",="" "@article{guy1983a,\n="" try="" solve="" these="" problems!}},\n="" "don\u0027t="" problems!",="" 90,="" 35--41",="" "guy1983b",="" "@article{guy1983b,\n="" prime="" producing="" machine}},\n="" magazine},\n="" 84j:10008}\n}",="" "conway\u0027s="" machine",="" magazine,="" 56,="" 26--33",="" "guy1986",="" "@article{guy1986,\n="" isbell\u0027s="" game="" beanstalk="" conway\u0027s="" beans="" don\u0027t="" talk}},\n="" 88c:90163}\n}",="" talk",="" 59,="" 259--269",="" "lorenz="" halbeisen="" norbert="" hungerb\u00fchler",="" "halbeisenhungerbuhler1997",="" "@article{halbeisenhungerbuhler1997,\n="" hungerb\\\"uhler},\n="" rational="" cycles}},\n="" 98g:11025}\n}",="" "optimal="" cycles",="" 78,="" 227--239",="" "gisbert="" hasenjager",="" "hasenjager1990",="" "@incollection{hasenjager1990,\n="" syracuse-problem="" und="" die="" rolle="" basen},\n="" hasenjager},\n="" rationis.="" festschrift="" f\\\"{u}r="" heinrich="" schepers},\n="" editor="{A." heinekamp="" lenzen="" schneider},\n="" publications},\n="" address="{M\\\&quot;{u}nster},\n" isbn="{3-89323-229-X}\n}&quot;," "hasse\u0027s="" basen",="" "mathesis="" f\u00fcr="" schepers,="" 329--336",="" "helmut="" hasse",="" "hasse1975",="" "@unpublished{hasse1975,\n="" elementary="" hasse},\n="" maine="" (orono),="" spring="" 1975.="" mimeographed="" notes.}\n}",="" "unpublished",="" "brian="" hayes",="" "hayes1984",="" "@article{hayes1984,\n="" recreations:="" ups="" downs="" hailstone="" numbers},\n="" hayes},\n="" "computer="" 250(1),="" 10--16",="" "ernst="" heppner",="" "heppner1978",="" "@article{heppner1978,\n="" bemerkung="" zum="" hasse-syracuse="" algorithmus},\n="" heppner},\n="" 80d:10007}\n}",="" "eine="" algorithmus",="" "archiv.="" 31,="" 317--320",="" g.="" hoffman="" klarner",="" "hoffmanklarner1978",="" "@article{hoffmanklarner1978,\n="" integers="" under="" affine="" operators-="" closure="" finite="" sets},\n="" klarner},\n="" 80i:10075}\n}",="" "sets="" "pacific="" 78(2),="" 337--344",="" "hoffmanklarner1979",="" "@article{hoffmanklarner1979,\n="" basis="" theorems},\n="" 83e:10080}\n}",="" theorems",="" 83(1),="" 135--144",="" "bo="" yang="" hong",="" "hong1986",="" "@article{hong1986,\n="" problem},\n="" hong},\n="" hubei="" edition},\n="" edition(1),="" 1--5",="" "stephen="" isard="" harold="" zwicky",="" "isardzwicky1970",="" "@article{isardzwicky1970,\n="" open="" questions="" one-symbol="" smullyan="" zwicky},\n="" news},\n="" issue="{7},\n" "three="" systems",="" "sigact="" news,="" 11-19",="" "1970"},="" "frazer="" jarvis",="" "jarvis1989",="" "@article{jarvis1989,\n="" 31="" jarvis},\n="" "13,="" "eureka,="" 49,="" 22--25",="" joseph",="" "joseph1998",="" "@article{joseph1998,\n="" chaotic="" $\\zz_2="" [i]$},\n="" joseph},\n="" quarterly},\n="" 99f:11026}\n}",="" [i]$",="" "fibonacci="" quarterly,="" 36,="" 309--317",="" "frantisek="" kascak",="" "kascak1992",="" "@inproceedings{kascak1992,\n="" one-state="" linear="" operator="" algorithms},\n="" kascak},\n="" mfcs="" \u002792,="" lecture="" notes="" 629},\n="" "small="" algorithms",="" 629,="" 327--335",="" "louis="" kauffman",="" "kauffman1995",="" "@article{kauffman1995,\n="" form},\n="" kauffman},\n="" 0827.03033}\n}",="" form",="" 26,="" 1--57",="" kay",="" "kay1972",="" "@article{kay1972,\n="" algorithm="" reducing="" size="" integer},\n="" kay},\n="" journal},\n="" "an="" integer",="" journal,="" 338",="" "timothy="" keller",="" "keller1999",="" "@article{keller1999,\n="" periodically="" functions},\n="" keller},\n="" 1717767}\n}",="" "finite="" "missouri="" 11(3),="" 152--157",="" "murray="" klamkin",="" "klamkin1963",="" "@article{klamkin1963,\n="" $63-13^{*}$},\n="" klamkin},\n="" "problem="" 5,="" 275--276",="" "1963"},="" "klarner1981",="" "@article{klarner1981,\n="" determine="" when="" have="" $0$="" density},\n="" 84h:10076}\n}",="" density",="" "journal="" algorithms,="" 31--43",="" "klarner1982",="" "@article{klarner1982,\n="" sufficient="" condition="" semigroups="" be="" free},\n="" algebra},\n="" 83e:10081}\n}",="" free",="" algebra,="" 74,="" 140--148",="" "klarner1988",="" "@article{klarner1988,\n="" applied="" 90m:68075}\n}",="" "$m$-recognizability="" 21(3),="" 207--214",="" "1988"},="" karel="" post",="" "klarnerpost1992",="" "@article{klarnerpost1992,\n="" fascinating="" sequences},\n="" post},\n="" 93i:11031}\n}",="" 106="" 107,="" 303--309",="" rado",="" "klarnerrado1973",="" "@article{klarnerrado1973,\n="" combinations="" integers},\n="" rado},\n="" 48="" $\\#$8378}\n}",="" 80(9),="" 985--989",="" "klarnerrado1974",="" "@article{klarnerrado1974,\n="" 50="" $\\#$9784}\n}",="" 53,="" 445--463",="" "ivan="" korec",="" "korec1992",="" "@article{korec1992,\n="" korec},\n="" problem,="" pascal="" triangles,="" cellular="" automata}},\n="" slovaca},\n="" 94g:11019}\n}",="" automata",="" slovaca,="" 42,="" 547--563",="" "korec1994",="" "@article{korec1994,\n="" density="" estimate="" 95h:11022}\n}",="" 44,="" 85--89",="" korec="" stefan="" znam",="" "korecznam1987",="" "@article{korecznam1987,\n="" znam},\n="" 90g:11023}\n}",="" 94,="" 771--772",="" "ilia="" krasikov",="" "krasikov1989",="" "@article{krasikov1989,\n="" krasikov},\n="" many="" satisfy="" conjecture?}},\n="" 91c:11013}\n}",="" "how="" conjecture?",="" "internatl.="" 12,="" 791--796",="" kuttler",="" "kuttler1994",="" "@article{kuttler1994,\n="" kuttler},\n="" 803.11018}\n}",="" 15,="" 183--185",="" "jeffrey="" "lagarias1985",="" "@article{lagarias1985,\n="" generalizations}},\n="" 86i:11043}\n}",="" generalizations",="" 92,="" 3--23",="" "lagarias1990",="" "@article{lagarias1990,\n="" set="" 91i:11024}\n}",="" 33--53",="" "lagarias1999",="" "@incollection{lagarias1999,\n="" random="" 3x="" 1="" iterates?}},\n="" mathemagician="" pied="" puzzler:="" collection="" tribute="" martin="" peters,="" ltd.:="" natick,="" mass.},\n="" iterates?",="" gardner,="" 253--266",="" lagarias,="" horacio="" porta="" kenneth="" stolarsky",="" "lagariasportastolarsky1993",="" "@article{lagariasportastolarsky1993,\n="" stolarsky},\n="" tent="" map="" expansions="" points}},\n="" london="" 94h:58139}\n}",="" "asymmetric="" points",="" 47,="" 542--556",="" "jeffey="" "lagariasportastolarsky1994",="" "@article{lagariasportastolarsky1994,\n="" ii.="" purely="" 96b:58093,="" zbl="" 809:11042}\n}",="" "illinois="" 38,="" 574--588",="" lagarias="" alan="" weiss",="" "lagariasweiss1992",="" "@article{lagariasweiss1992,\n="" weiss},\n="" two="" stochastic="" models}},\n="" probability},\n="" 92k:60159}\n}",="" models",="" "annals="" probability,="" 229--261",="" "gary="" leavens="" mike="" vermeulen",="" "leavensvermeulen1992",="" "@article{leavensvermeulen1992,\n="" vermeulen},\n="" +1$="" search="" programs}},\n="" applications},\n="" 93k:68047}\n}",="" "$3x="" programs",="" "computers="" applications,="" 24(11),="" 79--99",="" "george="" leigh",="" "leigh1986",="" "@article{leigh1986,\n="" leigh},\n="" process="" underlying="" syracuse="" 87i:11099}\n}",="" 46,="" 125--143",="" "simon="" letherman,="" dierk="" schleicher="" reg="" wood",="" "lethermanschleicherwood1999",="" "@article{lethermanschleicherwood1999,\n="" wood},\n="" holomorphic="" dynamics}},\n="" 2000g:37049}\n}",="" dynamics",="" 8(3),="" 241--251",="" "heinrich="" lunkenheimer",="" "lunkenheimer1988",="" "@article{lunkenheimer1988,\n="" lunkenheimer},\n="" kleine="" untersuchung="" zu="" einem="" zahlentheoretischen="" (praxis="" mathematik="" schule)},\n="" "pm="" schule),="" 30,="" 4--9",="" "kurt="" mahler",="" "mahler1968",="" "@article{mahler1968,\n="" mahler},\n="" unsolved="" powers="" $3="" 2$}},\n="" australian="" 37="" \\#2694}\n}",="" 2$",="" 313--321",="" "1968"},="" "jerzy="" marcinkowski",="" "marcinkowski1999",="" "@article{marcinkowski1999,\n="" marcinkowski},\n="" turtle,="" undecidable="" boundedness="" small="" datalog="" comput.},\n="" 2002d:68035}\n}",="" "achilles,="" comput.,="" 29,="" 231--257",="" "d\u0103nu\u0163="" marcu",="" "marcu1991",="" "@article{marcu1991,\n="" marcu},\n="" three}},\n="" 92h:11026}\n}",="" three",="" 89,="" 211-212",="" "maurice="" margenstern="" yuri="" matiyasevich",="" "margensternmatiyasevich1999",="" "@article{margensternmatiyasevich1999,\n="" matiyasevich},\n="" binomial="" representation="" 2001g:11015}\n}",="" 91(4),="" 367--378",="" "keith="" "matthews1992",="" "@article{matthews1992,\n="" borel="" measures="" 93i:11090}\n}",="" "colloq.="" 191--202",="" matthews="" george="" "matthewsleigh1987",="" "@article{matthewsleigh1987,\n="" $f_q="" [x]$}},\n="" 88f:11116}\n}",="" [x]$",="" 274--278",="" anthony="" watts",="" "matthewswatts1984",="" "@article{matthewswatts1984,\n="" watts},\n="" hasse\u0027s="" 85i:11068}\n}",="" "acta.="" 43,="" 167--175",="" "matthewswatts1985",="" "@article{matthewswatts1985,\n="" approach="" 87c:11071}\n}",="" 29--42",="" "danilo="" nicoletta="" sala",="" "merlinisala1999",="" "@article{merlinisala1999,\n="" sala},\n="" fibonacci\u0027s="" attractor="" long="" orbits="" chaos="" "international="" 4(2-3),="" 75--84",="" "karl="" heinz="" metzger",="" "metzger1995",="" "@article{metzger1995,\n="" metzger},\n="" $(3n+1)$-algorithmus.="" teil="" i:="" das="" zyklen}},\n="" beweis="" $(3n+1)$-problems,="" pm="" 39}="" (1996),="" 217}\n}",="" "untersuchungen="" zyklen",="" 255--257",="" "metzger1999",="" "@article{metzger1999,\n="" beim="" $(bn+1)$-algorithmus}},\n="" "zyklenbestimmung="" $(bn+1)$-algorithmus",="" 41,="" 25--27",="" "pascal="" michel",="" "michel1993",="" "@article{michel1993,\n="" michel},\n="" beaver="" competition="" logic},\n="" 94f:03048}\n}",="" "busy="" "archive="" logic,="" 351--367",="" "filippo="" mignosi",="" "mignosi1995",="" "@article{mignosi1995,\n="" mignosi},\n="" 96m:11016}\n}",="" "j="" 28--45",="" "herbert="" m\u00f6ller",="" "moller1978",="" "@article{moller1978,\n="" m\\\"{o}ller},\n="" hasses="" verallgemeinerung="" syracuse-algorithmus="" (kakutanis="" problem)}},\n="" 57="" \\#16246}\n}",="" "uber="" problem)",="" 34(3),="" 219--226",="" m\u00fcller",="" "muller1991",="" "@article{muller1991,\n="" m\\\"{u}ller},\n="" `$3n+1$\u0027="" ges.="" hamburg},\n="" 93c:11053}\n}",="" "das="" "mitteilungen="" hamburg,="" 231--251",="" "muller1994",="" "@article{muller1994,\n="" m\\\"uller},\n="" eine="" klasse="" 2-adischer="" funktionen="" im="" zusammenhang="" mit="" dem="" ``$3x+1$\u0027\u0027-problem}},\n="" sem.="" 95e:11032}\n}",="" "\u00dcber="" ``$3x+1$\u0027\u0027-problem",="" "abh.="" 293--302",="" "w\u0142="" adys\u0142="" aw="" narkiewicz",="" "narkiewicz1980",="" "@article{narkiewicz1980,\n="" adys\\l="" narkiewicz},\n="" paper="" gupta="" 2="" 3}},\n="" beograd.="" publ.="" elecktrotech.="" fak.="" ser.="" fiz.="" no},\n="" 3",="" "univ.="" no,="" 678-715,="" 173-174",="" "j\"\u0301urg="" nivergelt",="" "nivergelt1975",="" "@article{nivergelt1975,\n="" nivergelt},\n="" mathematics="" education}},\n="" education",="" 121--132",="" stanley="" ogilvy",="" "ogilvy1972",="" "@book{ogilvy1972,\n="" ogilvy},\n="" math:="" amateur}},\n="" press:="" edition}\n}",="" "tomorrow\u0027s="" amateur",="" "oxford="" "tom\u00e1s="" oliveira="" silva",="" "silva1999",="" "@article{silva1999,\n="" silva},\n="" excursion="" stopping="" time="" record-holders="" computational="" results}},\n="" 2000g:11015}\n}",="" "maximum="" results",="" 68(1),="" 371-384",="" "elio="" oliveri="" giuseppe="" vella",="" "oliverivella1998",="" "@article{oliverivella1998,\n="" vella},\n="" questioni="" correlate="" al="" ``3d+1\u0027\u0027}},\n="" della="" accademia="" scienze="" lettere="" arti="" palermo,="" v},\n="" "alcune="" ``3d+1\u0027\u0027",="" v,="" 21--52",="" "clifford="" pickover",="" "pickover1989",="" "@article{pickover1989,\n="" pickover},\n="" graphs}},\n="" "hailstone="" graphs",="" 21,="" 120--123",="" "margherita="" pierantoni="" vladan="" \u0106ur\u010di\u0107",="" "pierantonicurcic1996",="" "@article{pierantonicurcic1996,\n="" \\\u0027{c}ur\\v{c}i\\\u0027{c}},\n="" transformation="" mappings}},\n="" angew="" mech.},\n="" 2},\n="" 900.65373}\n}",="" mappings",="" "z.="" mech.,="" 76(suppl.="" 2),="" 641--642",="" "nicholas="" pippenger",="" "pippenger1993",="" "@article{pippenger1993,\n="" pippenger},\n="" analytic="" asymptotics}},\n="" anal.},\n="" 95d:26004}\n}",="" asymptotics",="" anal.,="" 24(5),="" 1361--1377",="" "susana="" puddu",="" "puddu1986",="" "@incollection{puddu1986,\n="" puddu},\n="" (spanish),="" 5$^{\\rm="" th}$}},\n="" american="" colloq.="" algebra="" --="" santiago="" 1985},\n="" soc.="" chile},\n="" 5$^m\u030a="" th$",="" "latin="" 1985,="" 199--200",="" "wei="" xing="" qiu",="" "qiu1997",="" "@article{qiu1997,\n="" qiu},\n="" $``3x+1\"$="" shanghai="" nat.="" ed.="" [shanghai="" "study="" 3(4),="" 462--464",="" "raymond="" "queneau1963",="" "@incollection{queneau1963,\n="" queneau},\n="" compl\\\u0027{e}mentaire="" sur="" sextine}},\n="" pataphysica},\n="" compl\u00e9mentaire="" sextine",="" "subsidia="" pataphysica,="" 79--80",="" "queneau1972",="" "@article{queneau1972,\n="" les="" suites="" $s$-additives}},\n="" 46="" \\#="" 1741}\n}",="" $s$-additives",="" 31-71",="" "lee="" ratzan",="" "ratzan1973",="" "@article{ratzan1973,\n="" ratzan},\n="" work="" palindromic="" 463--466",="" rawsthorne",="" "rawsthorne1985",="" "@article{rawsthorne1985,\n="" rawsthorne},\n="" iteration}},\n="" 86i:40001}\n}",="" "imitation="" iteration",="" 58,="" 172--176",="" te="" riele",="" "riele1983a",="" "@article{riele1983a,\n="" riele},\n="" 669}},\n="" archief="" voor="" wiskunde,="" iv},\n="" 669",="" "nieuw="" iv,="" 80",="" "riele1983b",="" "@article{riele1983b,\n="" number-theoretic="" 85e:11003}\n}",="" 345--360",="" roubaud",="" "roubaud1969",="" "@article{roubaud1969,\n="" roubaud},\n="" combinatoire="" pos\\`{e}="" par="" po\\\u0027{e}sie="" lyrique="" troubadours}},\n="" "un="" pos\u00e8="" po\u00e9sie="" troubadours",="" 5--12",="" "roubaud1993",="" "@incollection{roubaud1993,\n="" autrement="" dit="" quenine="" (encore)},="" {r\\\u0027{e}flexions="" historiques="" combinatoires="" $n$-ine,="" quenine}},\n="" biblioth\\\u0027{e}que="" oulipienne,="" num\\\u0027{e}ro="" 66},\n="" \\`{a}="" montreuil="" (seine-saint-denis)},\n="" month="{November}\n}&quot;," "$n$-ine,="" (encore),="" r\u00e9flexions="" quenine",="" "la="" biblioth\u00e9que="" num\u00e9ro="" 66",="" "olivier="" rozier",="" "rozier1990",="" "@article{rozier1990,\n="" rozier},\n="" l\u0027absence="" d\u0027une="" forme="" le="" probl\\\u0027{e}me="" "d\u00e9monstraton="" probl\u00e9me="" "https:="" www.probleme-syracuse.fr="" cargo="" singularit%e9_1_3.pdf",="" "singularit\u00e9,="" 1(3),="" 9--12",="" "rozier1991",="" "@article{rozier1991,\n="" syracuse:="" ``majorations\u0027\u0027="" elementaires="" "probleme="" 2(5),="" 8--11",="" "j\u00fcrgen="" sander",="" "sander1990",="" "@article{sander1990,\n="" sander},\n="" 1)$-conjecture}},\n="" 91m:11052}\n}",="" 1)$-conjecture",="" 241--248",="" "benedict="" seifert",="" "seifert1988",="" "@article{seifert1988,\n="" seifert},\n="" collatz-hasse="" (`syracuse\u0027)="" conjectures}},\n="" 89a:11031}\n}",="" conjectures",="" 68,="" 293--298",="" o.="" shallit="" wilson",="" "shallitwilson1991",="" "@article{shallitwilson1991,\n="" wilson},\n="" ``$3x+1$\u0027\u0027="" eatcs="" (european="" association="" theoretical="" science)},\n="" "bulletin="" science)(46),="" 182--185",="" shanks",="" "shanks1965",="" "@article{shanks1965,\n="" shanks},\n="" "comments="" 284--286",="" "1965"},="" "shanks1975",="" "@incollection{shanks1975,\n="" $\\#5$}},\n="" 1975,="" list},\n="" $#5$",="" "western="" list",="" "ray="" steiner",="" "steiner1978",="" "@inproceedings{steiner1978,\n="" steiner},\n="" 7-th="" 1977)},\n="" xx,="" utilitas="" math.:="" winnipeg,="" manitoba},\n="" 80g:10003}\n}",="" 1977),="" 553--559",="" "steiner1981a",="" "@article{steiner1981a,\n="" ``$qx+1$\u0027\u0027="" $q$="" odd}},\n="" 84m:10007a}\n}",="" odd",="" 19,="" 285--288",="" "steiner1981b",="" "@article{steiner1981b,\n="" odd="" ii}},\n="" 84m:10007b}\n}",="" ii",="" 293--296",="" "rosemarie="" stemmler",="" "stemmler1964",="" "@article{stemmler1964,\n="" stemmler},\n="" ideal="" waring="" exponents="" $401-200,000$}},\n="" \\#3019}\n}",="" $401-200,000$",="" 18,="" 144--146",="" "1964"},="" "kenneth="" "stolarsky1998",="" "@article{stolarsky1998,\n="" prelude="" 99k:11037}\n}",="" 451--461",="" "gy\u00f6rgy="" targ\u00f3nski",="" "targonski1991",="" "@article{targonski1991,\n="" targ\\\u0027{o}nski},\n="" about="" kw-orbits="" iterative="" roots}},\n="" roots",="" "aequationes="" 277--278",="" "riho="" terras",="" "terras1976",="" "@article{terras1976,\n="" terras},\n="" positive="" \\#27879}\n}",="" 241--252",="" "1976"},="" "terras1979",="" "@article{terras1979,\n="" density}},\n="" 80h:10066}\n}",="" 101--102",="" "bryan="" thwaites",="" "thwaites1985",="" "@article{thwaites1985,\n="" thwaites},\n="" inst.="" "my="" "bull.="" "thwaites1996",="" "@article{thwaites1996,\n="" conjectures,="" how="" win="" $\\pounds$="" 1000}},\n="" "two="" 1000",="" 80,="" 35--36",="" tijdeman",="" "tijdeman1972",="" "@article{tijdeman1972,\n="" tijdeman},\n="" mahler\u0027s="" 2$-problem}},\n="" kongelige="" norske="" videnskabers="" selskab="" skrifter="" 16},\n="" 227:="" 10025}\n}",="" 2$-problem",="" "det="" 16,="" trigg="" clayton="" dodge="" leroy="" meyers",="" "triggdodgemeyers1976",="" "@article{triggdodgemeyers1976,\n="" meyers},\n="" 133}},\n="" (now="" crux="" mathematicorum)},\n="" 133",="" "eureka="" mathematicorum),="" 2(7),="" 144--150",="" "toshio="" urata="" katsufumi="" suzuki",="" "uratasuzuki1996",="" "@article{uratasuzuki1996,\n="" suzuki},\n="" bulletin="" society="" education="" aichi="" education)="" [aichi="" kyoiku="" daigaku="" sugaku="" gakkai="" shi]},\n="" "collatz="" "epsilon="" shi],="" 123--131",="" suzuki="" hisao="" kajita",="" "uratasuzukikajita1997",="" "@article{uratasuzukikajita1997,\n="" kajita},\n="" 39,="" 121--129",="" "uratakajita1998",="" "@article{uratakajita1998,\n="" iii}},\n="" iii",="" 40,="" 57--65",="" urata",="" "urata1999",="" "@article{urata1999,\n="" urata},\n="" iv}},\n="" iv",="" 111-116",="" "giovanni="" venturini",="" "venturini1982",="" "@article{venturini1982,\n="" venturini},\n="" comportamento="" delle="" iterazioni="" alcune="" funzioni="" numeriche}},\n="" institute="" lombardo},\n="" 116},\n="" 87i:11015;="" 583.10009}\n}",="" "sul="" numeriche",="" "rend.="" lombardo,="" 116,="" 115--130",="" "venturini1989",="" "@article{venturini1989,\n="" math},\n="" 90i:11020}\n}",="" math,="" 344--347",="" "venturini1992",="" "@article{venturini1992,\n="" coefficients="" (generalization="" 93b:11102}\n}",="" "iterates="" "studies="" 86,="" 185--218",="" "venturini1997",="" "@article{venturini1997,\n="" 98j:11013}\n}",="" 295--305",="" "carlo="" viola",="" "viola1983",="" "@article{viola1983,\n="" viola},\n="" aritmetica="" (a="" arithmetic)}},\n="" 85j:11024}\n}",="" arithmetic)",="" "archimede,="" 37--39",="" "stanley="" wagon",="" "wagon1985",="" "@article{wagon1985,\n="" wagon},\n="" 86d:11103,="" 566.10008}\n}",="" 7(1),="" 72-76",="" "shi="" tie="" wang",="" "wang1988",="" "@article{wang1988,\n="" wang},\n="" researches="" over="" recursive="" xiamen="" [xiamen="" 89g:68057,="" 0689.68010}\n}",="" 27(1),="" 8--12",="" "blanton="" wiggin",="" "wiggin1988",="" "@article{wiggin1988,\n="" wiggin},\n="" family}},\n="" "wondrous="" family",="" 20,="" 52--56",="" "g\u00fcnther="" wirsching",="" "wirsching1993",="" "@article{wirsching1993,\n="" wirsching},\n="" improved="" predecessor="" 94e:11018}\n}",="" 63,="" 205--210",="" "wirsching1994",="" "@article{wirsching1994,\n="" chain="" backward="" roumaine="" pures="" 96d:11027}\n}",="" "rev.="" 915--926",="" "wirsching1996",="" "@article{wirsching1996,\n="" structure="" 97b:11029}\n}",="" 148,="" 265--286",="" "wirsching1997",="" "@inproceedings{wirsching1997,\n="" densities="" uniform="" $\\zz_3^\\ast$}},\n="" 883.11010}\n}",="" "$3n+1$="" $\\zz_3^*$",="" 230-240",="" "wirsching1998a",="" "@incollection{wirsching1998a,\n="" generated="" 1681},\n="" berlin},\n="" 99g:11027}\n}",="" "lecture="" 1681",="" "wirsching1998b",="" "@article{wirsching1998b,\n="" constrained="" urns="" cantor-like="" f\\\"ur="" analysis="" u.="" andwendungen},\n="" 2000b:05007}\n}",="" "balls="" andwendungen,="" 17,="" 979-996",="" "wu,="" jia="" bang",="" "wu1992",="" "@article{wu1992,\n="" bang},\n="" tendency="" proportion="" \n="" huazhong="" (central="" china)="" technol.="" [hua="" zhong="" gong="" yuan]},\n="" 94b:11024,="" 766.11013}\n}",="" \nthe="" yuan],="" 171--174",="" "wu1993",="" "@article{wu1993,\n="" applicata,="" suppl.="" [ying="" yung="" shu="" hs\\\"{u}eh]},\n="" 277="" 568}\n}",="" \ncollatz="" "mathematica="" hs\u00fceh],="" 150--153",="" "wu1995",="" "@article{wu1995,\n="" monotonicity="" pairs="" coalescence="" collatz\n="" tech.="" 403="" 509}\n}",="" collatz\nproblem",="" 170--172",="" "masaji="" yamada",="" "yamada1980",="" "@article{yamada1980,\n="" yamada},\n="" convergence="" proof="" integral="" 82d:10026}\n}",="" 231--242",="" "yang,="" zhao="" hua",="" "yang1998",="" "@article{yang1998,\n="" hua},\n="" equivalent="" south="" china="" natur.="" [="" hua="" nan="" 2001f:11040}\n}",="" \n[="" 66--68",="" zhi="" zhang,="" zhongfu",="" "yangzhang1988",="" "@article{yangzhang1988,\n="" zhongfu},\n="" black="" hole="" magazine="" [zi="" za="" (shanghai)]},\n="" "kakutani="" "nature="" (shanghai)],="" 453-456",="" "zhang,="" cheng="" yu",="" "zhang1990",="" "@article{zhang1990,\n="" yu},\n="" kakutani\u0027s="" 13,="" 267--269",="" zhongfu="" yang,="" shiming",="" "zhangyang1998",="" "@article{zhangyang1998,\n="" shiming},\n="" mapping="" [shu="" chuan="" bo="" ji="" kan]},\n="" "problems="" "mathmedia="" kan],="" 22,="" 76--88",="" "zhou,="" zhong",="" "zhou1995",="" "@article{zhou1995,\n="" zhong},\n="" discussion="" 97h:11021}\n}",="" 103--105",="" "zhou1997",="" "@article{zhou1997,\n="" recurrence="" ed.\n="" ed.\n[hua="" 7--8",="" "ethan="" akin",="" "akin2004",="" "@incollection{akin2004,\n="" akin},\n="" hard?}},\n="" hill="" ergodic="" workshops},\n="" 2005f:37031}\n}",="" "why="" hard?",="" "chapel="" workshops,="" 356,="" 1--20",="" "2004"},="" "jo\u00e3o="" alves="" m\u00e1rio="" graca="" sousa="" dias="" jos\u00e9="" ramos",="" "alvesgracadiasramos2005",="" "@article{alvesgracadiasramos2005,\n="" m\\\u0027{a}rio="" jos\\\u0027{e}="" ramos},\n="" collatz}},\n="" alg.="" "lin.="" 394,="" 277--289",="" "2005"},="" "tewodrus="" amdeberhan="" dante="" manna="" victor="" moll",="" "amdeberhanmannamoll2008",="" "@article{amdeberhanmannamoll2008,\n="" moll},\n="" $2$-adic="" valuation="" sequence="" integral}},\n="" 2009k:11194}\n}",="" integral",="" 115(8),="" 1474--1486",="" "2008"},="" andaloro",="" "andaloro2000",="" "@article{andaloro2000,\n="" andaloro},\n="" total="" times="" 2000m:11024}\n}",="" 73--78",="" "2000"},="" "andaloro2002",="" "@article{andaloro2002,\n="" directed="" 2003a:11018}\n}",="" 43--54",="" "2002"},="" manfred="" kudlek="" radu="" niculescu",="" "andreikudlekniculescu2000",="" "@article{andreikudlekniculescu2000,\n="" niculescu},\n="" 2002c:11022}\n}",="" 37,="" 145--160",="" wei-ngan="" chin="" huu="" hai="" nguyen",="" "andreichinnguyen2007",="" "@unpublished{andreichinnguyen2007,\n="" nguyen},\n="" view="" "2007"},="" "applegatelagarias2003",="" "@article{applegatelagarias2003,\n="" iterates}},\n="" 2004a:11016}\n}",="" "lower="" iterates",="" 72,="" 1035--1049",="" "2003"},="" "applegatelagarias2006",="" "@article{applegatelagarias2006,\n="" semigroup}},\n="" 2006k:11037}\n}",="" semigroup",="" 177,="" 146--159",="" "2006"},="" "belagamignotte2000",="" "@unpublished{belagamignotte2000,\n="" systems="" extensions="" 2000-18,="" pages},\n="" irma-acf",="" "belaga2003",="" "@article{belaga2003,\n="" polynomial="" upper="" perigees="" $(3x+d)$-cycles="" oddlength}},\n="" 2003m:11120}\n}",="" "effective="" oddlength",="" 106(2),="" 197--206",="" "belagamignotte2006a",="" "@inproceedings{belagamignotte2006a,\n="" cautiously="" into="" wilderness:="" algorithmically,="" theoretically,="" randomly}},\n="" colloquium="" "walking="" randomly",="" "fourth="" ag,="" 249--260",="" "belagamignotte2006b",="" "@unpublished{belagamignotte2006b,\n="" generalizations:="" experimental="" data.="" table="" 1.="" "belagamignotte2006c",="" "@unpublished{belagamignotte2006c,\n="" 2.="" factorization="" $2^l-3^k$}},\n="" $2^l-3^k$",="" "vitaly="" bergelson="" michal="" misiurewicz="" samuel="" senti",="" "bergelsonmisiurewiczsenti2006",="" "@article{bergelsonmisiurewiczsenti2006,\n="" senti},\n="" actions="" free="" semigroup="" (2008f:37019)}\n}",="" "affine="" "ergodic="" 1285--1305",="" "konstantin="" borovkov="" dietmar="" pfeifer",="" "borovkovpfeifer2000",="" "@article{borovkovpfeifer2000,\n="" pfeifer},\n="" via="" model}},\n="" probability="" 967="" 765}\n}",="" "estimates="" model",="" "theory="" 45(2),="" 300--310",="" "barry="" brent",="" "brent2002",="" "@unpublished{brent2002,\n="" brent},\n="" fixed="" denominator}},\n="" arxiv="" math.ds="" 0204170}\n}",="" "$3x+1$="" denominator",="" brox",="" "brox2000",="" "@article{brox2000,\n="" brox},\n="" few="" descents}},\n="" 2001a:11032}\n}",="" descents",="" 181--188",="" bruckman",="" "bruckman2008",="" "@article{bruckman2008,\n="" bruckman},\n="" mathematical="" technology},\n="" 39},="" 4="" (2008),="" 567.="" 2009d:11043b}\n}",="" technology,="" 39(3),="" 403--407",="" "cadogan2000",="" "@article{cadogan2000,\n="" towards="" solution}},\n="" 2005g:11032}\n}",="" solution",="" 2",="" "cadogan2003",="" "@article{cadogan2003,\n="" 2004a:11017}\n}",="" "trajectories="" 177--187",="" "cadogan2006",="" "@article{cadogan2006,\n="" solution="" comp.="" 1--11",="" "m\u00f3nica="" pilar="" canales="" chac\u00f3n="" vielhaber",="" "canaleschaconvielhaber2004",="" "@article{canaleschaconvielhaber2004,\n="" chac\\\u0027{o}n="" vielhaber},\n="" complexity="" isometries="" their="" shift="" commutators}},\n="" complexity,="" 57},\n="" "structural="" commutators",="" 57,="" 24",="" "mark="" "chamberland2003",="" "@article{chamberland2003,\n="" actualizachio="" $3x+1$}},\n="" societat="" catalana},\n="" 2004i:11019}\n}",="" $3x+1$",="" "butletti="" catalana,="" 19--45",="" "clark2006",="" "@article{clark2006,\n="" arbitrary="" equations},\n="" "periodic="" equations,="" 2006,="" 1--9",="" "lisbeth="" mol",="" "demol2008",="" "@article{demol2008,\n="" mol},\n="" "tag="" 390,="" 92--101",="" "diego="" domenici",="" "domenici2009",="" "@article{domenici2009,\n="" domenici},\n="" stat.},\n="" 2524878}\n}",="" "inter.="" stat.,="" 14,="" 97--107",="" "2009"},="" "jean-guillaume="" dumas",="" "dumas2008",="" "@article{dumas2008,\n="" dumas},\n="" quenines="" leur="" repr\\\u0027{e}sentation="" spirale}},\n="" "caract\u00e9risation="" repr\u00e9sentation="" spirale",="" 184,="" 9--23",="" dumont="" clifford="" reiter",="" "dumontreiter2001",="" "@article{dumontreiter2001,\n="" reiter},\n="" 3x+1="" graphics},\n="" "visualizing="" graphics,="" 883--898",="" "2001"},="" "dumontreiter2003",="" "@article{dumontreiter2003,\n="" $3$-power="" a:="" analysis},\n="" "real="" analysis,="" 875--893",="" "hershel="" farkas",="" "farkas2005",="" "@incollection{farkas2005,\n="" farkas},\n="" multiplicative="" semigroups}},\n="" spectral="" groups="" dynamics:="" proceedings="" memory="" robert="" brooks},\n="" providence},\n="" 2006g:11052}\n}",="" "variants="" semigroups",="" "geometry,="" brooks,="" 387,="" 121--127",="" gluck="" taylor",="" "glucktaylor2002",="" "@article{glucktaylor2002,\n="" taylor},\n="" statistic="" 2002k:11031}\n}",="" 130,="" 1293--1301",="" goodwin",="" "goodwin2003",="" "@article{goodwin2003,\n="" goodwin},\n="" stiintifice="" ale="" universitatii="" ``al.="" cuza\u0027\u0027="" din="" lasi="" noua.="" informatica="" (romanian)},\n="" (2005b:11025)}\n}",="" "annalele="" (romanian),="" xiii,="" 1--16",="" "he,="" sheng="" "he2003",="" "@article{he2003,\n="" problem\u0027s="" simplifying="" property="" $\\{t(n)\\}$$(n="" \\in="" \\nn)$}},\n="" scieniarum="" naturalium="" universitatis="" neimonggol="" [nei="" menggu="" xue]},\n="" $\\t(n)\\$$(n="" \u0131n="" \\nn)$",="" xue]",="" hicks="" gary="" mullen="" joseph="" yucas="" ryan="" zavislak",="" "hicksmullenyucaszavislak2008",="" "@article{hicksmullenyucaszavislak2008,\n="" zavislak},\n="" analogue="" problem?}},\n="" problem?",="" 115,="" 615--622",="" "wernt="" hotzel",="" "hotzel2003",="" "@article{hotzel2003,\n="" hotzel},\n="" $3n+1$-problem}},\n="" univsit\\\"{a}t="" 1066.11501}\n}",="" "beit\u00e4ge="" $3n+1$-problem",="" "dissertation:="" univsit\u00e4t="" hamburg",="" "huang,="" guo="" lin="" wu,="" "huangwu2000",="" "@article{huangwu2000,\n="" correspondence="" between="" south-central="" nationalities,="" [zhong="" min="" "one-to-one="" 59--61",="" "yasuaki="" ito="" koji="" nakano",="" "itonakano2009",="" "@inproceedings{itonakano2009,\n="" nakano},\n="" hardware-software="" cooperative="" exhaustive="" verification="" symp.="" parallel="" distributed="" processing="" 63--70",="" "ke,="" wei",="" "ke2001",="" "@article{ke2001,\n="" wei},\n="" jinan="" (science="" technology)="" [jinan="" "generalization="" ban]",="" yong-sheng",="" "ke2005",="" "@article{ke2005,\n="" yong-sheng},\n="" hypothesis="" $\"3x+1\"$}},\n="" tianjin="" vocational="" [teacher\u0027s="" college]="" [tianjin="" ye="" fax="" yuan="" bao]},\n="" $\"3x+1\"$",="" bao]",="" "immo="" kerner",="" "kerner2000",="" "@article{kerner2000,\n="" kerner},\n="" collatz-ulam-kombination="" cuk}},\n="" informatik-berichte="" 24},\n="" "die="" cuk",="" "rostocker="" kohl",="" "kohl2005",="" "@phdthesis{kohl2005,\n="" kohl},\n="" gruppen}},\n="" school="{Universit\\\&quot;{a}t" stuttgart},\n="" "restklassenweise="" gruppen",="" "phdthesis",="" deposit.ddb.de="" dokserv?idn="977164071&quot;," "kohl2007",="" "@article{kohl2007,\n="" residue="" class-wise="" 2008g:11041}\n}",="" "wildness="" 322--328",="" "kohl2008a",="" "@article{kohl2008a,\n="" conjugates="" 2008m:="" 11055}\n}",="" "int.="" 4(1),="" 117--120",="" "kohl2008b",="" "@article{kohl2008b,\n="" infinite="" permutation="" groups}},\n="" symbolic="" 2009e:20003}\n}",="" "algorithms="" groups",="" 43(8),="" 545--581",="" "kohl2010",="" "@article{kohl2010,\n="" group="" involutions="" interchanging="" classes="" z.},\n="" z.,="" 264(4),="" 927--938",="" "2010"},="" "pavlos="" konstadinidis",="" "konstadinidis2006",="" "@article{konstadinidis2006,\n="" konstadinidis},\n="" 2007c:11029}\n}",="" 122,="" 35--44",="" "alex="" kontorovich="" steven="" miller",="" "kontorovichmiller2005",="" "@article{kontorovichmiller2005,\n="" miller},\n="" law,="" values="" $l$-functions,="" 2007c:11085}\n}",="" "benford\u0027s="" 120,="" 269--297",="" yakov="" sinai",="" "kontorovichsinai2002",="" "@article{kontorovichsinai2002,\n="" sinai},\n="" $(d,="" g,="" h)$-maps}},\n="" braz.="" (n.s.)},\n="" 2003k:11034}\n}",="" "structure="" h)$-maps",="" (n.s.),="" 33,="" 213--224",="" "benjamin="" kraft="" kennan="" monks",="" "kraftmonks2010",="" "@article{kraftmonks2010,\n="" monks},\n="" conjugacies="" induced="" endomorphisms="" system}},\n="" 2011e:37027}\n}",="" system",="" 310(13-14),="" 1875--1883",="" "krasikovlagarias2003",="" "@article{krasikovlagarias2003,\n="" using="" 2004i:11020}\n}",="" "bounds="" 109(3),="" 237--258",="" "stuart="" kurtz="" janos="" simon",="" "kurtzsimon2007",="" "@incollection{kurtzsimon2007,\n="" simon},\n="" undecidability="" models="" 4-th="" international="" tamc="" 2007,="" shanghai,="" china,="" may="" 22-25,="" 2007},\n="" 2374341}\n}",="" 542--553",="" "lagarias2003",="" annotated="" bibliography="" (1963--1999)",="" "lagarias2006",="" "wild="" wooley="" 113,="" 97--108",="" neil="" sloane",="" "lagariassloane2004",="" "@article{lagariassloane2004,\n="" sloane},\n="" squaring}},\n="" 2005c:11098}\n}",="" "approximate="" squaring",="" 113--128",="" soundararajan",="" "lagariassoundararajan2006",="" "@article{lagariassoundararajan2006,\n="" soundararajan},\n="" law="" 2007h:37007}\n}",="" 289--303",="" "eero="" lehtonen",="" "lehtonen2008",="" "@article{lehtonen2008,\n="" lehtonen},\n="" versions="" 2009k:68092}\n}",="" "theor.="" 407,="" 596--600",="" "dan="" levy",="" "levy2004",="" "@article{levy2004,\n="" levy},\n="" surjectivity="" 2005f:11036}\n}",="" "injectivity="" 285,="" 190--199",="" "li,="" xiao="" chun",="" "li2002",="" "@article{li2002,\n="" chun},\n="" technology="" (natural="" "compressive="" science),="" 30(2)",="" "li2003",="" "@article{li2003,\n="" 2025640}\n}",="" "contractible="" 31(7),="" 115--116",="" "li2004",="" "@article{li2004,\n="" super="" contraction="" "same-flowing="" 32(10),="" 30--32",="" "li2005",="" "@article{li2005,\n="" 2209315}\n}",="" "necessary="" 33(11),="" 102--103",="" "li2006",="" "@article{li2006,\n="" 2287431}\n}",="" 34(8),="" 115--117",="" chun="" liang,="" you="" min",="" "liliang2002",="" "@article{liliang2002,\n="" min},\n="" properties}},\n="" air="" force="" radar="" academy},\n="" "research="" properties",="" academy(3)",="" liu,="" jun",="" "liliu2006",="" "@article{liliu2006,\n="" jun},\n="" $3n+3k$="" 2287654}\n}",="" "equivalence="" 34(7),="" 120-121",="" "liwu2004",="" "@article{liwu2004,\n="" 2121229}\n}",="" 100--101",="" "l\u00f3pez,="" josefine="" stoll,="" peter",="" "lopezstoll2009",="" "@article{lopezstoll2009,\n="" peter},\n="" sturmian="" word}},\n="" 2506145}\n}",="" word",="" "integers,="" 9,="" 141--162",="" "luca,="" florian",="" "luca2005",="" "@article{luca2005,\n="" florian},\n="" 2006e:11034}\n}",="" "sut="" 41(1),="" 31--41",="" "margenstern,="" maurice",="" "margenstern2000",="" "@article{margenstern2000,\n="" maurice},\n="" decidability="" undecidability:="" survey}},\n="" 2001g:03079}\n}",="" "frontier="" survey",="" 231,="" 217--251",="" "matthews,="" r.",="" "matthews2005",="" "@article{matthews2005,\n="" r.},\n="" 23pp.,="" dated="" oct.="" 2005,="" downloadable="" as="" pdf="" from:="" http:="" www.maths.uq.edu.au="" $\\sim$krm="" interests.html}\n}",="" "metzger,="" karl="" heinz",="" "metzger2000",="" "@article{metzger2000,\n="" heinz},\n="" ii:="" konstruktion="" zahlenbaums}},\n="" zahlenbaums",="" 27--32",="" "metzger2003",="" "@article{metzger2003,\n="" $(3n+1)$-algorithmus,="" iii:="" gesetzm\\\"{a}ssigkeiten="" ablauffolgen}},\n="" gesetzm\u00e4ssigkeiten="" ablauffolgen",="" 45(1),="" 25--32",="" "michel,="" pascal",="" "michel2004",="" "@article{michel2004,\n="" pascal},\n="" turing="" machines="" busy="" competition}},\n="" 2005e:68049,="" 1071.68025}\n}",="" competition",="" 326,="" "mimuro,="" tomoaki",="" "mimuro2001",="" "@article{mimuro2001,\n="" tomoaki},\n="" 2002j:11018}\n}",="" 37(2),="" 79--89",="" "misiurewicz,="" rodriguez,="" ana",="" "misiurewiczrodriguez2005",="" "@article{misiurewiczrodriguez2005,\n="" ana},\n="" 2005j:37011}\n}",="" 133,="" 1109--1118",="" "monks,="" g.",="" "monks2002",="" "@article{monks2002,\n="" g.},\n="" minus="" $+$}},\n="" theor.="" 2203f:11030}\n}",="" $+$",="" 47--53",="" yazinski,="" jonathan",="" "monksyazinski2004",="" "@article{monksyazinski2004,\n="" jonathan},\n="" autoconjugacy="" (2004m:11030)}\n}",="" 275(1),="" 219--236",="" m.",="" "monks2006",="" "@article{monks2006,\n="" m.},\n="" sufficiency="" progressions="" (2007c:11030)}\n}",="" 134(10),="" 2861--2872",="" maria",="" "monks2009",="" "@article{monks2009,\n="" maria},\n="" derivatives,="" applications}},\n="" 2010i:37217}\n}",="" "endomorphisms="" applications",="" 309,="" 5196--5205",="" "m\u00fcller,="" helmut",="" "muller2009",="" "@article{muller2009,\n="" helmut},\n="" periodenl\\\"{a}ngen="" vermutungen="" von="" periodenl\u00e4ngen="" "mitt.="" 121--130",="" "tomas="" "silva2004",="" "@misc{silva2004,\n="" tos@ieeta.pt}\n}",="" "computational="" www.ieeta.pt="" ~tos="" ",="" "reiko="" ohira="" michinori="" yamashita",="" "ohirayamashita2004",="" "@article{ohirayamashita2004,\n="" yamashita},\n="" literacy="" [pasocon="" literacy]="" (personal="" users="" application="" association]},\n="" "pc="" association],="" 31(4),="" 16--21",="" "ohirayamashita2004a",="" "@article{ohirayamashita2004a,\n="" $p$-collatz="" association)},\n="" association),="" 61--64",="" "pan,="" hong-liang",="" "pan2000",="" "@article{pan2000,\n="" hong-liang},\n="" suzhou="" [suzhou="" "notes="" 16(4),="" 13--16",="" "joseph="" pe",="" "pe2004",="" "@article{pe2004,\n="" pe},\n="" fractal}},\n="" fractal",="" 431--435",="" "yuval="" peres,="" k\u00e1roly="" simon="" boris="" solomak",="" "peressimonsolomak2006",="" "@article{peressimonsolomak2006,\n="" k\\\u0027{a}roly="" solomak},\n="" continuity="" overlaps}},\n="" (2007m:37053)}\n}",="" "absolute="" overlaps",="" 74(2),="" 739--756",="" "qu,="" jing-hua",="" "qu2002",="" "@article{qu2002,\n="" jing-hua},\n="" necessary="" condition}},\n="" sangqiu="" teacher\u0027s="" college},\n="" condition",="" college(5)",="" "eric="" roosendaal",="" "roosendaal2004",="" "@misc{roosendaal2004,\n="" roosendaal},\n="" www.ericr.nl="" index.html",="" "jean-louis="" rouet="" marc="" feix",="" "rouetfeix2002",="" "@article{rouetfeix2002,\n="" feix},\n="" problem.="" building="" 2003i:11035}\n}",="" 107(5="" 6),="" 1283--1298",="" "giuseppe="" scollo",="" "scollo2005",="" "@article{scollo2005,\n="" scollo},\n="" informaticae},\n="" 2008g:68060,="" 1102.68051}\n}",="" "$\u00f8mega$-rewriting="" "fundamenta="" informaticae,="" 401--412",="" "douglas="" shaw",="" "shaw2006",="" "@article{shaw2006,\n="" shaw},\n="" 44(3),="" 194-201",="" "shi,="" qian="" li",="" "shi2005a",="" "@article{shi2005a,\n="" li},\n="" yangzte="" science.="" [changjiang="" daxue="" xuebao.="" 2241924}\n}",="" "properties="" 191--192",="" "shi2005b",="" "@article{shi2005b,\n="" 2241263}\n}",="" 2(10),="" 287--289",="" simons",="" "simons2005",="" "@article{simons2005,\n="" simons},\n="" non-existence="" $2$-cycles="" 1565--1572",="" "simons2007",="" "@article{simons2007,\n="" (inductive)="" 10-17",="" "simons2008",="" "@article{simons2008,\n="" (non)-existence="" $m$-cycles="" 2008m:11056}\n}",="" 131(3),="" 217--254",="" "simons2008a",="" "@article{simons2008a,\n="" 2438845}\n}",="" "exotic="" 134,="" 201--209",="" "simons2008b",="" "@unpublished{simons2008b,\n="" conditions="" "post-transcendence="" "simons2008c",="" "@unpublished{simons2008c,\n="" isomorphism="" farkas="" simons="" benne="" weger",="" "simonsweger2004",="" "@article{simonsweger2004,\n="" weger},\n="" en="" het="" syracuseprobleem="" [mersenne="" problem]}},\n="" arch.="" wiskd.},\n="" "mersenne="" problem]",="" wiskd.,="" 5(3),="" 218--220",="" "simonsweger2005",="" "@article{simonsweger2005,\n="" 2005h:11049}\n}",="" 117,="" 51--70",="" "yakov="" "sinai2003a",="" "@article{sinai2003a,\n="" $(3x+1)$-problem}},\n="" 2004d:37007}\n}",="" $(3x+1)$-problem",="" "comm.="" 56(7),="" 1016--1028",="" "sinai2003b",="" "@article{sinai2003b,\n="" $(3x+1)$="" novikov="" 65-th="" birthday="" issue.="" mr2058805="" (2005a:11026)}\n}",="" "uniform="" "moscow="" 1429--1440",="" "sinai2004",="" "@article{sinai2004,\n="" distribution}},\n="" dyson="" mr2104890="" (2005g:37009)}\n}",="" distribution",="" "commun.="" 252,="" 581--588",="" "matti="" sinisalo",="" "sinisalo2003",="" "@article{sinisalo2003,\n="" sinisalo},\n="" minimal="" lengths="" oulu,="" finland}\n}",="" "alain="" slakmon="" luc="" macot",="" "slakmonmacot2006",="" "@article{slakmonmacot2006,\n="" macot},\n="" almost="" letters},\n="" "statistics="" letters,="" 76(15),="" 1625--1630",="" "bart="" snapp="" matt="" tracy",="" "snapptracy2008",="" "@article{snapptracy2008,\n="" tracy},\n="" analogues}},\n="" 08.4.7,="" 10pp.="" (mr="" 2009i:11144)}\n}",="" analogues",="" sequences,="" 11",="" "tang,="" ren="" xian",="" "tang2006",="" "@article{tang2006,\n="" xian},\n="" recursion="" relation="" (chinese)}},\n="" hunan="" engineering},\n="" (chinese)",="" engineering(5)",="" "urata2002",="" "@article{urata2002,\n="" 51,="" "urata2003",="" "@article{urata2003,\n="" 5--11",="" "urata2007",="" "@article{urata2007,\n="" booklet,="" select="" 60="" "collatz\u0027s="" kazuhiro="" hamada",="" "uratahamada2005",="" "@article{uratahamada2005,\n="" hamada},\n="" "positive="" 54,="" 1--10",="" "tanguy="" urvoy",="" "urvoy2000",="" "@incollection{urvoy2000,\n="" urvoy},\n="" foundations="" 2000="" (bratislava)},\n="" 2002d:68083}\n}",="" "regularity="" (bratislava),="" 680--689",="" "jean="" paul="" bendegem",="" "vanbendegem2005",="" "@article{vanbendegem2005,\n="" bendegem},\n="" conjecture:="" case="" study="" solving}},\n="" logical="" philosophy},\n="" 2163301}\n}",="" solving",="" "logic="" philosophy,="" 14(1),="" 7--23",="" "stanislav="" volkov",="" "volkov2006",="" "@article{volkov2006,\n="" volkov},\n="" model="" $5k+1$="" processes="" 662--674",="" "wang,="" nian-liang",="" "wang2002",="" "@article{wang2002,\n="" nian-liang},\n="" way="" prove="" shangluo="" university},\n="" university(2)",="" xing-yuan;="" wang,="" qiao="" long;="" fen,="" yue="" ping;="" xu,="" wen",="" "wangwangfenxu2003",="" "@article{wangwangfenxu2003,\n="" wen},\n="" points="" axis="" fractal="" images}},\n="" image="" images",="" graphics(1)",="" "xing-yuan="" wang="" xue-jing="" "wangyu2007",="" "@article{wangyu2007,\n="" "applied="" 188(1),="" 234--243",="" xing-yuan="" yu,="" xue-jing",="" "wangyu2008",="" "@article{wangyu2008,\n="" xue-jing},\n="" determined="" (english="" edition)},\n="" 2009i:37020}\n}",="" "progress="" edition),="" 217--223",="" "wirsching2000",="" "@article{wirsching2000,\n="" 2002h:11022}\n}",="" "elem.="" 142--155",="" "wirsching,="" g\u00fcnther="" j.",="" "wirsching2001",="" "@incollection{wirsching2001,\n="" g\\\"{u}nther="" differential="" equation="" \\$3n="" 1\\$="" (lisbon="" 1999)},\n="" 2002b:11035}\n}",="" "topics="" 1999),="" 369--378",="" "wirsching2003",="" "@article{wirsching2003,\n="" \\$3n+1\\$="" cont.="" dynam.="" syst.},\n="" 2004f:39028}\n}",="" "disc.="" syst.,="" 771--787",="" bang="" huang,="" lin",="" "wuhuang2001",="" "@article{wuhuang2001,\n="" lin},\n="" traditional="" elongate="" nationalities.="" ed.},\n="" ed.,="" 21(4)",="" hao,="" shen="" "wuhao2003",="" "@article{wuhao2003,\n="" equality="" adequate="" coefficient="" \\$n\\$="" 2000420}\n}",="" 31(5),="" 114--116",="" "wuhuang2001a",="" "@article{wuhuang2001a,\n="" applicata="" (wuhan)},\n="" 1885838,="" 1002.11023}\n}",="" "family="" (wuhan),="" 21--25",="" "wuhuang2001b",="" "@article{wuhuang2001b,\n="" tech.},\n="" 1887558}\n}",="" "elongate="" tech.,="" 29(2),="" 112--114",="" wen="" quan",="" "wu2003",="" "@article{wu2003,\n="" quan},\n="" proposition="" aba="" college(3)",="" "xia,="" ye",="" "xia2003",="" "@article{xia2003,\n="" ye},\n="" thoughts="" \\$3x+1\\$="" shuxue="" (chu="" ban)},\n="" "zhongxue="" ban)(6)",="" "xie,="" jiu="" guo",="" "xie2006",="" "@article{xie2006,\n="" guo},\n="" interesting="" technology(11)",="" "yamashita,="" michinori",="" "yamashita2002",="" "@article{yamashita2002,\n="" michinori},\n="" \\$(e,k)\\$-perspective}},\n="" literacy},\n="" "\\$3x+1\\$="" \\$(e,k)\\$-perspective",="" literacy,="" 27(10),="" 22--27",="" "yamashita2006",="" "@article{yamashita2006,\n="" \\$3x="" \\pm="" \u00b1="" literacy",="" "zarnowski,="" roger="" e.",="" "zarnowski2001",="" "@article{zarnowski2001,\n="" e.},\n="" inverses="" multilinear="" 2003b:15011}\n}",="" "generalized="" "zarnowski2008",="" "@article{zarnowski2008,\n="" congruence="" 2010c:11037}\n}",="" 47(2),="" 115--125",="" yun="" cai="" zhou,="" bao="" lan",="" "zhouzhou2007",="" "@article{zhouzhou2007,\n="" lan},\n="" yangtze="" science(1),="" 24--26",="" "tao,="" terence",="" "10.1017="" fmp.2022.8",="" "tao2022",="" "@article{tao2022,\n="" all="" attain="" bounded="" values},\n="" doi="{10.1017/fmp.2022.8},\n" pi},\n="" terence},\n="" "almost="" values",="" "forum="" pi,="" e12",="" "2022"},="" "here="" we="" investigate="" (sequences="" problem).="" especially="" interested="" methods="" sequence.="" first="" section,="" show="" mostly="" arithmetics.="" see="" become="" obvious="" than="" usual="" method="" second="" section="" this="" deal="" known="" can="" use="" ocs="" results.="" give="" andaloro="" i\u0327teand2="" true:="" $n$="" holds="" congruent="" $1$="" modulo="" $2^n$="" then="" true.",="" "jose="" capco",="" "capco2015",="" "@techreport{capco2015,\n="" representations}},\n="" capco},\n="" stra\u00dfe="" 69,="" 4040="" linz,="" austria},\n="" issn="{2791-4267" (online)},\n="" abstract="{Here" \\cite{and2}="" true.},\n="" howpublished="{RISC" type="{RISC" series},\n="" computation="" (risc),="" johannes="" kepler="" linz}\n}",="" "odd="" representations",="" "2015"},="" "michel2014",="" "@techreport{michel2014,\n="" machines}},\n="" eprint="{1409.7322},\n" archiveprefix="{arXiv},\n" primaryclass="{math.LO}\n}&quot;," "simulation="" machines",="" arxiv.org="" abs="" 1409.7322",="" "2014"},="" "jarkko="" kari="" johan="" kopra",="" "10.1051="" ita="" 2017014",="" "karikopra2017",="" "@article{karikopra2017,\n="" automata="" p="" q},\n="" kopra},\n="" informatics="" timestamp="{Thu," 04="" jun="" 2020="" 19:44:46="" +0200},\n="" biburl="{https://dblp.org/rec/journals/ita/KariK17.bib},\n" bibsource="{dblp" bibliography,="" https:="" dblp.org}\n}",="" "cellular="" q",="" doi.org="" 10.1051="" "rairo="" 51(4),="" 191--204",="" "2017"},="" "we="" discuss="" one-dimensional="" reversible="" f\u00d73="" that="" multiply="" 3="" respectively,="" base="" 6.="" they="" non-uniform="" 0-finite="" configurations="" contain="" factors="" words="" state="" alphabet="" \\0,1,\u0142dots,5\\.="" multiplication="" conjectured="" even="" orbit="" dense="" product="" topology.="" mahler="" z-numbers="" has="" interpretation="" terms="" automaton="" also="" remark="" multiplies="" slightly="" modified="" simulate="" function.="" several="" pattern="" generation="" automata.",="" "kari,="" jarkko",="" "kari2012",="" "@inproceedings{kari2012,\n="" jarkko},\n="" hsu-chun\n="" ibarra,="" oscar="" h.},\n="" automata,="" berlin="" heidelberg},\n="" f{\\texttimes}3="" {\\{}0,1,{\\ldots},5{\\}}.="" automata.},\n="" "developments="" 40--49",="" "2012"},="" "rozier2022",="" "@misc{rozier2022,\n="" bound="" elements="" {c}ollatz="" cycle},\n="" stack="" exchange},\n="" "upper="" cycle",="" math.stackexchange.com="" 4526766="" 243281",="" "2022"}]"="" style="display: none;"></div>
+
+---
+
+_**Assistant**_
+
+
+
+---
+
+I can see the issue! The problem is that when JSON is embedded in HTML data attributes, the quotes need to be properly escaped for HTML, but the `|safe` filter is bypassing that escaping. This is causing malformed JSON.
+
+Let me fix this by using a script tag instead of a data attribute, which is cleaner and avoids HTML escaping issues:
+
+---
+
+```diff
+  
+  {% block content %}
+- <!-- Hidden data container for Alpine.js -->
+- <div id="papers-data" data-papers="{{ papers|tojson|safe }}" style="display: none;"></div>
++ <!-- Papers data in script tag to avoid HTML escaping issues -->
++ <script type="application/json" id="papers-data">{{ papers|tojson|safe }}</script>
+  
+  <div x-data="paperManager()">
+```
+
+```diff
+  
+              init() {
+-                 // Load papers data from hidden div
+-                 const papersDataDiv = document.getElementById('papers-data');
++                 // Load papers data from script tag
++                 const papersScript = document.getElementById('papers-data');
+                  try {
+-                     this.allPapers = JSON.parse(papersDataDiv.dataset.papers);
++                     this.allPapers = JSON.parse(papersScript.textContent);
+                  } catch (e) {
+                      console.error('Failed to parse papers data:', e);
+```
+
+---
+
+Now let's compile and test this fix:
+
+---
+
+```bash
+python3 compiler.py
+```
+
+---
+
+_**User**_
+
+Great, however when loading the page all the papers are displayed instead of the selected default curation (ccchallenge)
+
+---
+
+_**Assistant**_
+
+
+
+---
+

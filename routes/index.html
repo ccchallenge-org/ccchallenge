@@ -3,18 +3,18 @@
 {% block title %}ccchallenge{% endblock %}
 
 {% block content %}
-<div>
+<!-- Papers data in script tag to avoid HTML escaping issues -->
+<script type="application/json" id="papers-data">{{ papers|tojson|safe }}</script>
+
+<div x-data="paperManager()">
     <!-- Header Section -->
     <div class="text-left mb-8 px-2 font-mono">
         <h1 class="underline">Challenge goal</h1>
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <p class="text-blue-100 max-w-4xl">
-                Formalised results: <span id="formalised-count">{{ papers|selectattr('formalisations_count', 'gt',
-                    0)|list|length }}</span> /
-                <span id="total-count">{{ papers|length }}</span>.
+                Formalised results: <span x-text="formalisedCount"></span> /
+                <span x-text="filteredPapers.length"></span>.
             </p>
-
-
         </div>
     </div>
 
@@ -22,11 +22,10 @@
         <!-- Curation Selector -->
         <div class="flex items-center gap-2">
             <label for="curation-select" class="text-blue-100 text-sm">Curation:</label>
-            <select id="curation-select"
+            <select x-model="selectedCuration" @change="filterPapers(); $nextTick(() => renderMath())"
                 class="bg-white text-gray-900 px-3 py-1 rounded border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 {% for curation in curations %}
-                <option value="{{ curation.slug }}" data-papers="{{ curation.curation|join(',') }}" {% if
-                    curation.slug=='ccchallenge' %}selected{% endif %}>
+                <option value="{{ curation.slug }}" data-papers="{{ curation.curation|join(',') }}">
                     {{ curation.name }} ({{ curation.curation|length }})
                 </option>
                 {% endfor %}
@@ -36,108 +35,96 @@
     </div>
 
     <!-- Papers Grid -->
-    <div id="papers-grid" class="grid grid-cols-1 gap-4 max-w-3xl mx-auto">
-        {% for paper in papers %}
-        <div id="{{ paper.id }}"
-            class="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-4 pb-2">
-            <!-- Paper Type Badge -->
-            <div class="flex justify-between items-start mb-3">
-                <div class="flex space-x-3">
-                    <span
-                        class="inline-block bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded uppercase">
-                        {{ paper.type }}
-                    </span>
-                    <!-- BibKey -->
-                    <code
-                        class="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono text-gray-700 select-all cursor-pointer"
-                        title="Click to select citation key">{{ paper.id }}</code>
-
+    <div class="grid grid-cols-1 gap-4 max-w-3xl mx-auto">
+        <template x-for="paper in filteredPapers" :key="paper.id">
+            <div :id="paper.id"
+                class="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-4 pb-2">
+                <!-- Paper Type Badge -->
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex space-x-3">
+                        <span
+                            class="inline-block bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded uppercase"
+                            x-text="paper.type">
+                        </span>
+                        <!-- BibKey -->
+                        <code
+                            class="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono text-gray-700 select-all cursor-pointer"
+                            title="Click to select citation key" x-text="paper.id"></code>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-900" x-text="paper.year"></span>
                 </div>
-                <span class="text-sm font-semibold text-gray-900">{{ paper.year }}</span>
-            </div>
 
-            <!-- Title -->
-            <h3 class="text-lg font-semibold text-gray-900 leading-tight math-content">
-                {{ paper.title }}
-            </h3>
+                <!-- Title -->
+                <h3 class="text-lg font-semibold text-gray-900 leading-tight math-content" x-text="paper.title">
+                </h3>
 
-            <!-- Authors -->
-            <p class="text-sm text-gray-600">
-                <span class="font-medium">Authors:</span> {{ paper.authors }}
-            </p>
-
-            <!-- Venue Information -->
-            <div class="venue-section">
-                {% if paper.venue %}
-                <p class="text-xs text-gray-600 mb-4 max-w-xl truncate">
-                    <span class="font-medium" title="{{ paper.venue }}">{{ paper.venue }}</span>
+                <!-- Authors -->
+                <p class="text-sm text-gray-600">
+                    <span class="font-medium">Authors:</span> <span x-text="paper.authors"></span>
                 </p>
-                {% endif %}
-            </div>
 
-            <!-- Abstract Preview -->
-            <!-- {% if paper.abstract %}
-            <p class="text-sm text-gray-700 mb-4 line-clamp-3">
-                {{ paper.abstract[:150] }}{% if paper.abstract|length > 150 %}...{% endif %}
-            </p>
-            {% endif %} -->
-
-            <!-- Links -->
-            <div class="flex flex-wrap gap-2 mt-auto justify-between items-center">
-                <!-- Left-hand side buttons (discrete) -->
-                <div class="flex flex-wrap gap-2">
-                    {% if paper.doi %}
-                    <a href="{{ paper.doi if paper.doi.startswith('http') else 'https://doi.org/' + paper.doi }}"
-                        target="_blank"
-                        class="inline-flex items-center px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-medium rounded transition-colors border border-blue-200">
-                        📄 DOI
-                    </a>
-                    {% else %}
-                    <span
-                        class="inline-flex items-center px-3 py-1 bg-blue-25  text-gray-400 text-xs font-medium rounded border border-blue-100">
-                        📄 DOI
-                    </span>
-                    {% endif %}
-
-                    {% if paper.url %}
-                    <a href="{{ paper.url }}" target="_blank"
-                        class="inline-flex items-center px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-medium rounded transition-colors border border-blue-200">
-                        🔗 URL
-                    </a>
-                    {% else %}
-                    <span
-                        class="inline-flex items-center px-3 py-1 bg-blue-25 text-gray-400 text-xs font-medium rounded border border-blue-100">
-                        🔗 URL
-                    </span>
-                    {% endif %}
-
-                    <button
-                        class="download-bibtex inline-flex items-center px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-medium rounded transition-colors border border-blue-200"
-                        data-id="{{ paper.id }}" data-bibtex="{{ paper.raw_bibtex|e }}">
-                        📋 BibTeX
-                    </button>
+                <!-- Venue Information -->
+                <div class="venue-section" x-show="paper.venue">
+                    <p class="text-xs text-gray-600 mb-4 max-w-xl truncate">
+                        <span class="font-medium" :title="paper.venue" x-text="paper.venue"></span>
+                    </p>
                 </div>
 
-                <!-- Right-hand side button (important) -->
-                <div class="flex items-center">
-                    <button
-                        class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm">
-                        {{ paper.formalisations_count }} Formal Proofs
-                    </button>
+                <!-- Links -->
+                <div class="flex flex-wrap gap-2 mt-auto justify-between items-center">
+                    <!-- Left-hand side buttons (discrete) -->
+                    <div class="flex flex-wrap gap-2">
+                        <template x-if="paper.doi">
+                            <a :href="paper.doi.startsWith('http') ? paper.doi : 'https://doi.org/' + paper.doi"
+                                target="_blank"
+                                class="inline-flex items-center px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-medium rounded transition-colors border border-blue-200">
+                                📄 DOI
+                            </a>
+                        </template>
+                        <template x-if="!paper.doi">
+                            <span
+                                class="inline-flex items-center px-3 py-1 bg-blue-25 text-gray-400 text-xs font-medium rounded border border-blue-100">
+                                📄 DOI
+                            </span>
+                        </template>
+
+                        <template x-if="paper.url">
+                            <a :href="paper.url" target="_blank"
+                                class="inline-flex items-center px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-medium rounded transition-colors border border-blue-200">
+                                🔗 URL
+                            </a>
+                        </template>
+                        <template x-if="!paper.url">
+                            <span
+                                class="inline-flex items-center px-3 py-1 bg-blue-25 text-gray-400 text-xs font-medium rounded border border-blue-100">
+                                🔗 URL
+                            </span>
+                        </template>
+
+                        <button @click="downloadBibtex(paper)"
+                            class="inline-flex items-center px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-medium rounded transition-colors border border-blue-200">
+                            📋 BibTeX
+                        </button>
+                    </div>
+
+                    <!-- Right-hand side button (important) -->
+                    <div class="flex items-center">
+                        <button
+                            class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm">
+                            <span x-text="paper.formalisations_count"></span>&nbsp;Formal Proofs
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-        {% endfor %}
+        </template>
     </div>
 
     <!-- No Papers Message -->
-    {% if not papers %}
-    <div class="text-center py-12">
+    <div x-show="filteredPapers.length === 0" class="text-center py-12">
         <div class="text-gray-400 text-6xl mb-4">📚</div>
         <h3 class="text-xl font-medium text-white mb-2">No Papers Found</h3>
-        <p class="text-blue-100">The Collatz_conjecture.bib file couldn't be loaded or is empty.</p>
+        <p class="text-blue-100">No papers match the selected curation.</p>
     </div>
-    {% endif %}
 </div>
 
 <!-- Custom CSS for line clamping -->
@@ -151,154 +138,80 @@
 </style>
 
 <script>
-    // Store all papers data for filtering
-    const allPapers = {{ papers| tojson }};
+    function paperManager() {
+        return {
+            allPapers: [],
+            filteredPapers: [],
+            selectedCuration: "ccchallenge's curation",
 
-    // Handle BibTeX download buttons
-    function setupBibtexButtons() {
-        document.querySelectorAll('.download-bibtex').forEach(button => {
-            button.addEventListener('click', function () {
-                const paperId = this.dataset.id;
-                const bibtexContent = this.dataset.bibtex;
+            get formalisedCount() {
+                return this.filteredPapers.filter(p => p.formalisations_count > 0).length;
+            },
 
-                // Create a downloadable file
-                const blob = new Blob([bibtexContent], { type: 'text/plain' });
+            init() {
+                // Load papers data from script tag
+                const papersScript = document.getElementById('papers-data');
+                try {
+                    this.allPapers = JSON.parse(papersScript.textContent);
+                } catch (e) {
+                    console.error('Failed to parse papers data:', e);
+                    this.allPapers = [];
+                }
+
+                // Initial filter and math rendering
+                this.filterPapers();
+                this.$nextTick(() => {
+                    this.renderMath();
+                });
+            },
+
+            filterPapers() {
+                if (!this.selectedCuration) {
+                    this.filteredPapers = [...this.allPapers];
+                    return;
+                }
+
+                // Find the curation data from the select options
+                const select = document.querySelector('select');
+                const selectedOption = select.querySelector(`option[value="${this.selectedCuration}"]`);
+
+                if (selectedOption && selectedOption.dataset.papers) {
+                    const paperIds = selectedOption.dataset.papers.split(',').filter(id => id.trim());
+                    this.filteredPapers = this.allPapers.filter(paper => paperIds.includes(paper.id));
+                } else {
+                    this.filteredPapers = [...this.allPapers];
+                }
+            },
+
+            renderMath() {
+                // Wait a bit for DOM to update, then render math
+                setTimeout(() => {
+                    if (typeof window.renderMathInElement === 'function') {
+                        window.renderMathInElement(document.body, {
+                            delimiters: [
+                                { left: "$$", right: "$$", display: true },
+                                { left: "$", right: "$", display: false },
+                                { left: "\\(", right: "\\)", display: false },
+                                { left: "\\[", right: "\\]", display: true }
+                            ],
+                            throwOnError: false
+                        });
+                    }
+                }, 50);
+            },
+
+            downloadBibtex(paper) {
+                const blob = new Blob([paper.raw_bibtex], { type: 'text/plain' });
                 const url = window.URL.createObjectURL(blob);
-
-                // Create a temporary link and click it
                 const link = document.createElement('a');
                 link.href = url;
-                link.download = `${paperId}.bib`;
+                link.download = `${paper.id}.bib`;
                 document.body.appendChild(link);
                 link.click();
-
-                // Clean up
                 document.body.removeChild(link);
                 window.URL.revokeObjectURL(url);
-            });
-        });
-    }
-
-    // Helper function to create venue HTML
-    function createVenueHtml(venue) {
-        if (!venue) return '';
-        return `<p class="text-xs text-gray-600 mb-4 max-w-xl truncate">
-                    <span class="font-medium" title="${venue.replace(/"/g, '&quot;')}">${venue}</span>
-                </p>`;
-    }
-
-    // Create paper HTML element
-    function createPaperElement(paper) {
-        return `
-            <div id="${paper.id}" class="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-4 pb-2">
-                <!-- Paper Type Badge -->
-                <div class="flex justify-between items-start mb-3">
-                    <div class="flex space-x-3">
-                        <span class="inline-block bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded uppercase">
-                            ${paper.type}
-                        </span>
-                        <!-- BibKey -->
-                        <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono text-gray-700 select-all cursor-pointer" title="Click to select citation key">${paper.id}</code>
-                    </div>
-                    <span class="text-sm font-semibold text-gray-900">${paper.year}</span>
-                </div>
-
-                <!-- Title -->
-                <h3 class="text-lg font-semibold text-gray-900 leading-tight math-content">
-                    ${paper.title}
-                </h3>
-
-                <!-- Authors -->
-                <p class="text-sm text-gray-600">
-                    <span class="font-medium">Authors:</span> ${paper.authors}
-                </p>
-
-                <!-- Venue Information -->
-                ${createVenueHtml(paper.venue)}
-
-                <!-- Links -->
-                <div class="flex flex-wrap gap-2 mt-auto justify-between items-center">
-                    <!-- Left-hand side buttons (discrete) -->
-                    <div class="flex flex-wrap gap-2">
-                        ${paper.doi ? `
-                        <a href="${paper.doi.startsWith('http') ? paper.doi : 'https://doi.org/' + paper.doi}"
-                            target="_blank"
-                            class="inline-flex items-center px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-medium rounded transition-colors border border-blue-200">
-                            📄 DOI
-                        </a>
-                        ` : `
-                        <span class="inline-flex items-center px-3 py-1 bg-blue-25 text-gray-400 text-xs font-medium rounded border border-blue-100">
-                            📄 DOI
-                        </span>
-                        `}
-
-                        ${paper.url ? `
-                        <a href="${paper.url}" target="_blank"
-                            class="inline-flex items-center px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-medium rounded transition-colors border border-blue-200">
-                            🔗 URL
-                        </a>
-                        ` : `
-                        <span class="inline-flex items-center px-3 py-1 bg-blue-25 text-gray-400 text-xs font-medium rounded border border-blue-100">
-                            🔗 URL
-                        </span>
-                        `}
-
-                        <button class="download-bibtex inline-flex items-center px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-medium rounded transition-colors border border-blue-200"
-                                data-id="${paper.id}" data-bibtex="${paper.raw_bibtex.replace(/"/g, '&quot;')}">
-                            📋 BibTeX
-                        </button>
-                    </div>
-
-                    <!-- Right-hand side button (important) -->
-                    <div class="flex items-center">
-                        <button class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm">
-                            ${paper.formalisations_count} Formal Proofs
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    // Filter papers based on curation
-    function filterPapers(curationSlug) {
-        const grid = document.getElementById('papers-grid');
-        const select = document.getElementById('curation-select');
-
-        let filteredPapers = allPapers;
-
-        if (curationSlug) {
-            const selectedOption = select.querySelector(`option[value="${curationSlug}"]`);
-            const paperIds = selectedOption.dataset.papers.split(',');
-            filteredPapers = allPapers.filter(paper => paperIds.includes(paper.id));
+            }
         }
-
-        // Update the grid
-        grid.innerHTML = filteredPapers.map(createPaperElement).join('');
-
-        // Update counts
-        const formalised = filteredPapers.filter(p => p.formalisations_count > 0).length;
-        document.getElementById('formalised-count').textContent = formalised;
-        document.getElementById('total-count').textContent = filteredPapers.length;
-
-        // Re-setup bibtex buttons for new elements
-        setupBibtexButtons();
     }
-
-    // Initialize everything when page loads
-    document.addEventListener('DOMContentLoaded', function () {
-        // Setup initial bibtex buttons
-        setupBibtexButtons();
-
-        // Setup curation selector
-        const curationSelect = document.getElementById('curation-select');
-        curationSelect.addEventListener('change', function () {
-            filterPapers(this.value);
-        });
-
-        // Initial render with default selected curation (ccchallenge)
-        const defaultCuration = curationSelect.value || 'ccchallenge';
-        filterPapers(defaultCuration);
-    });
 </script>
 {% endblock %}
