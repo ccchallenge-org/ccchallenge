@@ -5,6 +5,8 @@ import bibtexparser  # type: ignore
 from bibtexparser.bparser import BibTexParser  # type: ignore
 from bibtexparser.customization import convert_to_unicode  # type: ignore
 import re
+import json
+import os
 
 
 def parse_bibliography():
@@ -90,6 +92,39 @@ def extract_raw_bibtex_entry(bib_content, entry_id):
     return "\n".join(entry_lines)
 
 
+def parse_curations():
+    """Parse all curation JSON files and return them ordered by creation date."""
+    curations_dir = Path("curations")
+    if not curations_dir.exists():
+        print("Warning: curations directory not found!")
+        return []
+
+    curations = []
+
+    for json_file in curations_dir.glob("*.json"):
+        try:
+            with open(json_file, "r", encoding="utf-8") as f:
+                curation_data = json.load(f)
+
+            # Get file creation time
+            stat = os.stat(json_file)
+            creation_time = (
+                stat.st_birthtime if hasattr(stat, "st_birthtime") else stat.st_ctime
+            )
+
+            curation_data["creation_time"] = creation_time
+            curation_data["filename"] = json_file.name
+            curations.append(curation_data)
+
+        except (json.JSONDecodeError, FileNotFoundError) as e:
+            print(f"Warning: Could not parse {json_file}: {e}")
+
+    # Sort by creation time (oldest first)
+    curations.sort(key=lambda x: x["creation_time"])
+
+    return curations
+
+
 def compile_template(template_path, context=None):
     """
     Compile a Jinja2 template with proper template inheritance support.
@@ -128,9 +163,14 @@ def build_site():
     papers = parse_bibliography()
     print(f"Found {len(papers)} papers")
 
-    # Compile index.html with papers data
+    # Parse curations
+    print("Parsing curations...")
+    curations = parse_curations()
+    print(f"Found {len(curations)} curations")
+
+    # Compile index.html with papers and curations data
     print("Compiling routes/index.html...")
-    context = {"papers": papers}
+    context = {"papers": papers, "curations": curations}
     result = compile_template("index.html", context)
 
     # Save to build directory
