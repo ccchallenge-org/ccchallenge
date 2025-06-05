@@ -2923,3 +2923,42 @@ _**Assistant**_
 
 ---
 
+I see the issue! There's a mismatch between the default curation value and the actual slug in the JSON. Looking at the curations file, the slug is `"ccchallenge's curation"` but the default is set to `'ccchallenge'`.
+
+Let me fix this by updating the default value to match the actual slug:
+
+---
+
+```diff
+              allPapers: [],
+              filteredPapers: [],
+-             selectedCuration: 'ccchallenge',
++             selectedCuration: "ccchallenge's curation",
+  
+              get formalisedCount() {
+```
+
+---
+
+Now let's compile and test the fix:
+
+---
+
+```bash
+python3 compiler.py
+```
+
+---
+
+_**User**_
+
+Great, can we add a loading wheel when waiting for the papers to be rendered?
+
+---
+
+_**Assistant**_
+
+
+
+---
+
