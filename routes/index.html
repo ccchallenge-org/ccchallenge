@@ -29,7 +29,7 @@
 
             <!-- Title -->
             <h3 class="text-lg font-semibold text-gray-900 leading-tight math-content">
-                {{ paper.title|replace('{', '')|replace('}', '') }}
+                {{ paper.title }}
             </h3>
 
             <!-- Authors -->
@@ -104,7 +104,7 @@
     <div class="text-center py-12">
         <div class="text-gray-400 text-6xl mb-4">📚</div>
         <h3 class="text-xl font-medium text-white mb-2">No Papers Found</h3>
-        <p class="text-blue-100">The Collatz.bib file couldn't be loaded or is empty.</p>
+        <p class="text-blue-100">The Collatz_conjecture.bib file couldn't be loaded or is empty.</p>
     </div>
     {% endif %}
 </div>

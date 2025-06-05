@@ -413,6 +413,363 @@ The warning is because the docstring contains `\item` which Python interprets as
 
 ---
 
+```diff
+  def item_contains_year_multiline(lines, start_idx, max_look_ahead=5):
+      """
+-     Check if the lines starting at start_idx contain an \item followed by a year pattern.
++     Check if the lines starting at start_idx contain an \\item followed by a year pattern.
+      Look ahead up to max_look_ahead lines to find the year.
+      """
+```
+
+---
+
+Perfect! I've fixed the SyntaxWarning by escaping the backslash in the docstring. Now `\\item` will display as `\item` in the docstring without triggering the invalid escape sequence warning.
+
+The warning should now be resolved when you run the script.
+
+---
+
+_**User**_
+
+In index.html, when displaying info from bibtex (title, authors, etc...) there are some things specific to latex such as ``'' or diacritics encodings such as \' etc... How could we render them?
+
+---
+
+_**Assistant**_
+
+
+
+---
+
+You're right! LaTeX formatting like backticks for quotes (``) and diacritics (`\'`, `\"`, etc.) need to be properly converted to HTML/Unicode. Let me help you create a solution.
+
+First, let me check what your Flask app structure looks like:
+
+---
+
+<details>
+            <summary>Searched codebase "app.py" • **0** results</summary>
+        
+No results found
+</details>
+
+---
+
+<details>
+            <summary>Listed current directory • **24** results</summary>
+        
+| Name |
+|-------|
+| 📁 `.netlify` |
+| 📁 `.git` |
+| 📄 `compiler.py` |
+| 📄 `Collatz_conjecture.bib` |
+| 📄 `.gitignore` |
+| 📁 `routes` |
+| 📁 `.mypy_cache` |
+| 📁 `bib_tools` |
+| 📁 `aux` |
+| 📄 `.DS_Store` |
+| 📄 `requirements.txt` |
+| 📁 `build` |
+| 📄 `deploy.sh` |
+| 📁 `node_modules` |
+| 📄 `package-lock.json` |
+| 📄 `package.json` |
+| 📁 `LICENSES` |
+| 📄 `TODO.txt` |
+| 📄 `watcher.py` |
+| 📁 `static` |
+| 📁 `.vscode` |
+| 📁 `venv` |
+| 📄 `.cursorindexingignore` |
+| 📁 `.specstory` |
+
+</details>
+
+---
+
+<details>
+            <summary>Grep search for "from flask import" • **0** files</summary>
+        
+No results found
+</details>
+
+---
+
+<details>
+            <summary>Searched codebase "*.py" • **6** results</summary>
+        
+| File |
+|------|
+| `undefined` |
+| `undefined` |
+| `undefined` |
+| `undefined` |
+| `undefined` |
+| `undefined` |
+
+</details>
+
+---
+
+Read file: compiler.py
+
+---
+
+Great! I can see you're using a static site generator with Jinja2. Let me create a custom filter to handle LaTeX formatting. I'll add it to your `compiler.py`:
+
+---
+
+```diff
+  import shutil
+  import bibtexparser  # type: ignore
++ import re
++ 
++ 
++ def latex_to_html(text):
++     """Convert common LaTeX formatting to HTML/Unicode."""
++     if not text:
++         return text
++     
++     # Dictionary of LaTeX diacritics to Unicode
++     diacritics = {
++         # Acute accents
++         r"\\'a": "á", r"\\'e": "é", r"\\'i": "í", r"\\'o": "ó", r"\\'u": "ú",
++         r"\\'A": "Á", r"\\'E": "É", r"\\'I": "Í", r"\\'O": "Ó", r"\\'U": "Ú",
++         r"\\'y": "ý", r"\\'Y": "Ý", r"\\'c": "ć", r"\\'C": "Ć",
++         r"\\'n": "ń", r"\\'N": "Ń", r"\\'s": "ś", r"\\'S": "Ś",
++         r"\\'z": "ź", r"\\'Z": "Ź", r"\\'r": "ř", r"\\'R": "Ř",
++         
++         # Grave accents
++         r"`a": "à", r"`e": "è", r"`i": "ì", r"`o": "ò", r"`u": "ù",
++         r"`A": "À", r"`E": "È", r"`I": "Ì", r"`O": "Ò", r"`U": "Ù",
++         
++         # Circumflex
++         r"\^a": "â", r"\^e": "ê", r"\^i": "î", r"\^o": "ô", r"\^u": "û",
++         r"\^A": "Â", r"\^E": "Ê", r"\^I": "Î", r"\^O": "Ô", r"\^U": "Û",
++         
++         # Diaeresis/umlaut
++         r'\"a': "ä", r'\"e': "ë", r'\"i': "ï", r'\"o': "ö", r'\"u': "ü",
++         r'\"A': "Ä", r'\"E': "Ë", r'\"I': "Ï", r'\"O': "Ö", r'\"U': "Ü",
++         
++         # Tilde
++         r"~a": "ã", r"~n": "ñ", r"~o": "õ",
++         r"~A": "Ã", r"~N": "Ñ", r"~O": "Õ",
++         
++         # Cedilla
++         r"\c{c}": "ç", r"\c{C}": "Ç",
++         
++         # Special characters
++         r"{\\'o}": "ó", r"{\\'a}": "á", r"{\\'e}": "é", r"{\\'i}": "í", 
++         r"{\\'u}": "ú", r"{\\'c}": "ć", r"{\\'n}": "ń",
++         r'{\"o}': "ö", r'{\"a}': "ä", r'{\"e}': "ë", r'{\"i}': "ï", r'{\"u}': "ü",
++         r"{\^o}": "ô", r"{\^a}": "â", r"{\^e}": "ê", r"{\^i}": "î", r"{\^u}": "û",
++         r"{\~n}": "ñ", r"{\~a}": "ã", r"{\~o}": "õ",
++         r"{\c{c}}": "ç", r"{\c{C}}": "Ç",
++         
++         # Common special characters
++         r"\o": "ø", r"\O": "Ø", r"\ae": "æ", r"\AE": "Æ",
++         r"\aa": "å", r"\AA": "Å", r"\ss": "ß",
++     }
++     
++     # Apply diacritic replacements
++     result = text
++     for latex_cmd, unicode_char in diacritics.items():
++         result = result.replace(latex_cmd, unicode_char)
++     
++     # Handle LaTeX quotes
++     result = re.sub(r"``([^']*?)''", r""\1"", result)  # ``text'' -> "text"
++     result = re.sub(r"`([^']*?)'", r"'\1'", result)    # `text' -> 'text'
++     
++     # Handle curly braces for emphasis (keep text, remove braces)
++     result = re.sub(r"\{\\em\s+([^}]*?)\}", r"<em>\1</em>", result)  # {\em text} -> <em>text</em>
++     result = re.sub(r"\{\\bf\s+([^}]*?)\}", r"<strong>\1</strong>", result)  # {\bf text} -> <strong>text</strong>
++     result = re.sub(r"\{\\it\s+([^}]*?)\}", r"<em>\1</em>", result)  # {\it text} -> <em>text</em>
++     
++     # Remove remaining curly braces that are just for grouping
++     result = re.sub(r'\{([^{}]*?)\}', r'\1', result)
++     
++     # Handle common LaTeX commands
++     result = result.replace(r'\&', '&')  # \& -> &
++     result = result.replace(r'\%', '%')  # \% -> %
++     result = result.replace(r'\$', '$')  # \$ -> $
++     result = result.replace(r'\#', '#')  # \# -> #
++     result = result.replace(r'\_', '_')  # \_ -> _
++     result = result.replace(r'\{', '{')  # \{ -> {
++     result = result.replace(r'\}', '}')  # \} -> }
++     
++     # Handle spacing commands
++     result = result.replace(r'\,', ' ')   # \, -> thin space
++     result = result.replace(r'\ ', ' ')   # \ -> space
++     result = result.replace(r'~', ' ')    # ~ -> non-breaking space (approximate)
++     
++     # Clean up extra whitespace
++     result = re.sub(r'\s+', ' ', result).strip()
++     
++     return result
+  
+  
+```
+
+```diff
+      template_dir = Path("routes")
+      env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
++     
++     # Add the custom filter
++     env.filters['latex_to_html'] = latex_to_html
+  
+      # Get template name (remove routes/ prefix if present)
+```
+
+---
+
+I see there's a syntax error in the regex. Let me fix it:
+
+---
+
+
+
+---
+
+Let me fix the quote issue more carefully:
+
+---
+
+```diff
+      
+      # Handle LaTeX quotes
+-     result = re.sub(r"``([^']*?)''", r""\1"", result)  # ``text'' -> "text"
+-     result = re.sub(r"`([^']*?)'", r"'\1'", result)    # `text' -> 'text'
++     result = re.sub(r"``([^']*?)''", ""\\1"", result)  # ``text'' -> "text"
++     result = re.sub(r"`([^']*?)'", "'\\1'", result)    # `text' -> 'text'
+      
+      # Handle curly braces for emphasis (keep text, remove braces)
+```
+
+---
+
+Let me fix this by using proper string literals:
+
+---
+
+```diff
+      
+      # Handle LaTeX quotes
+-     result = re.sub(r"``([^']*?)''", ""\\1"", result)  # ``text'' -> "text"
++     result = re.sub(r"``([^']*?)''", '"\\1"', result)  # ``text'' -> "text"
+      result = re.sub(r"`([^']*?)'", "'\\1'", result)    # `text' -> 'text'
+      
+```
+
+---
+
+Great! Now let me update the HTML template to use this new filter:
+
+---
+
+```diff
+              <!-- Title -->
+              <h3 class="text-lg font-semibold text-gray-900 leading-tight math-content">
+-                 {{ paper.title|replace('{', '')|replace('}', '') }}
++                 {{ paper.title|latex_to_html|safe }}
+              </h3>
+  
+              <!-- Authors -->
+              <p class="text-sm text-gray-600">
+-                 <span class="font-medium">Authors:</span> {{ paper.authors }}
++                 <span class="font-medium">Authors:</span> {{ paper.authors|latex_to_html|safe }}
+              </p>
+  
+```
+
+---
+
+Now let's test the changes by building the site:
+
+---
+
+```bash
+cd /Users/cosmo/Documents/projects/ccchallenge/ccchallenge && python compiler.py
+```
+
+---
+
+Perfect! I've implemented a comprehensive LaTeX-to-HTML conversion system for your bibliography. Here's what I've added:
+
+## **Custom LaTeX Filter**
+
+The `latex_to_html()` filter handles:
+
+### **1. Diacritics & Accents**
+- **Acute accents**: `\'a` → á, `\'e` → é, etc.
+- **Grave accents**: `` `a`` → à, `` `e`` → è, etc.  
+- **Circumflex**: `\^a` → â, `\^e` → ê, etc.
+- **Umlaut/diaeresis**: `\"a` → ä, `\"o` → ö, etc.
+- **Tilde**: `~n` → ñ, `~a` → ã, etc.
+- **Cedilla**: `\c{c}` → ç
+
+### **2.
+
+---
+
+_**User**_
+
+it does not work, I get tile Algorithmes pour v\'erifier la conjecture de Syracuse
+
+---
+
+_**Assistant**_
+
+
+
+---
+
+The filter isn't working because there might be an issue with how the LaTeX commands are being matched. Let me debug this by first testing the filter and then fixing it.
+
+---
+
+Model provided invalid arguments to terminal tool.
+
+---
+
+```bash
+cd /Users/cosmo/Documents/projects/ccchallenge/ccchallenge && python -c "from compiler import latex_to_html; test_text = 'Algorithmes pour v\\'erifier la conjecture de Syracuse'; print('Input:', repr(test_text)); print('Output:', repr(latex_to_html(test_text))); print('Rendered:', latex_to_html(test_text))"
+```
+
+```
+<xt))); print('Rendered:', latex_to_html(test_text))"
+Input: "Algorithmes pour v'erifier la conjecture de Syracuse"
+Output: "Algorithmes pour v'erifier la conjecture de Syracuse"
+Rendered: Algorithmes pour v'erifier la conjecture de Syracuse
+(venv) ➜  ccchallenge git:(main) ✗
+```
+
+---
+
+I see the issue! The test shows that the text is being interpreted as `v'erifier` (with a regular apostrophe) instead of `v\'erifier` (with backslash-apostrophe). The LaTeX command isn't being preserved properly. Let me check what's actually in the BibTeX file:
+
+---
+
+<details>
+            <summary>Grep search for "v\\'erifier" • **4** files</summary>
+        
+| File | Line | Match |
+|------|------|-------|
+| `file:///Users/cosmo/Documents/projects/ccchallenge/ccchallenge/Collatz_conjecture.bib` | L80 | `title   = {{Algorithmes pour v\'erifier la conjecture de Syracuse}},` |
+| `file:///Users/cosmo/Documents/projects/ccchallenge/ccchallenge/bib_tools/lagarias_surveys/lagarias_survey_1_openai_output_second_try.bib` | L80 | `title = {{Algorithmes pour v\'erifier la conjecture de Syracuse}},` |
+| `file:///Users/cosmo/Documents/projects/ccchallenge/ccchallenge/bib_tools/lagarias_surveys/lagarias_survey_1_openai_output.bib` | L73 | `title={Algorithmes pour v\'erifier la conjecture de Syracuse},` |
+| `file:///Users/cosmo/Documents/projects/ccchallenge/ccchallenge/Collatz_conjecture.bib` | L80 | `title   = {{Algorithmes pour v\'erifier la conjecture de Syracuse}},` |
+
+</details>
+
+---
+
+Perfect! I can see the actual LaTeX in the BibTeX file is `v\'e` (not `v\\'e`). The issue is that `bibtexparser` is likely processing some of the escape sequences. Let me fix the filter to handle the patterns as they actually appear:
+
+---
+
 
 
 ---

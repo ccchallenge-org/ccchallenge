@@ -2,6 +2,9 @@ import jinja2  # type: ignore
 from pathlib import Path
 import shutil
 import bibtexparser  # type: ignore
+from bibtexparser.bparser import BibTexParser  # type: ignore
+from bibtexparser.customization import convert_to_unicode  # type: ignore
+import re
 
 
 def parse_bibliography():
@@ -16,7 +19,9 @@ def parse_bibliography():
         bib_content = f.read()
 
     # Parse with bibtexparser
-    bib_database = bibtexparser.loads(bib_content)
+    parser = BibTexParser()
+    parser.customization = convert_to_unicode
+    bib_database = bibtexparser.loads(bib_content, parser=parser)
 
     papers = []
     for entry in bib_database.entries:
