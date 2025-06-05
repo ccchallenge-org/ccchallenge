@@ -2962,3 +2962,144 @@ _**Assistant**_
 
 ---
 
+Great idea! Let me add a loading spinner that shows while the papers are being loaded and rendered. I'll use Alpine.js reactive state to manage this:
+
+---
+
+```diff
+              filteredPapers: [],
+              selectedCuration: "ccchallenge's curation",
++             loading: true,
+  
+              get formalisedCount() {
+```
+
+```diff
+                  this.$nextTick(() => {
+                      this.renderMath();
++                     // Hide loading spinner after everything is rendered
++                     setTimeout(() => {
++                         this.loading = false;
++                     }, 100);
+                  });
+              },
+```
+
+---
+
+Now let me add the loading spinner UI that shows when `loading` is true:
+
+---
+
+```diff
+          </div>
+      </div>
++ 
++     <!-- Loading Spinner -->
++     <div x-show="loading" class="flex justify-center items-center py-20">
++         <div class="text-center">
++             <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mb-4"></div>
++             <p class="text-blue-100 text-sm">Loading papers...</p>
++         </div>
++     </div>
+  
+      <!-- Papers Grid -->
+-     <div class="grid grid-cols-1 gap-4 max-w-3xl mx-auto">
++     <div x-show="!loading" class="grid grid-cols-1 gap-4 max-w-3xl mx-auto">
+          <template x-for="paper in filteredPapers" :key="paper.id">
+              <div :id="paper.id"
+```
+
+---
+
+Let me also hide the "No Papers Found" message during loading:
+
+---
+
+```diff
+  
+      <!-- No Papers Message -->
+-     <div x-show="filteredPapers.length === 0" class="text-center py-12">
++     <div x-show="!loading && filteredPapers.length === 0" class="text-center py-12">
+          <div class="text-gray-400 text-6xl mb-4">📚</div>
+          <h3 class="text-xl font-medium text-white mb-2">No Papers Found</h3>
+```
+
+---
+
+Perfect! Now let's compile and test the loading spinner:
+
+---
+
+```bash
+python3 compiler.py
+```
+
+---
+
+_**User**_
+
+Can you change papers.sort(key=lambda x: x["authors"].split(",")[0].split(" ")[-1]) based on  
+
+---
+
+_**Assistant**_
+
+
+
+---
+
+Looking at the different author name formats in the comments, I can see the current sorting logic doesn't handle all cases properly. Let me create a more robust sorting function that handles the various formats:
+
+---
+
+```diff
+      #  - Wang, Xing-Yuan; Wang, Qiao Long; Fen, Yue Ping; and Xu, Zhi Wen
+  
+-     
+-     papers.sort(key=lambda x: x["authors"].split(",")[0].split(" ")[-1])
++     def get_first_author_last_name(authors_str):
++         """Extract the last name of the first author from various formats."""
++         # Handle different separators for multiple authors
++         first_author = authors_str.split(" and ")[0].split(";")[0].strip()
++         
++         # If there's a comma, it's likely "Last, First" format
++         if "," in first_author:
++             return first_author.split(",")[0].strip()
++         else:
++             # It's likely "First Last" format, take the last word
++             return first_author.split()[-1].strip()
++     
++     papers.sort(key=lambda x: get_first_author_last_name(x["authors"]))
+  
+      return papers
+```
+
+---
+
+Let me also remove the debug print statement that was added:
+
+---
+
+```diff
+          authors = entry.get("author", "Unknown Authors")
+          authors = authors.replace('\\"o', "ö").replace("\\_", "_").replace("\\", "")
+-         print(authors)
+  
+          # Determine venue/publisher info
+```
+
+---
+
+Now let's test the improved sorting by compiling:
+
+---
+
+
+
+---
+
+
+
+---
+

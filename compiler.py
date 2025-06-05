@@ -66,6 +66,26 @@ def parse_bibliography():
         }
         papers.append(paper)
 
+    def get_first_author_last_name(authors_str):
+        """Extract the last name of the first author from various formats:
+        - Toshio Urata and Kazuhiro Hamada
+        - John L. Simons and Benne M. M. de Weger
+        - Wirsching, Günther J.
+        - Wu, Jia Bang and Huang, Guo Lin
+        - Wang, Xing-Yuan; Wang, Qiao Long; Fen, Yue Ping; and Xu, Zhi Wen
+        """
+        # Handle different separators for multiple authors
+        first_author = authors_str.split(" and ")[0].split(";")[0].strip()
+
+        # If there's a comma, it's likely "Last, First" format
+        if "," in first_author:
+            return first_author.split(",")[0].strip()
+        else:
+            # It's likely "First Last" format, take the last word
+            return first_author.split()[-1].strip()
+
+    papers.sort(key=lambda x: get_first_author_last_name(x["authors"]))
+
     return papers
 
 
