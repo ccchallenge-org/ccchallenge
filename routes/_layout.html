@@ -70,7 +70,7 @@
                 <a href="/" class="text-white text-xl font-semibold hover:text-gray-300 transition-colors">
                     The Collatz Conjecture Challenge
                 </a>
-                <ul class="flex space-x-2">
+                <ul class="flex space-x-2 items-center">
                     <li><span class="text-gray-400 px-3 py-2 rounded-md font-medium ">Story</span>
                     </li>
                     <li><span class="text-gray-400 px-3 py-2 rounded-md font-medium ">Method</span>
@@ -80,16 +80,22 @@
                     <li><span class="text-gray-400 px-3 py-2 rounded-md font-medium ">Forum</span>
                     </li>
                     <li><span class="text-gray-400 px-3 py-2 rounded-md font-medium ">Wiki</span></li>
-                    <div class="flex items-center space-x-5">
+                    <div class="flex items-center space-x-4">
                         <li>
                             <a href="https://github.com/tcosmo/ccchallenge" class="cursor-pointer"><img
                                     class="w-[23px] lg:w-[26px]" src="./GitHub-Mark-Light-32px.png"
                                     alt="Github logo" /></a>
                         </li>
                         <li>
-                            <a href="https://discord.gg/PzgWnN6txJ" class="cursor-pointer"><img
-                                    class="w-[23px] lg:w-[26px]" src="./Discord-Logo-White.png" alt="Github logo" /></a>
+                            <a href="https://ccchallenge.zulipchat.com/#inbox" class="cursor-pointer"><img
+                                    class="w-[18px] lg:w-[21px]" src="./zulip_discrete.svg" alt="Zulip logo" /></a>
                         </li>
+                        <li>
+                            <a href="https://discord.gg/PzgWnN6txJ" class="cursor-pointer"><img
+                                    class="w-[23px] lg:w-[26px]" src="./Discord-Logo-White.png"
+                                    alt="Discord logo" /></a>
+                        </li>
+
                     </div>
                     {% block nav_links %}{% endblock %}
                 </ul>

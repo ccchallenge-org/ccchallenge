@@ -3095,9 +3095,730 @@ Now let's test the improved sorting by compiling:
 
 ---
 
+```bash
+python3 compiler.py
+```
+
+---
+
 
 
 ---
+
+_**User**_
+
+Can we go back at writing our own custom parser.customization
+
+---
+
+_**Assistant**_
+
+
+
+---
+
+Absolutely! Let's create a custom parser customization function that handles LaTeX properly without breaking math mode. I'll create a function that preserves math content while still converting diacritics:
+
+---
+
+```diff
+  import os
+  
++ 
++ def smart_latex_to_unicode(record):
++     """
++     Custom LaTeX to Unicode conversion that protects math mode.
++     Converts diacritics and common LaTeX symbols while preserving math content.
++     """
++     def protect_math_mode(text):
++         """Protect content inside math delimiters from conversion."""
++         if not text:
++             return text
++             
++         # Find all math mode sections and replace them with placeholders
++         math_sections = []
++         placeholders = []
++         
++         # Pattern for math delimiters: $...$ and \(...\)
++         math_patterns = [
++             (r'\$([^$]+)\$', r'$\1$'),  # $math$
++             (r'\\[(]([^)]*?)\\[)]', r'\\(\1\\)'),  # \(math\)
++         ]
++         
++         result = text
++         placeholder_counter = 0
++         
++         for pattern, replacement in math_patterns:
++             matches = list(re.finditer(pattern, result))
++             for match in reversed(matches):  # Reverse to maintain indices
++                 math_content = match.group(0)
++                 placeholder = f"__MATH_PLACEHOLDER_{placeholder_counter}__"
++                 math_sections.append(math_content)
++                 placeholders.append(placeholder)
++                 result = result[:match.start()] + placeholder + result[match.end():]
++                 placeholder_counter += 1
++         
++         return result, math_sections, placeholders
++     
++     def restore_math_mode(text, math_sections, placeholders):
++         """Restore math mode content."""
++         result = text
++         for placeholder, math_content in zip(placeholders, math_sections):
++             result = result.replace(placeholder, math_content)
++         return result
++     
++     def convert_latex_symbols(text):
++         """Convert common LaTeX symbols to Unicode."""
++         # Common diacritics
++         conversions = {
++             r"\\'{a}": "á", r"\\'{e}": "é", r"\\'{i}": "í", r"\\'{o}": "ó", r"\\'{u}": "ú",
++             r"\\'{A}": "Á", r"\\'{E}": "É", r"\\'{I}": "Í", r"\\'{O}": "Ó", r"\\'{U}": "Ú",
++             r'\\`{a}': "à", r'\\`{e}': "è", r'\\`{i}': "ì", r'\\`{o}': "ò", r'\\`{u}': "ù",
++             r'\\`{A}': "À", r'\\`{E}': "È", r'\\`{I}': "Ì", r'\\`{O}': "Ò", r'\\`{U}': "Ù",
++             r'\\^{a}': "â", r'\\^{e}': "ê", r'\\^{i}': "î", r'\\^{o}': "ô", r'\\^{u}': "û",
++             r'\\^{A}': "Â", r'\\^{E}': "Ê", r'\\^{I}': "Î", r'\\^{O}': "Ô", r'\\^{U}': "Û",
++             r'\\"{a}': "ä", r'\\"{e}': "ë", r'\\"{i}': "ï", r'\\"{o}': "ö", r'\\"{u}': "ü",
++             r'\\"{A}': "Ä", r'\\"{E}': "Ë", r'\\"{I}': "Ï", r'\\"{O}': "Ö", r'\\"{U}': "Ü",
++             r'\\~{a}': "ã", r'\\~{n}': "ñ", r'\\~{o}': "õ",
++             r'\\~{A}': "Ã", r'\\~{N}': "Ñ", r'\\~{O}': "Õ",
++             r'\\c{c}': "ç", r'\\c{C}': "Ç",
++             r'\\v{c}': "č", r'\\v{C}': "Č",
++             r'\\v{s}': "š", r'\\v{S}': "Š",
++             r'\\v{z}': "ž", r'\\v{Z}': "Ž",
++             
++             # Special cases mentioned in the conversation
++             r'v\\\'erifier': "vérifier",
++             r"\\'erifier": "érifier",
++             
++             # Clean up remaining backslashes (but be careful)
++             r'\\_': "_",
++         }
++         
++         result = text
++         for latex, unicode_char in conversions.items():
++             result = re.sub(latex, unicode_char, result)
++         
++         return result
++     
++     # Process each field in the record
++     for field, value in record.items():
++         if isinstance(value, str):
++             # Protect math mode content
++             protected_text, math_sections, placeholders = protect_math_mode(value)
++             
++             # Convert LaTeX symbols (only outside math mode)
++             converted_text = convert_latex_symbols(protected_text)
++             
++             # Restore math mode content
++             final_text = restore_math_mode(converted_text, math_sections, placeholders)
++             
++             record[field] = final_text
++     
++     return record
++ 
+  
+  def parse_bibliography():
+```
+
+---
+
+Now let's update the parser to use our custom function:
+
+---
+
+```diff
+      # Parse with bibtexparser
+      parser = BibTexParser()
+-     # parser.customization = convert_to_unicode
++     parser.customization = smart_latex_to_unicode
+      bib_database = bibtexparser.loads(bib_content, parser=parser)
+  
+```
+
+---
+
+Let's also clean up the author processing since our custom function should handle most of the LaTeX conversion:
+
+---
+
+```diff
+      papers = []
+      for entry in bib_database.entries:
+-         # Clean up author names and handle special characters
++         # Get authors (our custom parser should have handled LaTeX conversion)
+          authors = entry.get("author", "Unknown Authors")
+-         authors = authors.replace('\\"o', "ö").replace("\\_", "_").replace("\\", "")
+  
+          # Determine venue/publisher info
+```
+
+---
+
+Now let's test our custom LaTeX parser:
+
+---
+
+```bash
+python3 compiler.py
+```
+
+---
+
+Perfect! I've created a comprehensive custom LaTeX parser that:
+
+1. **Protects math mode content**: Uses placeholders to prevent conversion of LaTeX commands inside `$...$` and `\(...\)` delimiters
+2. **Converts diacritics properly**: Handles common accented characters like `\'{e}` → `é`, `\"{o}` → `ö`, etc.
+3. **Handles special cases**: Includes the `vérifier` case mentioned in the conversation
+4. **Preserves important LaTeX**: Keeps math content like `$\omega$` intact without converting `\o` to `ø`
+
+The key improvements over the built-in `convert_to_unicode`:
+- **Math mode protection**: Won't break `$\omega$` by converting `\o` to `ø`
+- **Selective conversion**: Only converts actual diacritics, not math symbols
+- **Customizable**: Easy to add more conversion rules as needed
+
+This should resolve the LaTeX rendering issues while still properly converting author names and other text content. Would you like me to compile it to test, or would you like to make any adjustments to the conversion rules first?
+
+---
+
+_**User**_
+
+Good but all titles are encapsulated in inner {Odd Collatz Sequence and Binary Representations}
+
+---
+
+_**Assistant**_
+
+
+
+---
+
+Ah yes, that's a common BibTeX issue where titles are wrapped in extra braces to protect capitalization. Let me add logic to remove the outer braces from titles while preserving any necessary inner content:
+
+---
+
+```diff
+          return result
+  
++     def remove_outer_braces(text):
++         """Remove outer braces from titles while preserving inner content."""
++         if not text:
++             return text
++         
++         text = text.strip()
++         
++         # If the entire string is wrapped in braces, remove them
++         if text.startswith('{') and text.endswith('}'):
++             # Count braces to make sure we're removing a complete outer pair
++             brace_count = 0
++             for i, char in enumerate(text):
++                 if char == '{':
++                     brace_count += 1
++                 elif char == '}':
++                     brace_count -= 1
++                     # If we reach 0 before the end, these aren't outer braces
++                     if brace_count == 0 and i < len(text) - 1:
++                         return text
++             
++             # If we got here, the entire string is wrapped in one pair of braces
++             if brace_count == 0:
++                 return text[1:-1]
++         
++         return text
++ 
+      def convert_latex_symbols(text):
+          """Convert common LaTeX symbols to Unicode."""
+```
+
+```diff
+              protected_text, math_sections, placeholders = protect_math_mode(value)
+  
++             # Remove outer braces from titles
++             if field.lower() == 'title':
++                 protected_text = remove_outer_braces(protected_text)
++ 
+              # Convert LaTeX symbols (only outside math mode)
+              converted_text = convert_latex_symbols(protected_text)
+```
+
+---
+
+Perfect! Now let's test the improved parser with brace removal:
+
+---
+
+```bash
+python3 compiler.py
+```
+
+---
+
+Great! I've added a `remove_outer_braces` function that:
+
+1. **Safely removes outer braces**: Only removes braces that wrap the entire title
+2. **Preserves inner structure**: Keeps necessary braces for LaTeX commands and math mode
+3. **Handles nested braces**: Uses proper brace counting to avoid breaking complex titles
+4. **Only applies to titles**: Specifically targets the title field to avoid affecting other fields
+
+For example:
+- `{Odd Collatz Sequence and Binary Representations}` → `Odd Collatz Sequence and Binary Representations`
+- `{The $3x + 1$ Problem}` → `The $3x + 1$ Problem` (math preserved)
+- `{A Study of {Something Important}}` → `A Study of {Something Important}` (inner braces preserved)
+
+This should clean up the title display while maintaining all the LaTeX math rendering functionality. Would you like me to compile it to test, or do you want to make any other adjustments to the parser first?
+
+---
+
+_**User**_
+
+Lacking some diacritics: \l a\.{z}
+
+---
+
+_**Assistant**_
+
+
+
+---
+
+You're right! Let me add those missing diacritics to the conversion list. I'll add `\l` (ł), `\.{z}` (ż), and some other common ones that might be missing:
+
+---
+
+```diff
+          # Common diacritics
+          conversions = {
+-             r"\\'{a}": "á",
+-             r"\\'{e}": "é",
+-             r"\\'{i}": "í",
+-             r"\\'{o}": "ó",
+-             r"\\'{u}": "ú",
+-             r"\\'{A}": "Á",
+-             r"\\'{E}": "É",
+-             r"\\'{I}": "Í",
+-             r"\\'{O}": "Ó",
+-             r"\\'{U}": "Ú",
+-             r"\\`{a}": "à",
+-             r"\\`{e}": "è",
+-             r"\\`{i}": "ì",
+-             r"\\`{o}": "ò",
+-             r"\\`{u}": "ù",
+-             r"\\`{A}": "À",
+-             r"\\`{E}": "È",
+-             r"\\`{I}": "Ì",
+-             r"\\`{O}": "Ò",
+-             r"\\`{U}": "Ù",
+-             r"\\^{a}": "â",
+-             r"\\^{e}": "ê",
+-             r"\\^{i}": "î",
+-             r"\\^{o}": "ô",
+-             r"\\^{u}": "û",
+-             r"\\^{A}": "Â",
+-             r"\\^{E}": "Ê",
+-             r"\\^{I}": "Î",
+-             r"\\^{O}": "Ô",
+-             r"\\^{U}": "Û",
+-             r'\\"{a}': "ä",
+-             r'\\"{e}': "ë",
+-             r'\\"{i}': "ï",
+-             r'\\"{o}': "ö",
+-             r'\\"{u}': "ü",
+-             r'\\"{A}': "Ä",
+-             r'\\"{E}': "Ë",
+-             r'\\"{I}': "Ï",
+-             r'\\"{O}': "Ö",
+-             r'\\"{U}': "Ü",
+-             r"\\~{a}": "ã",
+-             r"\\~{n}": "ñ",
+-             r"\\~{o}": "õ",
+-             r"\\~{A}": "Ã",
+-             r"\\~{N}": "Ñ",
+-             r"\\~{O}": "Õ",
+-             r"\\c{c}": "ç",
+-             r"\\c{C}": "Ç",
+-             r"\\v{c}": "č",
+-             r"\\v{C}": "Č",
+-             r"\\v{s}": "š",
+-             r"\\v{S}": "Š",
+-             r"\\v{z}": "ž",
+-             r"\\v{Z}": "Ž",
++             # Acute accents
++             r"\\'{a}": "á", r"\\'{e}": "é", r"\\'{i}": "í", r"\\'{o}": "ó", r"\\'{u}": "ú",
++             r"\\'{A}": "Á", r"\\'{E}": "É", r"\\'{I}": "Í", r"\\'{O}": "Ó", r"\\'{U}": "Ú",
++             r"\\'{c}": "ć", r"\\'{C}": "Ć", r"\\'{n}": "ń", r"\\'{N}": "Ń",
++             r"\\'{s}": "ś", r"\\'{S}": "Ś", r"\\'{z}": "ź", r"\\'{Z}": "Ź",
++             
++             # Grave accents
++             r'\\`{a}': "à", r'\\`{e}': "è", r'\\`{i}': "ì", r'\\`{o}': "ò", r'\\`{u}': "ù",
++             r'\\`{A}': "À", r'\\`{E}': "È", r'\\`{I}': "Ì", r'\\`{O}': "Ò", r'\\`{U}': "Ù",
++             
++             # Circumflex
++             r'\\^{a}': "â", r'\\^{e}': "ê", r'\\^{i}': "î", r'\\^{o}': "ô", r'\\^{u}': "û",
++             r'\\^{A}': "Â", r'\\^{E}': "Ê", r'\\^{I}': "Î", r'\\^{O}': "Ô", r'\\^{U}': "Û",
++             
++             # Diaeresis/umlaut
++             r'\\"{a}': "ä", r'\\"{e}': "ë", r'\\"{i}': "ï", r'\\"{o}': "ö", r'\\"{u}': "ü",
++             r'\\"{A}': "Ä", r'\\"{E}': "Ë", r'\\"{I}': "Ï", r'\\"{O}': "Ö", r'\\"{U}': "Ü",
++             
++             # Tilde
++             r'\\~{a}': "ã", r'\\~{n}': "ñ", r'\\~{o}': "õ",
++             r'\\~{A}': "Ã", r'\\~{N}': "Ñ", r'\\~{O}': "Õ",
++             
++             # Cedilla
++             r'\\c{c}': "ç", r'\\c{C}': "Ç",
++             
++             # Caron/háček
++             r'\\v{c}': "č", r'\\v{C}': "Č",
++             r'\\v{s}': "š", r'\\v{S}': "Š",
++             r'\\v{z}': "ž", r'\\v{Z}': "Ž",
++             r'\\v{e}': "ě", r'\\v{E}': "Ě",
++             r'\\v{r}': "ř", r'\\v{R}': "Ř",
++             r'\\v{n}': "ň", r'\\v{N}': "Ň",
++             
++             # Dot above
++             r'\\.{z}': "ż", r'\\.{Z}': "Ż",
++             r'\\.{a}': "ȧ", r'\\.{A}': "Ȧ",
++             r'\\.{e}': "ė", r'\\.{E}': "Ė",
++             
++             # Stroke
++             r'\\l': "ł", r'\\L': "Ł",
++             r'\\o': "ø", r'\\O': "Ø",
++             
++             # Ring above
++             r'\\r{a}': "å", r'\\r{A}': "Å",
++             r'\\r{u}': "ů", r'\\r{U}': "Ů",
++             
++             # Macron
++             r'\\={a}': "ā", r'\\={A}': "Ā",
++             r'\\={e}': "ē", r'\\={E}': "Ē",
++             r'\\={i}': "ī", r'\\={I}': "Ī",
++             r'\\={o}': "ō", r'\\={O}': "Ō",
++             r'\\={u}': "ū", r'\\={U}': "Ū",
++             
++             # Breve
++             r'\\u{a}': "ă", r'\\u{A}': "Ă",
++             r'\\u{g}': "ğ", r'\\u{G}': "Ğ",
++             
++             # Double acute
++             r'\\H{o}': "ő", r'\\H{O}': "Ő",
++             r'\\H{u}': "ű", r'\\H{U}': "Ű",
++             
++             # Ogonek
++             r'\\k{a}': "ą", r'\\k{A}': "Ą",
++             r'\\k{e}': "ę", r'\\k{E}': "Ę",
++             
+              # Special cases mentioned in the conversation
+-             r"v\\\'erifier": "vérifier",
++             r'v\\\'erifier': "vérifier",
+              r"\\'erifier": "érifier",
++             
+              # Clean up remaining backslashes (but be careful)
+-             r"\\_": "_",
++             r'\\_': "_",
+          }
+          
+```
+
+---
+
+Perfect! I've significantly expanded the diacritics support to include:
+
+**Added the ones you mentioned:**
+- `\l` → `ł` (Polish l with stroke)
+- `\.{z}` → `ż` (z with dot above)
+
+**Plus many other common diacritics:**
+- **Polish**: `ą`, `ć`, `ę`, `ł`, `ń`, `ś`, `ź`, `ż` 
+- **Czech/Slovak**: `č`, `ě`, `ň`, `ř`, `š`, `ů`, `ž`
+- **Hungarian**: `ő`, `ű`
+- **Scandinavian**: `å`, `ø`
+- **Turkish**: `ğ`
+- **Romanian**: `ă`
+- **And many others**: macrons, breves, double acutes, ogoneks, etc.
+
+The expanded list should handle most European language diacritics commonly found in academic bibliographies. Now let's test it:
+
+---
+
+```bash
+python3 compiler.py
+```
+
+---
+
+_**User**_
+
+\& need to go to &
+
+---
+
+_**Assistant**_
+
+
+
+---
+
+You're absolutely right! The LaTeX escaped ampersand `\&` should be converted to a regular `&`. Let me add that and a few other common LaTeX escape sequences:
+
+---
+
+```diff
+              r"\\k{E}": "Ę",
+              # Special cases mentioned in the conversation
+-             r"v\\\'erifier": "vérifier",
++             r'v\\\'erifier': "vérifier",
+              r"\\'erifier": "érifier",
++             
++             # LaTeX escape sequences
++             r'\\&': "&",
++             r'\\%': "%", 
++             r'\\$': "$",
++             r'\\#': "#",
++             r'\\{': "{",
++             r'\\}': "}",
++             
+              # Clean up remaining backslashes (but be careful)
+-             r"\\_": "_",
++             r'\\_': "_",
+          }
+  
+```
+
+---
+
+Perfect! I've added the common LaTeX escape sequences:
+
+- `\&` → `&` (ampersand)
+- `\%` → `%` (percent sign)
+- `\$` → `$` (dollar sign - but only outside math mode thanks to our protection)
+- `\#` → `#` (hash/number sign)
+- `\{` → `{` (left brace)
+- `\}` → `}` (right brace)
+- `\_` → `_` (underscore)
+
+These are the standard LaTeX escape sequences for special characters that have meaning in LaTeX syntax. The math mode protection will ensure that legitimate math content isn't affected while these escaped characters in regular text get properly converted.
+
+Now let's test it:
+
+---
+
+```bash
+python3 compiler.py
+```
+
+---
+
+_**User**_
+
+Great, also need \`e to go to è
+
+---
+
+_**Assistant**_
+
+
+
+---
+
+You're absolutely right! LaTeX allows both `\`{e}` and `\`e` (with and without braces). Let me add the non-braced versions of the accent commands:
+
+---
+
+```diff
+          conversions = {
+              # Acute accents
+-             r"\\'{a}": "á",
+-             r"\\'{e}": "é",
+-             r"\\'{i}": "í",
+-             r"\\'{o}": "ó",
+-             r"\\'{u}": "ú",
+-             r"\\'{A}": "Á",
+-             r"\\'{E}": "É",
+-             r"\\'{I}": "Í",
+-             r"\\'{O}": "Ó",
+-             r"\\'{U}": "Ú",
+-             r"\\'{c}": "ć",
+-             r"\\'{C}": "Ć",
+-             r"\\'{n}": "ń",
+-             r"\\'{N}": "Ń",
+-             r"\\'{s}": "ś",
+-             r"\\'{S}": "Ś",
+-             r"\\'{z}": "ź",
+-             r"\\'{Z}": "Ź",
++             r"\\'{a}": "á", r"\\'{e}": "é", r"\\'{i}": "í", r"\\'{o}": "ó", r"\\'{u}": "ú",
++             r"\\'{A}": "Á", r"\\'{E}": "É", r"\\'{I}": "Í", r"\\'{O}": "Ó", r"\\'{U}": "Ú",
++             r"\\'{c}": "ć", r"\\'{C}": "Ć", r"\\'{n}": "ń", r"\\'{N}": "Ń",
++             r"\\'{s}": "ś", r"\\'{S}": "Ś", r"\\'{z}": "ź", r"\\'{Z}": "Ź",
++             # Non-braced versions
++             r"\\'a": "á", r"\\'e": "é", r"\\'i": "í", r"\\'o": "ó", r"\\'u": "ú",
++             r"\\'A": "Á", r"\\'E": "É", r"\\'I": "Í", r"\\'O": "Ó", r"\\'U": "Ú",
++             r"\\'c": "ć", r"\\'C": "Ć", r"\\'n": "ń", r"\\'N": "Ń",
++             r"\\'s": "ś", r"\\'S": "Ś", r"\\'z": "ź", r"\\'Z": "Ź",
++             
+              # Grave accents
+-             r"\\`{a}": "à",
+-             r"\\`{e}": "è",
+-             r"\\`{i}": "ì",
+-             r"\\`{o}": "ò",
+-             r"\\`{u}": "ù",
+-             r"\\`{A}": "À",
+-             r"\\`{E}": "È",
+-             r"\\`{I}": "Ì",
+-             r"\\`{O}": "Ò",
+-             r"\\`{U}": "Ù",
++             r'\\`{a}': "à", r'\\`{e}': "è", r'\\`{i}': "ì", r'\\`{o}': "ò", r'\\`{u}': "ù",
++             r'\\`{A}': "À", r'\\`{E}': "È", r'\\`{I}': "Ì", r'\\`{O}': "Ò", r'\\`{U}': "Ù",
++             # Non-braced versions
++             r'\\`a': "à", r'\\`e': "è", r'\\`i': "ì", r'\\`o': "ò", r'\\`u': "ù",
++             r'\\`A': "À", r'\\`E': "È", r'\\`I': "Ì", r'\\`O': "Ò", r'\\`U': "Ù",
+              # Circumflex
+              r"\\^{a}": "â",
+```
+
+---
+
+Let me also add the non-braced versions for other common accents:
+
+---
+
+```diff
+              r"\\`U": "Ù",
+              # Circumflex
+-             r"\\^{a}": "â",
+-             r"\\^{e}": "ê",
+-             r"\\^{i}": "î",
+-             r"\\^{o}": "ô",
+-             r"\\^{u}": "û",
+-             r"\\^{A}": "Â",
+-             r"\\^{E}": "Ê",
+-             r"\\^{I}": "Î",
+-             r"\\^{O}": "Ô",
+-             r"\\^{U}": "Û",
++             r'\\^{a}': "â", r'\\^{e}': "ê", r'\\^{i}': "î", r'\\^{o}': "ô", r'\\^{u}': "û",
++             r'\\^{A}': "Â", r'\\^{E}': "Ê", r'\\^{I}': "Î", r'\\^{O}': "Ô", r'\\^{U}': "Û",
++             # Non-braced versions
++             r'\\^a': "â", r'\\^e': "ê", r'\\^i': "î", r'\\^o': "ô", r'\\^u': "û",
++             r'\\^A': "Â", r'\\^E': "Ê", r'\\^I': "Î", r'\\^O': "Ô", r'\\^U': "Û",
++             
+              # Diaeresis/umlaut
+-             r'\\"{a}': "ä",
+-             r'\\"{e}': "ë",
+-             r'\\"{i}': "ï",
+-             r'\\"{o}': "ö",
+-             r'\\"{u}': "ü",
+-             r'\\"{A}': "Ä",
+-             r'\\"{E}': "Ë",
+-             r'\\"{I}': "Ï",
+-             r'\\"{O}': "Ö",
+-             r'\\"{U}': "Ü",
++             r'\\"{a}': "ä", r'\\"{e}': "ë", r'\\"{i}': "ï", r'\\"{o}': "ö", r'\\"{u}': "ü",
++             r'\\"{A}': "Ä", r'\\"{E}': "Ë", r'\\"{I}': "Ï", r'\\"{O}': "Ö", r'\\"{U}': "Ü",
++             # Non-braced versions
++             r'\\"a': "ä", r'\\"e': "ë", r'\\"i': "ï", r'\\"o': "ö", r'\\"u': "ü",
++             r'\\"A': "Ä", r'\\"E': "Ë", r'\\"I': "Ï", r'\\"O': "Ö", r'\\"U': "Ü",
++             
+              # Tilde
+-             r"\\~{a}": "ã",
+-             r"\\~{n}": "ñ",
+-             r"\\~{o}": "õ",
+-             r"\\~{A}": "Ã",
+-             r"\\~{N}": "Ñ",
+-             r"\\~{O}": "Õ",
++             r'\\~{a}': "ã", r'\\~{n}': "ñ", r'\\~{o}': "õ",
++             r'\\~{A}': "Ã", r'\\~{N}': "Ñ", r'\\~{O}': "Õ",
++             # Non-braced versions
++             r'\\~a': "ã", r'\\~n': "ñ", r'\\~o': "õ",
++             r'\\~A': "Ã", r'\\~N': "Ñ", r'\\~O': "Õ",
+              # Cedilla
+              r"\\c{c}": "ç",
+```
+
+---
+
+Perfect! Now the LaTeX conversion supports both formats:
+
+**Braced versions (already had):**
+- `\'{e}` → `é`
+- `\`{e}` → `è`
+- `\^{e}` → `ê`
+- `\"{e}` → `ë`
+- `\~{n}` → `ñ`
+
+**Non-braced versions (just added):**
+- `\'e` → `é`
+- `\`e` → `è` ✅ (the one you specifically mentioned)
+- `\^e` → `ê`
+- `\"e` → `ë`
+- `\~n` → `ñ`
+
+This covers both LaTeX syntax styles that authors might use in BibTeX files. Let's test it:
+
+---
+
+```bash
+python3 compiler.py
+```
+
+---
+
+_**User**_
+
+Great also, any {C} capitalised letter
+
+---
+
+_**Assistant**_
+
+
+
+---
+
+Ah yes! In BibTeX, single capitalized letters are often wrapped in braces like `{C}ollatz` or `{DNA}` to protect them from case changes. Let me add logic to handle these:
+
+---
+
+```diff
+      def convert_latex_symbols(text):
+          """Convert common LaTeX symbols to Unicode."""
++         # First handle protected capitalization - single letters or short acronyms in braces
++         # Pattern: {A}, {C}, {DNA}, {IEEE}, etc.
++         text = re.sub(r'\{([A-Z]{1,6})\}', r'\1', text)
++         
+          # Common diacritics
+          conversions = {
+```
+
+---
+
+Perfect! I've added a regex pattern that handles:
+
+- **Single letters**: `{C}ollatz` → `Collatz`
+- **Short acronyms**: `{DNA}` → `DNA`, `{IEEE}` → `IEEE`, `{API}` → `API`
+- **Preserves the letters**: The capitalization is maintained exactly as written
+
+The pattern `\{([A-Z]{1,6})\}` matches:
+- `\{` - opening brace
+- `([A-Z]{1,6})` - 1 to 6 uppercase letters (captured)
+- `\}` - closing brace
+
+And replaces it with just the captured letters, so `{C}ollatz` becomes `Collatz`.
+
+This is placed before the other LaTeX conversions so it won't interfere with diacritic handling. Let's test it:
+
+---
+
+```bash
+python3 compiler.py
+```
+
+---
+
+_**User**_
+
+\c{t}
+
+---
+
+_**Assistant**_
 
 
 
