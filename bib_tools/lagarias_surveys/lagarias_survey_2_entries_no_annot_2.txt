@@ -1,0 +1,696 @@
+Ethan Akin (2004), {\em Why is the $3x+1$ Problem Hard?,}
+In: {\em Chapel Hill Ergodic Theory Workshops}  (I. Assani, Ed.), 
+Contemp. Math. vol 356, Amer. Math. Soc. 2004, pp. 1--20. 
+(MR 2005f:37031).\\
+@@@@@@@@@@@@@
+Jo\~{a}o F. Alves, M\'{a}rio M. Graca, M. E. Sousa Dias, and Jos\'{e} Sousa Ramos (2005), 
+{\em A linear algebra approach to the conjecture of Collatz,}
+Lin. Alg. Appl. {\bf 394} (2005), 277--289. (MR2100588) \\
+@@@@@@@@@@@@@
+Tewodrus Amdeberhan, Dante Manna and Victor H. Moll (2008),
+{\em The $2$-adic valuation of a sequence arising from a rational integral,}
+J. Combinatorial Theory, Series A, {\bf 115} (2008), no. 8, 1474--1486.
+(MR 
+%2455589 (
+2009k:11194) \\
+%(eprint {\tt arxiv:0707.2119}.) \\
+@@@@@@@@@@@@@
+Paul  Andaloro (2000),
+{\em On total stopping times under $3X+1$ iteration,}
+Fibonacci Quarterly {\bf 38} (2000), 73--78. (MR 2000m:11024). \\
+@@@@@@@@@@@@@
+Paul Andaloro (2002),
+{\em The $3X+1$ problem and directed graphs,}
+Fibonacci Quarterly {\bf 40} (2002), 43--54. (MR 2003a:11018). \\
+@@@@@@@@@@@@@
+Stefan Andrei, Manfred Kudlek, Radu Stefan Niculescu  (2000),
+{\em Some results on the Collatz problem},
+Acta Informatica {\bf 37} (2000), 145--160.
+(MR 2002c:11022). \\
+@@@@@@@@@@@@@
+Stefan Andrei, Wei-Ngan Chin, and Huu Hai Nguyen (2007+),
+{\em A Functional View over the Collatz's Problem,}
+preprint.\\
+@@@@@@@@@@@@@
+David Applegate and Jeffrey C. Lagarias (2003), 
+{\em Lower bounds for the total stopping time  of $3x+1$ iterates,}
+Math. Comp. {\bf 72} (2003), 1035--1049. (MR 2004a:11016).\\
+%(eprint: {\tt arxiv.org/abs/math.NT/0103054}).  \\
+@@@@@@@@@@@@@
+David Applegate and Jeffrey C. Lagarias (2006), 
+{\em The $3x+1$ semigroup}, 
+J. Number Theory {\bf 177} (2006), 146--159. (MR 2006k:11037).\\
+ %(eprint: {\tt arxiv.org/abs/math.NT/0411140})  \\
+@@@@@@@@@@@@@
+Edward  Belaga and Maurice Mignotte (2000),
+{\em Cyclic Structure of Dynamical Systems Associated
+with $3x+d$ Extensions of Collatz Problem,}
+U. Strasbourg report 2000-18, 57 pages. 
+%(file hal-00129656-version 1 available at\\
+({\tt http://hal.archives-ouvertes.fr/IRMA-ACF}, file hal-00129656)\\
+%http://www-irma.u-strasbg.fr/irma/publications/2000/00018.ps.gz \\
+@@@@@@@@@@@@@
+Edward Belaga (2003),
+{\em Effective polynomial upper bounds to perigees and
+numbers of $(3x+d)$-cycles of a given oddlength,}
+Acta Arithmetica {\bf 106}, No. 2,  (2003), 197--206. (MR 2003m:11120). \\
+@@@@@@@@@@@@@
+Edward Belaga and Maurice Mignotte (2006a),
+{\em Walking Cautiously into the Collatz 
+Wilderness: Algorithmically,
+Number Theoretically, and Randomly,}
+Fourth Colloquium on Mathematics and Computer Science,
+DMTS (Discrete Mathematics and Computer Science) Proceedings  {\bf AG}, 2006, 249--260.\\
+% Univ. of Strasbourg preprint 2006-009, 17 pages.\\
+ %Discrete Mathematics and Theoretical Computer Science
+@@@@@@@@@@@@@
+Edward Belaga and Maurice Mignotte (2006b), 
+{\em The Collatz problem and
+its generalizations: Experimental Data. Table 1. Primitive cycles
+of $3x+d$ mappings, } Univ. of Strasbourg preprint 2006-015, 9 pages+400+ page table .\\
+@@@@@@@@@@@@@
+Edward Belaga and Maurice Mignotte (2006c),
+{\em The Collatz problem and
+its generalizations: Experimental Data. Table 2. Factorization of
+Collatz numbers $2^l-3^k$, }
+Univ. of Strasbourg preprint 2006-018, 
+6 pages text+156 page table. \\
+@@@@@@@@@@@@@
+Vitaly Bergelson, Michal Misiurewicz and Samuel Senti (2006), 
+{\em Affine Actions of a Free Semigroup on the Real Line,}
+Ergodic Theory and Dynamical Systems {\bf 26} (2006), 1285--1305.
+MR2266362 (2008f:37019). \\
+@@@@@@@@@@@@@
+Konstantin Borovkov and Dietmar Pfeifer (2000), 
+{\em Estimates for the Syracuse problem via a probabilistic model,} 
+Theory of Probability and its Applications {\bf 45}, No. 2 (2000), 300--310.
+(MR 1 967 765). \\
+@@@@@@@@@@@@@
+Barry Brent (2002+),
+{\em $3X+1$ dynamics on rationals with fixed denominator,}
+{\tt eprint: arXiv math.DS/0204170}. \\
+@@@@@@@@@@@@@
+Thomas Brox (2000), 
+{\em Collatz cycles with few descents, }
+Acta Arithmetica {\bf 92} (2000), 181--188. (MR 2001a:11032) \\
+@@@@@@@@@@@@@
+Paul S. Bruckman (2008),
+{\em A proof of the Collatz conjecture,}
+International Journal of Mathematical Education in Science and Technology,
+{\bf 39}, No. 3 (2008), 403--407. [Erratum: {\bf 39}, No. 4 (2008), 567.] (MR 2009d:11043b) \\
+@@@@@@@@@@@@@
+Charles C. Cadogan (2000),
+{\em The $3x+1$ problem: towards a solution},
+Caribbean J. Math. Comput. Sci. {\bf 10} (2000), paper 2, 11pp.
+(MR 2005g:11032) \\
+@@@@@@@@@@@@@
+Charles C. Cadogan (2003),
+{\em Trajectories in the $3x+1$ problem,}
+J. of Combinatorial Mathematics and Combinatorial Computing,
+{\bf 44} (2003), 177--187. (MR 2004a:11017)  \\
+@@@@@@@@@@@@@
+Charles C. Cadogan (2006),
+{\em A Solution to the $3x+1$ Problem,}
+Caribbean J. Math. Comp. Sci. {\bf 13} (2006), 1--11. \\
+@@@@@@@@@@@@@
+M\'{o}nica del Pilar Canales Chac\'{o}n 
+and  Michael Vielhaber (2004),
+{\em Structural and Computational Complexity of Isometries
+and their Shift Commutators,} Electronic Colloquium
+on Computational Complexity, Report No. 57 (2004), 24 pp. (electronic). \\
+@@@@@@@@@@@@@
+Mark Chamberland (2003),
+{\em Una actualizachio del problema $3x+1$,}
+Butletti de la Societat Catalana, {\bf 22} (2003) 19--45.
+ (MR 2004i:11019).\\
+@@@@@@@@@@@@@
+Dean Clark (2006), 
+Periodic solutions of arbitrary length in a simple integer iteration,
+Advances in Difference Equations, {\bf 2006} Article 35847, pp. 1--9.\\
+@@@@@@@@@@@@@
+Lisbeth De Mol (2008),
+{\em Tag Systems and Collatz-like functions},
+Theoretical Computer Science {\bf 390} (2008), 92--101.\\
+@@@@@@@@@@@@@
+Diego Domenici (2009)
+ {\em A few observations on the Collatz problem,}
+ Inter. J. Appl. Math. Stat. {\bf 14} (2009), No. J09, 97--107.
+ (MR 2524878)
+@@@@@@@@@@@@@
+Jean-Guillaume Dumas (2008),
+{\em Caract\'{e}risation des quenines et leur repr\'{e}sentation spirale}
+Math\'{e}matiques et Sciences Humaines
+[Mathematics and Social Science], {\bf 184} No. 4, 9--23.\\
+@@@@@@@@@@@@@
+Jeffrey P. Dumont and Clifford A. Reiter (2001),
+{\em Visualizing Generalized 3x+1 Function Dynamics,}
+Computers and Graphics {\bf 25} (2001), 883--898. \\
+@@@@@@@@@@@@@
+Jeffrey P. Dumont and Clifford A. Reiter (2003),
+{\em Real dynamics of a $3$-power extension of the $3x+1$ function,}
+Dynamics of Continuous, Discrete and Impulsive Systems, Series A:
+Mathematical Analysis 
+{\bf 10} (2003), 875--893. (MR2005e:37099).\\
+@@@@@@@@@@@@@
+Hershel M. Farkas (2005),
+{\em Variants of the $3N+1$ problem and multiplicative semigroups}, 
+In:  Geometry, Spectral Theory, Groups and Dynamics: Proceedings in
+Memory of Robert Brooks, 
+Contemporary Math., Volume 387, Amer. Math. Soc., Providence, 2005, pp. 121--127.
+(MR 2006g:11052)\\
+@@@@@@@@@@@@@
+David Gluck and Brian D. Taylor (2002),
+{\em A new statistic for the $3x+1$ problem,}
+Proc. Amer. Math. Soc. {\bf 130} (2002), 1293--1301.
+(MR 2002k:11031). \\
+@@@@@@@@@@@@@
+Jeffrey R.  Goodwin (2003),
+{\em Results on the Collatz conjecture,} 
+Annalele Stiintifice ale Universitatii ``Al. I. Cuza'' din lasi serie noua.
+Informatica  (Romanian), {\bf XIII} (2003) pp. 1--16. 
+MR2067520 (2005b:11025).
+[Scientific Annals of the ``Al. I. Cuza'' University of Iasi,
+Computer Science Section, Tome XIII, 2003, 1--16]\\
+% An. \c Stiin\c t. Univ. Al. I. Cuza la\c si. Mat. (N.S.) 
+%ASAU\
+@@@@@@@@@@@@@
+He, Sheng Wang (2003),
+{\em $3n+1$ problem's simplifying and structure property of $\{T(n)\}$$(n \in \NN)$}
+(Chinese),
+Acta Scieniarum Naturalium Universitatis Neimonggol 
+[Nei Menggu da xue xue bao. Zi ran ke xue] (2003), No. 2. \\
+@@@@@@@@@@@@@
+Kenneth  Hicks, Gary L. Mullen, Joseph L. Yucas and Ryan Zavislak (2008),
+{\em A Polynomial Analogue of the $3N+1$ Problem?}, 
+American Math. Monthly {\bf   115}  (2008), No. 7, 615--622.\\
+@@@@@@@@@@@@@
+Wernt Hotzel (2003),
+{\em Beit\"{a}ge zum $3n+1$-Problem,}
+Dissertation: Univsit\"{a}t Hamburg 2003, 62pp. [Zbl 1066.11501]\\
+@@@@@@@@@@@@@
+Huang, Guo Lin  and Wu, Jia Bang (2000),
+{\em One-to-one correspondence between the natural numbers and the
+parity vectors in the Collatz problem} (Chinese),
+J. of South-Central University for the Nationalities, Natural Science Ed.
+[Zhong nan min zu  da xue xue bao. Zi ran ke xue   ban] {\bf 19} (2000), No. 3, 59--61.\\
+@@@@@@@@@@@@@
+Yasuaki Ito and Koji Nakano (2009),
+{\em A Hardware-Software Cooperative Approach to the Exhaustive verification of the
+Collatz conjecture,}
+International Symp. on Parallel and Distributed Processing with Applications,
+2009, pp. 63--70.\\
+% IEICE Conference (Hiroshima University)
+@@@@@@@@@@@@@
+Ke, Wei (2001),
+{\em Generalization Concerning the $3x+1$ Problem} (Chinese),
+Journal of Jinan University (Science and Technology) 
+[Jinan da xue xue bao. Zi ran ke xue ban]  (2001), No. 4.\\
+@@@@@@@@@@@@@
+Ke, Yong-Sheng (2005),
+{\em The proof of the hypothesis about $"3x+1"$} (Chinese),
+Journal of Tianjin Vocational Institute [Teacher's College]
+%Worldcat ref : Tianjin vocational teacher's college
+[Tianjin zhi ye ji shu shi fax xue yuan xue bao] (2005), No. 2.\\
+@@@@@@@@@@@@@
+Immo O. Kerner (2000),
+{\em Die Collatz-Ulam-Kombination CUK},
+Rostocker Informatik-Berichte No. 24 (2000), preprint. \\
+@@@@@@@@@@@@@
+Stefan Kohl (2005),
+{\em Restklassenweise affine Gruppen}, Universit\"{a}t Stuttgart,
+Ph. D. Dissertation, 2005.
+(eprint: {\tt http://deposit.ddb.de/dokserv?idn=977164071})
+@@@@@@@@@@@@@
+Stefan Kohl (2007),
+{\em Wildness of iteration of certain residue class-wise affine mappings},
+Advances in Applied Math. {\bf 39} (2007), 322--328. (MR 2008g:11041)\\
+@@@@@@@@@@@@@
+Stefan Kohl (2008a),
+{\em On conjugates of Collatz-type mappings,}
+Int.  J. Number Theory {\bf 4}, No. 1 (2008), 117--120. (MR 2008m: 11055) \\
+@@@@@@@@@@@@@
+Stefan Kohl (2008b),
+{\em Algorithms for a class of infinite permutation groups,}
+J. of Symbolic Computation {\bf 43}, No. 8 (2008), 545--581. (MR 2009e:20003) \\
+@@@@@@@@@@@@@
+Stefan Kohl (2010),
+{\em A simple group generated by involutions interchanging residue classes
+of the integers}, Math. Z. {\bf 264} (2010), no. 4, 927--938.\\
+@@@@@@@@@@@@@
+Pavlos B.  Konstadinidis (2006),
+{\em The real $3x+1$ problem},
+Acta Arithmetica {\bf 122} (2006), 35--44. (MR 2007c:11029)\\
+%(eprint: {\tt arxiv.org/abs/math.DS/0410481}).\\
+@@@@@@@@@@@@@
+Alex V. Kontorovich and Steven J. Miller (2005),
+{\em Benford's law, values of $L$-functions, and the
+$3x+1$ problem}, Acta Arithmetica {\bf 120} (2005), 269--297. 
+(MR 2007c:11085). \\
+%(eprint: {\tt arxiv.org/abs/math.NT/0412003}).\\
+@@@@@@@@@@@@@
+Alex V. Kontorovich and Yakov G. Sinai (2002),
+{\em Structure Theorem for $(d, g, h)$-maps,}
+Bull. Braz. Math. Soc. (N.S.) {\bf 33} (2002), 213--224.
+(MR 2003k:11034). \\
+@@@@@@@@@@@@@
+Benjamin Kraft and Kennan Monks (2010),
+{\em On conjugacies for the $3x+1$ map induced by continuous endomorphisms
+of the shift dynamical system,}
+Discrete Math. {\bf 310} (2010), no. 13-14, 1875--1883.
+(MR 2011e:37027)\\
+@@@@@@@@@@@@@
+Ilia Krasikov and J. C. Lagarias (2003),
+{\em Bounds for the $3x+1$ problem using difference inequalities},
+Acta Arithmetica {\bf 109} (2003), no. 3,  237--258. 
+(MR 2004i:11020)\\
+%(eprint: {\tt arxiv.org/abs/math.NT/0205002   v1 30 Apr 2002}). \\
+@@@@@@@@@@@@@
+Stuart A. Kurtz and Janos Simon (2007),
+{\em The undecidability of the generalized Collatz problem,}
+In: J-Y. Cai et al, Ed., {\em Theory and Applications of Models of Computation,
+4-th International Conference, TAMC 2007, Shanghai, China, May 22-25, 2007.}
+ Lecture Notes in Computer Science No. 4484, Springer-Verlag: New York (2007),
+pp. 542--553. (MR 2374341)  \\
+@@@@@@@@@@@@@
+Jeffrey C. Lagarias (2003+),
+{\em The $3x+1$ Problem: An Annotated Bibliography (1963--1999)}, \\
+eprint:  {\tt arxiv:math.NT/0309224 Sept. 13, 2003, v11}. \\
+@@@@@@@@@@@@@
+Jeffrey C. Lagarias (2006), 
+{\em Wild and Wooley Numbers},
+American Mathematical Monthly, {\bf 113} (2006), 97--108. (MR 2007g:11029).\\
+%(eprint: {\tt arxiv.org/abs/math.NT/0411141}).  \\
+@@@@@@@@@@@@@
+Jeffrey C. Lagarias and Neil J. A. Sloane (2004),
+{\em Approximate squaring},
+Experimental Math. {\bf 13} (2004), 113--128.  (MR 2005c:11098).\\
+%(eprint: {\tt arxiv.org/abs/math.NT/0309389}).\\
+@@@@@@@@@@@@@
+Jeffrey  C. Lagarias and K. Soundararajan (2006),
+{\em Benford's Law for the $3x+1$ Function,}
+J. London Math. Soc. {\bf 74} (2006), 289--303.
+(MR 2007h:37007)\\
+@@@@@@@@@@@@@
+Eero Lehtonen (2008),
+{\em Two undecidable versions of Collatz's problems},
+Theor. Comp. Sci. {\bf 407} (2008), 596--600. (MR 2009k:68092)\\
+@@@@@@@@@@@@@
+Dan Levy (2004),
+{\em Injectivity and Surjectivity of  Collatz Functions},
+Discrete Math. {\bf 285} (2004), 190--199. (MR 2005f:11036). \\
+@@@@@@@@@@@@@
+Li, Xiao Chun (2002),
+{\em Compressive Iteration for the $3N+1$ conjecture} (Chinese),
+J. Huazhong Univ. of Science and Technology (Natural Science)
+[Hua zhong gong xue yuan] {\bf 30} (2002), no. 2. \\
+@@@@@@@@@@@@@
+Li, Xiao Chun (2003),
+{\em Contractible iteration for the $3n+1$ conjecture}
+(Chinese, English summary), J. Huazhong Univ. Sci. Technol. Nat. Sci.   
+[Hua zhong gong xue yuan] {\bf 31} (2003), no. 7, 
+115--116. (MR 2025640).\\
+@@@@@@@@@@@@@
+Li, Xiao Chun (2004),
+{\em Same-flowing numbers and super contraction iteration in $3N+1$ 
+conjecture} (Chinese, English summary),
+J. Huazhong Univ. Sci. Technol. Nat. Sci.   [Hua zhong gong xue yuan]  {\bf 32} (2004) no. 10,
+30--32.\\
+@@@@@@@@@@@@@
+Li, Xiao Chun (2005),
+{\em Necessary condition for periodic numbers in the $3N+1$ conjecture}
+(Chinese, English summary), J. Huazhong Univ. Sci. Technol. Nat. Sci.  
+[Hua zhong gong xue yuan]  {\bf 33} (2005), no. 11,  102--103. (MR 2209315).\\
+@@@@@@@@@@@@@
+Li, Xiao Chun  (2006),
+{\em Some properties of super contraction iteration in the $3N+1$ conjecture}
+(Chinese, English summary), 
+J. Huazhong Univ. Sci. Technol. Nat. Sci.  [Hua zhong gong xue yuan] 
+{\bf 34} (2006), no. 8, 115--117.
+(MR 2287431).\\
+@@@@@@@@@@@@@
+Li, Xiao Chun and Liang, You Min (2002)
+{\em Research on the Syracuse Operator and its properties} (Chinese),
+%Is this 3x+1 related? Yes, 3x+1 is in abstract
+% WORLDCAT: No find
+Journal of Air Force Radar Academy (2002), No. 3.\\
+@@@@@@@@@@@@@
+Li, Xiao Chun  and Liu, Jun (2006),
+{\em Equivalence of the $3N+1$ and $3N+3k$ conjecture and some
+related properties} (Chinese, English summary),
+J. Huazhong Univ. Sci. Technol. Nat. Sci. [Hua zhong gong xue yuan]  {\bf 34} (2006), no. 7, 120-121.
+(MR 2287654)\\
+@@@@@@@@@@@@@
+Li, Xiao Chun and Wu, Jia Bang  (2004),
+{\em Study of periodic numbers in the $3N+1$ conjecture} (Chinese, English summary),
+ J. Huazhong Univ. Sci. Technol. Nat. Sci.  [Hua zhong gong xue yuan]  {\bf 32} (2004), 
+no. 10, 100--101. (MR 2121229)\\
+@@@@@@@@@@@@@
+Josefine L\'{o}pez and Peter Stoll (2009),
+{\em The $3x+1$ conjugacy map over a Sturmian word,}
+Integers {\bf 9} (2009), A13, 141--162. (MR 2506145).\\
+@@@@@@@@@@@@@
+Florian Luca (2005),
+{\em On the nontrivial cycles in Collatz's problem},
+SUT  Journal of  Mathematics {\bf 41} (2005), no. 1, 31--41  (MR 2006e:11034). \\
+@@@@@@@@@@@@@
+Maurice Margenstern (2000),
+{\em Frontier between decidability and undecidability: a survey},
+%Universal Machines and Computations (Metz 1998),
+Theor. Comput. Sci. {\bf 231} (2000), 217--251.
+(MR 2001g:03079). \\
+@@@@@@@@@@@@@
+Keith R. Matthews (2005+),
+{\em The generalized $3x+1$ mapping,}
+ preprint, 23pp., dated Oct. 31, 2005, downloadable 
+as pdf file from: 
+{\tt http://www.maths.uq.edu.au/$\sim$krm/interests.html} \\
+@@@@@@@@@@@@@
+Karl Heinz Metzger (2000),
+{\em Untersuchungen zum $(3n+1)$-Algorithmus.
+Teil II: Die Konstruktion des Zahlenbaums,}
+PM (Praxis der Mathematik in der Schule) {\bf 42} (2000), 27--32. \\
+@@@@@@@@@@@@@
+Karl Heinz Metzger (2003),
+{\em Untersuchungen zum $(3n+1)$-Algorithmus,
+Teil III: \\
+Gesetzm\"{a}ssigkeiten der Ablauffolgen,}
+PM (Praxis der Mathematik in der Schule) 
+{\bf 45} (2003), No. 1, 25--32. \\
+@@@@@@@@@@@@@
+Pascal Michel (2004),
+{\em Small Turing machines and generalized busy beaver competition,}
+Theor. Comp. Sci. {\bf 326} (2004), 45--56. [MR 2005e:68049, Zbl 1071.68025]\\
+@@@@@@@@@@@@@
+Tomoaki Mimuro (2001),
+{\em On certain simple cycles of the Collatz conjecture,}
+SUT Journal of Mathematics, {\bf 37}, No. 2 (2001), 79--89.
+(MR 2002j:11018). \\
+@@@@@@@@@@@@@
+Michal Misiurewicz and Ana Rodriguez (2005),
+{\em Real $3X+1$},
+Proc. Amer. Math. Soc., {\bf 133}  (2005), 1109--1118.  (MR 2005j:37011).\\
+@@@@@@@@@@@@@
+Kenneth G. Monks (2002), 
+{\em $3X+1$ Minus the $+$},
+Discrete Math. Theor. Comput. Sci. {\bf 5} (2002), 47--53.
+(MR 2203f:11030). \\
+@@@@@@@@@@@@@
+Kenneth G. Monks and Jonathan Yazinski (2004),
+{\em The Autoconjugacy of the $3x+1$ function,}
+Discrete Mathematics {\bf 275} (2004), No. 1, 219--236. 
+MR2026287 (2004m:11030).\\
+@@@@@@@@@@@@@
+Kenneth M. Monks (2006),
+{\em The sufficiency of arithmetic progressions for the $3x+1$ conjecture,}
+Proc. Amer. Math. Soc. {\bf 134} (2006), No. 10, 2861--2872.
+MR2231609 (2007c:11030).\\
+@@@@@@@@@@@@@
+Maria Monks (2009),
+{\em Endomorphisms of the shift dynamical systems, discrete derivatives,
+and applications,} Discrete Math. {\bf 309} (2009), 5196--5205.
+(MR 2010i:37217)\\
+@@@@@@@@@@@@@
+Helmut M\"{u}ller (2009),
+\:{U}ber Periodenl\"{a}ngen and die Vermutungen von Collatz und Crandall,
+[On period lengths and the conjectures of Collatz and Crandall],
+Mitt. Math. Ges. Hamburg, {\bf 28} (2009), 121--130.\\
+@@@@@@@@@@@@@
+Tomas Oliveira e Silva (2004+),
+{\em Computational verification of $3x+1$ conjecture,}
+web document at {\tt http://www.ieeta.pt/ \~ tos/}; email: {\tt tos@ieeta.pt}. \\
+@@@@@@@@@@@@@
+Reiko Ohira  and Michinori Yamashita (2004),
+{\em A Generalization of the Collatz problem} (Japanese), 
+PC Literacy [Pasocon Literacy] (Personal Computer Users Application Technology
+Association]  {\bf 31} (2006), No. 4, pp. 16--21.\\
+@@@@@@@@@@@@@
+Reiko Ohira and Michinori Yamashita(2004),
+{\em On the $p$-Collatz problem} (Japanese), 
+PC Literacy [Pasocon Literacy] (Personal Computer Users Application Technology
+Association] {\bf 31} (2006), No. 4, pp. 61--64.\\
+@@@@@@@@@@@@@
+Pan, Hong-liang (2000),
+{\em Notes on the $3x+1$ problem} (Chinese),
+Journal of Suzhou University, Natural Science 
+[Suzhou da xue xue bao. Zi ran ke xue ban]
+{\bf 16} (2000), No. 4, 13--16.\\
+@@@@@@@@@@@@@
+Joseph L. Pe (2004), 
+{\em The $3x+1$ Fractal, }
+Computers \& Graphics  {\bf 28} (2004), 431--435. \\
+@@@@@@@@@@@@@
+Yuval  Peres, K\'{a}roly Simon and Boris Solomak (2006), 
+{\em Absolute continuity for random iterated function systems with
+overlaps,}
+J. London Math. Soc. {\bf 74}, No. 2 (2006), 739--756.
+MR2286443 (2007m:37053). \\
+@@@@@@@@@@@@@
+Qu, Jing-hua (2002),
+{\em The $3x+1$ problem and its necessary and sufficient condition} (Chinese),
+Journal of Sangqiu Teacher's College (2002), No. 5.\\
+@@@@@@@@@@@@@
+Eric Roosendaal (2004+),
+{\em On the $3x+1$ problem}, web document, available at: \\
+{\tt http://www.ericr.nl/wondrous/index.html} \\
+@@@@@@@@@@@@@
+Jean-Louis Rouet and Marc R. Feix (2002),
+{\em A generalization of the Collatz problem. Building
+cycles and a stochastic approach,}
+J. Stat. Phys. {\bf 107}, No. 5/6 (2002), 1283--1298. \\
+(MR 2003i:11035). \\
+@@@@@@@@@@@@@
+Giuseppe Scollo (2005),
+{\it $\omega$-rewriting the Collatz problem,}
+Fundamenta Informaticae {\bf 64} (2005), 401--412.
+[MR 2008g:68060, Zbl 1102.68051] \\
+@@@@@@@@@@@@@
+Douglas J. Shaw (2006),
+{\em The pure numbers generated by the Collatz sequence},
+Fibonacci Quarterly, {\bf 44} , No. 3, (2006), 194-201.\\
+@@@@@@@@@@@@@
+Shi, Qian Li (2005a),
+{\em Properties of cycle sets} (Chinese),
+J. Yangzte Univ. Natural Science.
+[Changjiang daxue xuebao. Zi ke ban]
+%J. Southern Yangtze University. Natural Science Ed. 
+% [Jiangnan da xue xue bao. Zi ren ke xue ban.]
+{\bf 2} (2005), No. 7, 191--192. (MR 2241924)\\
+@@@@@@@@@@@@@
+Shi, Qian Li (2005b),
+{\em Properties of the $3x+1$ problem} (Chinese),
+J. Yangzte Univ. Natural Science.
+[Changjiang daxue xuebao. Zi ke ban]
+%J. Southern Yangtze University. Natural Science Ed. 
+% [Jiangnan da xue xue bao. Zi ren ke xue ban.]
+{\bf 2} (2005),  No. 10, 287--289. (MR 2241263)\\
+@@@@@@@@@@@@@
+John L. Simons (2005),
+{\em On the non-existence of $2$-cycles for the $3x+1$ problem},
+Math. Comp. {\bf 74} (2005), 1565--1572. MR2137019(2005k:11050).\\
+@@@@@@@@@@@@@
+John L. Simons (2007),
+{\em A simple (inductive) proof for  the non-existence of $2$-cycles for the $3x+1$ problem},
+J. Number Theory  {\bf 123} (2007), 10-17. \\
+@@@@@@@@@@@@@
+John L. Simons (2008),
+{\em On the (non)-existence of $m$-cycles for generalized
+Syracuse sequences, }
+Acta Arithmetica {\bf 131} (2008), No. 3, 217--254. (MR 2008m:11056)\\
+@@@@@@@@@@@@@
+John L. Simons (2008),
+{\em Exotic Collatz Cycles,}
+Acta Arithmetica  {\bf 134} (2008), 201--209. (MR 2438845)\\
+@@@@@@@@@@@@@
+John L. Simons (2008a+),
+{\em Post-transcendence conditions for the existence of $m$-cycles for
+the $3x+1$ problem,} preprint.\\
+@@@@@@@@@@@@@
+John L. Simons (2008b+),
+{\em On isomorphism between Farkas sequences and Collatz sequences,}
+preprint.\\
+@@@@@@@@@@@@@
+John L. Simons and Benne M. M. de Weger (2004),
+{\em Mersenne en het Syracuseprobleem}
+[Mersenne and the Syracuse problem] (Dutch),
+Nieuw Arch. Wiskd. {\bf 5} (2004), no. 3, 218--220.
+(MR2090398).\\
+@@@@@@@@@@@@@
+John L. Simons and Benne M. M. de Weger (2005),
+{\em Theoretical and computational bounds for $m$-cycles of the
+$3n+1$ problem}, Acta Arithmetica, {\bf 117} (2005), 51--70.  
+(MR 2005h:11049).\\
+@@@@@@@@@@@@@
+Yakov G. Sinai (2003a), 
+{\em Statistical $(3X+1)$-Problem},
+Dedicated to the memory of J\"{u}rgen K. Moser.
+Comm. Pure Appl. Math. {\bf 56} No. 7 (2003), 1016--1028.
+(MR 2004d:37007). \\
+%(eprint: {\tt arxiv.org/abs/math.DS/0201102}). \\
+@@@@@@@@@@@@@
+Yakov G. Sinai (2003b), 
+{\em Uniform distribution in the $(3x+1)$ problem},
+Moscow Math. Journal {\bf 3} (2003), No. 4, 1429--1440.
+(S. P. Novikov 65-th birthday issue). MR2058805 (2005a:11026).\\
+@@@@@@@@@@@@@
+Yakov G. Sinai (2004),
+{\em A theorem about uniform distribution,}
+Commun. Math. Phys. {\bf 252} (2004), 581--588. (F. Dyson birthday issue)
+MR2104890 (2005g:37009).\\
+@@@@@@@@@@@@@
+Matti K. Sinisalo (2003+),
+{\em On the minimal cycle lengths of the Collatz sequences},
+preprint., Univ. of Oulu, Finland.\\
+@@@@@@@@@@@@@
+Alain Slakmon and Luc Macot (2006),
+{\em On the almost convergence of Syracuse sequences},
+Statistics and Probability Letters {\bf 76}, No. 15 (2006), 1625--1630.\\
+@@@@@@@@@@@@@
+Bart Snapp and Matt Tracy (2008),
+{\em The Collatz problem and Analogues,}
+J. Integer Sequences {\bf 11} (2008), Article 08.4.7, 10pp. (MR 2009i:11144)\\
+@@@@@@@@@@@@@
+Tang, Ren Xian (2006),
+{\em About recursion relation of $3x+1$ Conjecture (Chinese),}
+J. of Hunan Univ. Science Engineering 
+%WORLDCAT: hunan u of science and technology
+[Hunan ki ji da xue xue bao] 
+% J. Hunan universiy:  [Hunan da xue xue bao. Zi ran ke xue ban]
+(2006), No. 5 \\
+@@@@@@@@@@@@@
+Toshio Urata (2002),
+{\em Some holomorphic functions connected with the Collatz problem,}
+Bulletin Aichi Univ. Education (Natural Science)
+[Aichi Kyoiku Daigaku Kenkyu hokoku. Shizen kagaku.] {\bf 51}  (2002), 13--16.\\
+@@@@@@@@@@@@@
+Toshio Urata (2003),
+{\em  The Collatz problem over $2$-adic integers,}
+Bulletin Aichi Univ. Education (Natural Science)
+[Aichi Kyoiku Daigaku Kenkyu hokoku. Shizen kagaku.] {\bf 52}  (2003), 5--11.\\
+@@@@@@@@@@@@@
+Toshio Urata (2007),
+{\em Collatz's problem} (Japanese), 
+Aichi University of Education Booklet, Math. Sciences Select 1, 
+60 pages.\\
+@@@@@@@@@@@@@
+Toshio Urata and Kazuhiro Hamada (2005),
+{\em  Positive values of a holomorphic function connected with the Collatz problem,}
+Bulletin Aichi Univ. Education (Natural Science), 
+[Aichi Kyoiku Daigaku Kenkyu hokoku. Shizen kagaku.] {\bf 54}  (2005), 1--10\\
+@@@@@@@@@@@@@
+Tanguy Urvoy (2000),
+{\em Regularity of congruential graphs},
+in: {\em Mathematical Foundations of Computer Science 2000
+(Bratislava)}, Lecture Notes in Computer Science Vol. 1893,
+Springer: Berlin, 2000, pp. 680--689. 
+(MR 2002d:68083). \\
+@@@@@@@@@@@@@
+Jean Paul Van Bendegem (2005),
+{\em The Collatz Conjecture: A Case Study in Mathematical Problem Solving}, 
+Logic and Logical Philosophy {\bf 14}, No. 1 (2005), 7--23. (MR 2163301)\\
+@@@@@@@@@@@@@
+Stanislav Volkov (2006), 
+{\em A probabilistic model for the $5k+1$ problem and related problems,}
+Stochastic Processes and Applications {\bf 116} (2006), 662--674. \\
+@@@@@@@@@@@@@
+Wang, Nian-liang (2002),
+{\em The way to prove Collatz problem} (Chinese), 
+%WORLDCAT: Shangluo nian jian (bian ji wei yuan hui) [since 2001]??
+Journal of Shangluo University (2002), No. 2. \\
+@@@@@@@@@@@@@
+Wang, Xing-Yuan; Wang, Qiao Long; Fen, Yue Ping; and Xu, Zhi Wen (2003), 
+{\em The distribution of the fixed points on the real axis of a generalized
+$3x+1$ function and some related fractal images} (Chinese),
+Journal of Image and Graphics [Zhongguo tu xiang tu xing xue bao] {\bf 8}(?) (2003), No. 1.\\
+@@@@@@@@@@@@@
+Xing-yuan Wang  and  Xue-jing Yu (2007),
+{\em Visualizing generalized $3x+1$ function dynamics based on fractal,}
+Applied  Mathematics and Computation 
+{\bf 188} (2007), no. 1, 234--243. 
+(MR2327110).\\
+@@@@@@@@@@@@@
+Wang, Xing-yuan and Yu, Xue-jing (2008),
+{\em Dynamics of the generalized $3x+1$ function determined by
+its fractal images,}
+Progress Natural Science (English Edition) {\bf 18} (2008), 217--223. (MR 2009i:37020).\\
+@@@@@@@@@@@@@
+G\"{u}nther J. Wirsching (2000),
+{\em \"{U}ber das $3n + 1$ Problem,}
+Elem. Math. {\bf 55} (2000), 142--155. 
+(MR 2002h:11022). \\
+@@@@@@@@@@@@@
+G\"{u}nther J. Wirsching (2001),
+{\em A functional differential equation and $3n + 1$ dynamics,}
+in: {\em Topics in Functional Differential and Functional Difference
+Equations (Lisbon 1999),} (T. Faria, E. Frietas, Eds.), Fields Institute
+Communications No. 29, Amer. Math. Soc. 2001, pp. 369--378. 
+(MR 2002b:11035). \\
+@@@@@@@@@@@@@
+G\"{u}nther  J. Wirsching (2003)
+{\em On the problem of positive predecessor density in $3N+1$ dynamics,}
+Disc. Cont. Dynam. Syst. {\bf 9} (2003), no. 3, 771--787.
+(MR 2004f:39028). \\
+@@@@@@@@@@@@@
+Wu, Jia Bang and  Huang, Guo Lin (2001),
+{\em On the traditional iteration and the elongate iteration of the $3N+1$ conjecture} (Chinese),
+Journal of South-Central University for Nationalities. Natural Sciences Ed.
+[Zhong nan min zu  da xue xue bao. Zi ran ke xue   ban] 
+{\bf 21} (2001), No. 4 \\
+@@@@@@@@@@@@@
+Wu, Jia Bang  and Hao, Shen Wang (2003),
+{\em On the equality of the adequate stopping time and the coefficient stopping
+time of $n$ in the $3N+1$ conjecture} (Chinese, English summary),
+J. Huazhong Univ. Sci. Technol. Nat. Sci.  [Hua zhong gong xue yuan]  {\bf 31} (2003), no. 5, 114--116. (MR 2000420)\\
+@@@@@@@@@@@@@
+Wu, Jia Bang and Huang, Guo Lin  (2001a),
+{\em Family of consecutive integer pairs of the same height in the Collatz conjecture}
+(Chinese, English summary), Mathematica  Applicata (Wuhan) [Ying yung shu hs\"{u}eh] {\bf 14} (2001), suppl. 21--25.
+(MR 1885838, Zbl 1002.11023)\\
+@@@@@@@@@@@@@
+Wu, Jia Bang  and Huang, Guo Lin (2001b),
+{\em Elongate iteration for the $3N+1$ Conjecture}
+(Chinese, English summary), J. Huazhong Univ. Sci. Tech.  
+[Hua zhong gong xue yuan]  {\bf 29} (2001), no.2 , 112--114.
+(MR 1887558)\\
+@@@@@@@@@@@@@
+Wu, Wen Quan (2003),
+{\em An equivalent proposition of Collatz conjecture} (Chinese),
+Journal of Aba Teacher's College 
+[Aba shi fan gao deng zhuan ke xue xiao xue bao] (2003), No. 3.\\
+@@@@@@@@@@@@@
+Xia, Ye (2003),
+{\em Some thoughts about $3X+1$ Conjecture}  (Chinese),
+% WORLDCAT: Zhongxue Shu Xue [Chu zhong ban= Middle School?]
+[Zhongxue Shuxue Za Zhi (Chu zhong ban)] (2003), No. 6. \\
+@@@@@@@@@@@@@
+Xie, Jiu Guo  (2006),
+{\em The interesting $3x+1$ problem (Chinese), }
+J. of Hunan Univ. Science Technology 
+%WORLDCAT: hunan u of science and technology is:
+[Hunan ki ji da xue xue bao] (2006), No. 11 \\
+@@@@@@@@@@@@@
+Michinori Yamashita (2002),
+{\em  $3x+1$ problem from the $(e,k)$-perspective } (Japanese),
+PC Literacy [Pasocon Literacy] (Personal Computer Users Application Technology
+Association]  {\bf 27} (2002), No. 10,  22--27.\\
+@@@@@@@@@@@@@
+Michinori Yamashita (2006),
+{\em Note on the $3x \pm 1$ Problem } (Japanese),
+PC Literacy [Pasocon Literacy] (Personal Computer Users Application Technology
+Association]  (2006).\\
+@@@@@@@@@@@@@
+Roger E.  Zarnowski (2001),
+{\em Generalized inverses and the total stopping time of
+Collatz sequences,}
+ Linear and Multilinear Algebra {\bf 49} (2001), 115--130. 
+(MR 2003b:15011). \\
+@@@@@@@@@@@@@
+Roger E. Zarnowski (2008),
+{\em The congruence structure of the $3x+1$ map,}
+Fibonacci Quarterly {\bf 46/47} (2008/09), no. 2, 115--125.
+(MR 2010c:11037)\\
+@@@@@@@@@@@@@
+Zhou, Yun Cai and Zhou, Bao Lan (2007),
+{\em On the Collatz Conjecture} (Chinese),
+% Journal: see SHI
+J. Yangtze University Natural Science.
+[Changjiang daxue xuebao. Zi ke ban] (2007), No. 1, 24--26.\\

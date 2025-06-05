@@ -5,10 +5,10 @@ import bibtexparser  # type: ignore
 
 
 def parse_bibliography():
-    """Parse the Collatz.bib file and return a list of papers."""
-    bib_file = Path("Collatz.bib")
+    """Parse the Collatz_conjecture.bib file and return a list of papers."""
+    bib_file = Path("Collatz_conjecture.bib")
     if not bib_file.exists():
-        print("Warning: Collatz.bib not found!")
+        print("Warning: Collatz_conjecture.bib not found!")
         return []
 
     # Read the file content
@@ -58,11 +58,6 @@ def parse_bibliography():
             "formalisations_count": 0,  # Number of proof assistant formalisations (Lean, Coq, etc.)
         }
         papers.append(paper)
-
-    # Sort papers by year (newest first)
-    papers.sort(
-        key=lambda x: int(x["year"]) if x["year"].isdigit() else 0, reverse=True
-    )
 
     return papers
 
@@ -124,7 +119,7 @@ def build_site():
     build_dir.mkdir(exist_ok=True)
 
     # Parse bibliography
-    print("Parsing Collatz.bib...")
+    print("Parsing Collatz_conjecture.bib...")
     papers = parse_bibliography()
     print(f"Found {len(papers)} papers")
 

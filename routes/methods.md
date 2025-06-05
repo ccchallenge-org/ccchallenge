@@ -1,0 +1,3 @@
+Why curations:
+- overwhelment
+- subjectivity
