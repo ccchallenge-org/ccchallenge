@@ -1,6 +1,3 @@
-- curations
-- chats
-- Explainations
-- abstracts
-- Lagarias review
-- ffields
+- GitHub-based process for formal proofs
+- Annotations
+- Engagement (chat, wiki, etc.)
