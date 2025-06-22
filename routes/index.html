@@ -193,8 +193,35 @@
                     // Hide loading spinner after everything is rendered
                     setTimeout(() => {
                         this.loading = false;
+                        // Handle hash navigation after content is loaded with longer delay
+                        setTimeout(() => {
+                            this.handleHashNavigation();
+                        }, 500);
                     }, 100);
                 });
+
+                // Listen for hash changes
+                window.addEventListener('hashchange', () => {
+                    setTimeout(() => {
+                        this.handleHashNavigation();
+                    }, 100);
+                });
+            },
+
+            handleHashNavigation() {
+                // Check if there's a hash in the URL
+                if (window.location.hash) {
+                    const hash = window.location.hash.substring(1); // Remove the #
+                    console.log('Looking for element with ID:', hash);
+                    const targetElement = document.getElementById(hash);
+                    if (targetElement) {
+                        console.log('Found element, scrolling to it');
+                        // Scroll to the element
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    } else {
+                        console.log('Element not found');
+                    }
+                }
             },
 
             renderMath() {
