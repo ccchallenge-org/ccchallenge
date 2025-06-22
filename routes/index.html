@@ -8,7 +8,7 @@
 
 <div x-data="paperManager()">
     <!-- Header Section -->
-    <div class="text-left mb-2 px-2 font-mono">
+    <!-- <div class="text-left mb-2 px-2 font-mono">
         <h1 class="underline">Challenge goal</h1>
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <p class="text-blue-100 max-w-4xl">
@@ -16,23 +16,7 @@
                 <span x-text="filteredPapers.length"></span>.
             </p>
         </div>
-    </div>
-
-    <div class="flex justify-center items-center mb-8">
-        <!-- Curation Selector -->
-        <div class="flex items-center gap-2">
-            <label for="curation-select" class="text-blue-100 text-sm">Curation:</label>
-            <select x-model="selectedCuration" @change="filterPapers(); $nextTick(() => renderMath())"
-                class="bg-white text-gray-900 px-3 py-1 rounded border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                {% for curation in curations %}
-                <option value="{{ curation.slug }}" data-papers="{{ curation.curation|join(',') }}">
-                    {{ curation.name }} ({{ curation.curation|length }})
-                </option>
-                {% endfor %}
-                <option value="">All ({{ papers|length }})</option>
-            </select>
-        </div>
-    </div>
+    </div> -->
 
     <!-- Loading Spinner -->
     <div x-show="loading" class="flex justify-center items-center py-20">
@@ -44,9 +28,13 @@
 
     <!-- Papers Grid -->
     <div x-show="!loading" class="grid grid-cols-1 gap-4 max-w-3xl mx-auto mb-10">
+        <h2 class="text-2xl font-bold mb-2">Literature (<span x-text="filteredPapers.length"></span> entries)</h2>
         <template x-for="paper in filteredPapers" :key="paper.id">
             <div :id="paper.id"
                 class="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-4 pb-2">
+                <!-- Anchor for bibtex key -->
+                <a :name="paper.id"></a>
+
                 <!-- Paper Type Badge -->
                 <div class="flex justify-between items-start mb-3">
                     <div class="flex space-x-3">
@@ -55,9 +43,9 @@
                             x-text="paper.type">
                         </span>
                         <!-- BibKey -->
-                        <code
-                            class="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono text-gray-700 select-all cursor-pointer"
-                            title="Click to select citation key" x-text="paper.id"></code>
+                        <a :href="'#' + paper.id"
+                            class="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono text-gray-700 select-all cursor-pointer hover:bg-gray-200 transition-colors"
+                            title="Click to go to this paper" x-text="paper.id"></a>
                     </div>
                     <span class="text-sm font-semibold text-gray-900" x-text="paper.year"></span>
                 </div>
@@ -131,7 +119,7 @@
     <div x-show="!loading && filteredPapers.length === 0" class="text-center py-12">
         <div class="text-gray-400 text-6xl mb-4">📚</div>
         <h3 class="text-xl font-medium text-white mb-2">No Papers Found</h3>
-        <p class="text-blue-100">No papers match the selected curation.</p>
+        <p class="text-blue-100">No papers available.</p>
     </div>
 </div>
 
@@ -150,7 +138,6 @@
         return {
             allPapers: [],
             filteredPapers: [],
-            selectedCuration: "ccchallenge's curation",
             loading: true,
 
             get formalisedCount() {
@@ -167,8 +154,9 @@
                     this.allPapers = [];
                 }
 
-                // Initial filter and math rendering
-                this.filterPapers();
+                // Show all papers by default
+                this.filteredPapers = [...this.allPapers];
+
                 this.$nextTick(() => {
                     this.renderMath();
                     // Hide loading spinner after everything is rendered
@@ -176,24 +164,6 @@
                         this.loading = false;
                     }, 100);
                 });
-            },
-
-            filterPapers() {
-                if (!this.selectedCuration) {
-                    this.filteredPapers = [...this.allPapers];
-                    return;
-                }
-
-                // Find the curation data from the select options
-                const select = document.querySelector('select');
-                const selectedOption = select.querySelector(`option[value="${this.selectedCuration}"]`);
-
-                if (selectedOption && selectedOption.dataset.papers) {
-                    const paperIds = selectedOption.dataset.papers.split(',').filter(id => id.trim());
-                    this.filteredPapers = this.allPapers.filter(paper => paperIds.includes(paper.id));
-                } else {
-                    this.filteredPapers = [...this.allPapers];
-                }
             },
 
             renderMath() {
