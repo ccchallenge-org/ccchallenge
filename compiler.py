@@ -315,6 +315,17 @@ def custom_latex_to_unicode(record):
     return record
 
 
+def parse_bibtex_naive(file_path):
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    # Regex to match BibTeX entry keys, assuming entries start like @article{key, ...
+    entry_pattern = re.compile(r"@\w+\s*{\s*([^,\s]+)", re.IGNORECASE)
+    keys = entry_pattern.findall(content)
+
+    return keys
+
+
 def parse_bibliography():
     """Parse the Collatz_conjecture.bib file and return a list of papers."""
     bib_file = Path("Collatz_conjecture.bib")
@@ -329,7 +340,19 @@ def parse_bibliography():
     # Parse with bibtexparser
     parser = BibTexParser()
     parser.customization = custom_latex_to_unicode
+    parser.ignore_nonstandard_types = False  # Fail on non-standard entry types
+    parser.common_strings = False  # Fail on undefined string references
+    parser.homogenize_fields = False  # Don't homogenize field names
     bib_database = bibtexparser.loads(bib_content, parser=parser)
+
+    # Check for duplicate entries
+    entry_ids = [entry.get("ID", "") for entry in bib_database.entries]
+    duplicate_ids = [
+        entry_id for entry_id in set(entry_ids) if entry_ids.count(entry_id) > 1
+    ]
+
+    if duplicate_ids:
+        raise ValueError(f"Duplicate BibTeX entries found: {', '.join(duplicate_ids)}")
 
     papers = []
     for entry in bib_database.entries:
@@ -372,6 +395,17 @@ def parse_bibliography():
         papers.append(paper)
 
     papers.sort(key=lambda x: x["id"])
+
+    naive_keys = parse_bibtex_naive(bib_file)
+    if set(entry_ids) != set(naive_keys):
+        if len(set(entry_ids) - set(naive_keys)) > 0:
+            raise ValueError(
+                f"Duplicate BibTeX entries found after BibtexParser: {', '.join(set(entry_ids) - set(naive_keys))}"
+            )
+        if len(set(naive_keys) - set(entry_ids)) > 0:
+            raise ValueError(
+                f"Missing BibTeX entries after BibtexParser found: {', '.join(set(naive_keys) - set(entry_ids))}"
+            )
 
     return papers
 
