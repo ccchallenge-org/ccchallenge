@@ -123,17 +123,20 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
         if not settings.resend_key:
             print("RESEND_KEY not set — skipping email send.")
             return
-        resend.Emails.send({
-            "from": "ccchallenge <noreply@ccchallenge.org>",
-            "to": [user.email],
-            "subject": "Verify your ccchallenge account",
-            "html": (
-                f"<p>Hi {user.username},</p>"
-                f"<p>Click the link below to verify your email address:</p>"
-                f'<p><a href="{verify_link}">{verify_link}</a></p>'
-                f"<p>If you didn't sign up for ccchallenge, you can ignore this email.</p>"
-            ),
-        })
+        try:
+            resend.Emails.send({
+                "from": "ccchallenge <noreply@ccchallenge.org>",
+                "to": [user.email],
+                "subject": "Verify your ccchallenge account",
+                "html": (
+                    f"<p>Hi {user.username},</p>"
+                    f"<p>Click the link below to verify your email address:</p>"
+                    f'<p><a href="{verify_link}">{verify_link}</a></p>'
+                    f"<p>If you didn't sign up for ccchallenge, you can ignore this email.</p>"
+                ),
+            })
+        except Exception as e:
+            print(f"Failed to send verification email to {user.email}: {e}")
 
     async def authenticate(self, credentials):
         """Authenticate by username instead of email. Rejects unverified users."""
