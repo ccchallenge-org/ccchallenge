@@ -40,6 +40,13 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
         request: Request | None = None,
     ) -> models.UP:
         user_create.email = _normalize_email(user_create.email)
+        # Check username uniqueness (fastapi-users only checks email)
+        session = self.user_db.session
+        existing = await session.execute(
+            select(User).where(User.username == user_create.username)
+        )
+        if existing.scalar_one_or_none() is not None:
+            raise exceptions.UserAlreadyExists()
         return await super().create(user_create, safe=safe, request=request)
 
     async def _generate_username(self, email: str) -> str:
