@@ -210,7 +210,7 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(buildPayload())
             }).then(r => {
-                if(r.ok) window.location.reload();
+                if(r.ok) { window.location.hash = '{{ paper.bibtex_key }}'; window.location.reload(); }
                 else r.json().then(d => alert(d.detail || 'Error'));
             })
         " class="space-y-2">
