@@ -163,24 +163,8 @@
             knownTypes: ['article','inproceedings','incollection','book','phdthesis','mastersthesis','techreport','misc','unpublished'],
             entrySelect: '',
             customType: '',
-            fd: {
-                entry_type: '{{ paper.entry_type }}',
-                title: '{{ paper.title|e }}',
-                authors: '{{ paper.authors|e }}',
-                year: '{{ paper.year or '' }}',
-                journal: '{{ paper.journal or '' }}',
-                booktitle: '{{ paper.booktitle or '' }}',
-                publisher: '{{ paper.publisher or '' }}',
-                volume: '{{ paper.volume or '' }}',
-                number: '{{ paper.number or '' }}',
-                pages: '{{ paper.pages or '' }}',
-                doi: '{{ paper.doi or '' }}',
-                url: '{{ paper.url or '' }}',
-                abstract: `{{ paper.abstract|default('', true)|e }}`,
-                note: '{{ paper.note or '' }}',
-                extra_fields: null,
-            },
-            extras: [{% if paper.extra_fields %}{% for k, v in paper.extra_fields.items() %}{ key: '{{ k|e }}', value: '{{ v|e }}' },{% endfor %}{% endif %}],
+            fd: { entry_type: '', title: '', authors: '', year: '', journal: '', booktitle: '', publisher: '', volume: '', number: '', pages: '', doi: '', url: '', abstract: '', note: '', extra_fields: null },
+            extras: [],
             addExtra() { this.extras.push({ key: '', value: '' }); },
             removeExtra(i) { this.extras.splice(i, 1); },
             buildPayload() {
@@ -191,13 +175,35 @@
                 return this.fd;
             },
             init() {
+                const d = JSON.parse(this.$el.querySelector('[data-paper-json]').textContent);
+                Object.keys(this.fd).forEach(k => { if (d[k] !== undefined && d[k] !== null) this.fd[k] = d[k]; });
                 this.entrySelect = this.knownTypes.includes(this.fd.entry_type) ? this.fd.entry_type : '__other__';
                 this.customType = this.entrySelect === '__other__' ? this.fd.entry_type : '';
+                if (d.extra_fields) this.extras = Object.entries(d.extra_fields).map(([k, v]) => ({ key: k, value: String(v) }));
             },
             syncEntryType() {
                 this.fd.entry_type = this.entrySelect === '__other__' ? this.customType : this.entrySelect;
             }
          }">
+        <script type="application/json" data-paper-json>
+        {
+            "entry_type": {{ paper.entry_type|tojson }},
+            "title": {{ paper.title|tojson }},
+            "authors": {{ paper.authors|tojson }},
+            "year": {{ (paper.year or '')|tojson }},
+            "journal": {{ (paper.journal or '')|tojson }},
+            "booktitle": {{ (paper.booktitle or '')|tojson }},
+            "publisher": {{ (paper.publisher or '')|tojson }},
+            "volume": {{ (paper.volume or '')|tojson }},
+            "number": {{ (paper.number or '')|tojson }},
+            "pages": {{ (paper.pages or '')|tojson }},
+            "doi": {{ (paper.doi or '')|tojson }},
+            "url": {{ (paper.url or '')|tojson }},
+            "abstract": {{ (paper.abstract or '')|tojson }},
+            "note": {{ (paper.note or '')|tojson }},
+            "extra_fields": {{ paper.extra_fields|tojson }}
+        }
+        </script>
         <form @submit.prevent="
             fetch('/api/papers/{{ paper.bibtex_key }}', {
                 method: 'PUT',
