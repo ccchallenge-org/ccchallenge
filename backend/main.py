@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from backend.auth.router import router as auth_router
+from backend.config import settings
 from backend.auth.users import current_optional_user
 from backend.database import engine, get_async_session
 from backend.models import AuditReport, Base, Formalisation, FormalisationStatus, Paper, Review, User, Vote
@@ -32,6 +33,8 @@ app.mount("/static", StaticFiles(directory=BACKEND_DIR / "static"), name="static
 
 # Templates
 templates = Jinja2Templates(directory=BACKEND_DIR / "templates")
+templates.env.globals["oauth_github"] = bool(settings.github_client_id)
+templates.env.globals["oauth_discord"] = bool(settings.discord_client_id)
 
 # API routers
 app.include_router(auth_router, prefix="/api")

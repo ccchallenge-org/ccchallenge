@@ -1,3 +1,4 @@
+import secrets
 import uuid
 from typing import Optional
 
@@ -41,9 +42,73 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
         user_create.email = _normalize_email(user_create.email)
         return await super().create(user_create, safe=safe, request=request)
 
+    async def _generate_username(self, email: str) -> str:
+        """Generate a unique username from an email address."""
+        base = email.split("@")[0][:20]
+        session = self.user_db.session
+        result = await session.execute(select(User).where(User.username == base))
+        if result.scalar_one_or_none() is None:
+            return base
+        return f"{base}_{secrets.token_hex(3)}"
+
+    async def oauth_callback(
+        self,
+        oauth_name: str,
+        access_token: str,
+        account_id: str,
+        account_email: str,
+        expires_at: int | None = None,
+        refresh_token: str | None = None,
+        request: Request | None = None,
+        *,
+        associate_by_email: bool = False,
+        is_verified_by_default: bool = False,
+    ) -> models.UP:
+        oauth_account_dict = {
+            "oauth_name": oauth_name,
+            "access_token": access_token,
+            "account_id": account_id,
+            "account_email": account_email,
+            "expires_at": expires_at,
+            "refresh_token": refresh_token,
+        }
+
+        try:
+            user = await self.get_by_oauth_account(oauth_name, account_id)
+        except exceptions.UserNotExists:
+            try:
+                user = await self.get_by_email(account_email)
+                if not associate_by_email:
+                    raise exceptions.UserAlreadyExists()
+                user = await self.user_db.add_oauth_account(user, oauth_account_dict)
+            except exceptions.UserNotExists:
+                password = self.password_helper.generate()
+                username = await self._generate_username(account_email)
+                user_dict = {
+                    "email": _normalize_email(account_email),
+                    "hashed_password": self.password_helper.hash(password),
+                    "is_verified": is_verified_by_default,
+                    "username": username,
+                }
+                user = await self.user_db.create(user_dict)
+                user = await self.user_db.add_oauth_account(user, oauth_account_dict)
+                await self.on_after_register(user, request)
+        else:
+            for existing_oauth_account in user.oauth_accounts:
+                if (
+                    existing_oauth_account.account_id == account_id
+                    and existing_oauth_account.oauth_name == oauth_name
+                ):
+                    user = await self.user_db.update_oauth_account(
+                        user, existing_oauth_account, oauth_account_dict
+                    )
+
+        return user
+
     async def on_after_register(self, user: User, request: Optional[Request] = None):
         print(f"User {user.id} ({user.username}) registered.")
-        await self.request_verify(user, request)
+        if not user.is_verified:
+            await self.request_verify(user, request)
 
     async def on_after_request_verify(self, user: User, token: str, request: Optional[Request] = None):
         verify_link = f"{settings.base_url}/verify?token={token}"

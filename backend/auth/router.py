@@ -58,6 +58,8 @@ if github:
             auth_backend,
             settings.secret_key,
             redirect_url=f"{settings.base_url}/api/auth/github/callback",
+            associate_by_email=True,
+            is_verified_by_default=True,
         ),
         prefix="/auth/github",
     )
@@ -70,6 +72,8 @@ if discord:
             auth_backend,
             settings.secret_key,
             redirect_url=f"{settings.base_url}/api/auth/discord/callback",
+            associate_by_email=True,
+            is_verified_by_default=True,
         ),
         prefix="/auth/discord",
     )
