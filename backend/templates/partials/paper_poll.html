@@ -1,0 +1,165 @@
+{% set yes_count = votes|selectattr('vote', 'equalto', true)|list|length %}
+{% set no_count = votes|selectattr('vote', 'equalto', false)|list|length %}
+{% set total_votes = votes|length %}
+{% set ns = namespace(user_vote=none) %}
+{% if user %}
+{% for v in votes %}
+{% if v.user_id == user.id %}
+{% set ns.user_vote = v %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% set user_vote = ns.user_vote %}
+{% set closed = voting_closed|default(false) %}
+
+<div class="border-t border-gray-200 pt-3">
+    {% if closed %}
+    <!-- Voting closed (paper has formalisations) -->
+    <div class="flex items-center gap-2 flex-wrap mb-2">
+        <p class="text-[13px] font-semibold text-gray-800">Should this paper be formalised?</p>
+        <span class="text-xs text-gray-400 italic">Voting closed</span>
+        <span x-data="{ show: false }" class="relative inline-flex">
+            <button type="button" @click="show = !show" title="Vote closed because a formalisation has been registered."
+                class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-50 text-blue-300 text-[10px] font-bold cursor-help">i</button>
+            <span x-show="show" x-cloak @click.away="show = false"
+                class="absolute left-5 top-0 z-10 w-48 text-xs text-gray-600 bg-white border border-gray-200 rounded shadow-md p-2">Vote closed because a formalisation has been registered.</span>
+        </span>
+    </div>
+    {% elif user %}
+        {% if user_vote %}
+        <!-- Already voted -->
+        <div class="mb-2" x-data="{ changing: false, selectedVote: {{ 'true' if user_vote.vote else 'false' }}, reason: '' }">
+            <div class="flex items-center gap-2 flex-wrap">
+                <p class="text-[13px] font-semibold text-gray-800">Should this paper be formalised?</p>
+                <template x-if="!changing">
+                    <div class="flex items-center gap-1">
+                        <button type="button" @click="selectedVote = true; changing = selectedVote !== {{ 'true' if user_vote.vote else 'false' }}"
+                            class="px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors {{ 'bg-green-600 text-white' if user_vote.vote else 'bg-gray-100 text-gray-400 hover:bg-green-50 hover:text-green-600 border border-gray-200' }}">Yes</button>
+                        <button type="button" @click="selectedVote = false; changing = selectedVote !== {{ 'true' if user_vote.vote else 'false' }}"
+                            class="px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors {{ 'bg-red-600 text-white' if not user_vote.vote else 'bg-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-600 border border-gray-200' }}">No</button>
+                        <button @click="if(confirm('Remove your vote?')) fetch('/api/papers/{{ paper.bibtex_key }}/votes/{{ user_vote.id }}', {method:'DELETE'}).then(resp => { if(resp.ok) htmx.ajax('GET', '/htmx/paper-poll/{{ paper.bibtex_key }}', {target: '#poll-{{ paper.bibtex_key }}', swap: 'innerHTML'}); })"
+                            class="text-xs text-gray-400 hover:text-red-500 hover:underline">unvote</button>
+                    </div>
+                </template>
+                <template x-if="changing">
+                    <div class="flex items-center gap-1">
+                        <button type="button" @click="selectedVote = true"
+                            :class="selectedVote === true ? 'bg-green-600 text-white ring-2 ring-green-300' : 'bg-gray-100 text-gray-400 border border-gray-200'"
+                            class="px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors">Yes</button>
+                        <button type="button" @click="selectedVote = false"
+                            :class="selectedVote === false ? 'bg-red-600 text-white ring-2 ring-red-300' : 'bg-gray-100 text-gray-400 border border-gray-200'"
+                            class="px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors">No</button>
+                        <button type="button" @click="changing = false; selectedVote = {{ 'true' if user_vote.vote else 'false' }}" class="text-xs text-gray-500 hover:underline">cancel</button>
+                    </div>
+                </template>
+            </div>
+            <template x-if="changing">
+                <form @submit.prevent="
+                    if(!reason.trim()) { alert('Please provide a reason.'); return; }
+                    fetch('/api/papers/{{ paper.bibtex_key }}/votes', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({vote: selectedVote, reason: reason})
+                    }).then(resp => {
+                        if(resp.ok) htmx.ajax('GET', '/htmx/paper-poll/{{ paper.bibtex_key }}', {target: '#poll-{{ paper.bibtex_key }}', swap: 'innerHTML'});
+                        else resp.json().then(d => alert(d.detail || 'Error'));
+                    })
+                " class="space-y-2 mt-2">
+                    <textarea x-model="reason" required placeholder="Why?" rows="2"
+                        class="w-full text-sm rounded border-gray-300 border p-2 text-gray-900 placeholder-gray-400"></textarea>
+                    <button type="submit" class="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">Update</button>
+                </form>
+            </template>
+        </div>
+        {% else %}
+        <!-- New vote form -->
+        <div class="mb-2" x-data="{ selectedVote: null, reason: '' }">
+            <div class="flex items-center gap-3 mb-2 flex-wrap">
+                <p class="text-[13px] font-semibold text-gray-800">Should this paper be formalised?</p>
+                <button type="button" @click="selectedVote = true"
+                    :class="selectedVote === true ? 'bg-green-600 text-white ring-2 ring-green-300' : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-300'"
+                    class="px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors">Yes</button>
+                <button type="button" @click="selectedVote = false"
+                    :class="selectedVote === false ? 'bg-red-600 text-white ring-2 ring-red-300' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-300'"
+                    class="px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors">No</button>
+            </div>
+            <template x-if="selectedVote !== null">
+                <form @submit.prevent="
+                    if(!reason.trim()) { alert('Please provide a reason.'); return; }
+                    fetch('/api/papers/{{ paper.bibtex_key }}/votes', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({vote: selectedVote, reason: reason})
+                    }).then(resp => {
+                        if(resp.ok) htmx.ajax('GET', '/htmx/paper-poll/{{ paper.bibtex_key }}', {target: '#poll-{{ paper.bibtex_key }}', swap: 'innerHTML'});
+                        else resp.json().then(d => alert(d.detail || 'Error'));
+                    })
+                " class="space-y-2">
+                    <textarea x-model="reason" required placeholder="Why?" rows="2"
+                        class="w-full text-sm rounded border-gray-300 border p-2 text-gray-900 placeholder-gray-400"></textarea>
+                    <button type="submit" class="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">Submit vote</button>
+                </form>
+            </template>
+        </div>
+        {% endif %}
+    {% else %}
+    <div class="flex items-center gap-2 mb-2 flex-wrap">
+        <p class="text-[13px] font-semibold text-gray-800">Should this paper be formalised?</p>
+        <span class="flex items-center gap-1">
+            <button type="button" @click="showAuthModal = true"
+                class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-50 text-green-700 hover:bg-green-100 border border-green-300 transition-colors">Yes</button>
+            <button type="button" @click="showAuthModal = true"
+                class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-50 text-red-700 hover:bg-red-100 border border-red-300 transition-colors">No</button>
+        </span>
+    </div>
+    {% endif %}
+
+    <!-- Vote summary -->
+    {% if total_votes > 0 %}
+    <div x-data="{ showReasons: false }">
+        <div class="flex items-center gap-2 text-[13px]">
+            <span class="text-green-600 font-medium">{{ yes_count }} yes</span>
+            <span class="text-gray-400">/</span>
+            <span class="text-red-600 font-medium">{{ no_count }} no</span>
+            <button @click="showReasons = !showReasons" class="text-xs text-blue-600 hover:underline ml-1">
+                <span x-text="showReasons ? 'Hide votes' : 'Show votes'"></span>
+            </button>
+        </div>
+        <div x-show="showReasons" x-cloak class="space-y-2 mt-2">
+            {% for v in votes %}
+            <div class="bg-gray-50 rounded p-2 text-xs"{% if user and v.user_id == user.id and not closed %} x-data="{ editing: false, editReason: '{{ v.reason|e }}' }"{% endif %}>
+                <span class="font-medium text-gray-700">{{ v._user_display_name or 'Anonymous' }}</span>
+                <span class="{{ 'text-green-600' if v.vote else 'text-red-600' }} font-medium ml-1">{{ 'Yes' if v.vote else 'No' }}</span>
+                {% if user and v.user_id == user.id and not closed %}
+                <template x-if="!editing">
+                    <div class="flex items-start gap-1 mt-1">
+                        <p class="text-gray-600">{{ v.reason }}</p>
+                        <button @click="editing = true" class="text-blue-600 hover:underline shrink-0">edit</button>
+                    </div>
+                </template>
+                <template x-if="editing">
+                    <form @submit.prevent="
+                        if(!editReason.trim()) { alert('Please provide a reason.'); return; }
+                        fetch('/api/papers/{{ paper.bibtex_key }}/votes', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({vote: {{ 'true' if v.vote else 'false' }}, reason: editReason})
+                        }).then(resp => {
+                            if(resp.ok) htmx.ajax('GET', '/htmx/paper-poll/{{ paper.bibtex_key }}', {target: '#poll-{{ paper.bibtex_key }}', swap: 'innerHTML'});
+                            else resp.json().then(d => alert(d.detail || 'Error'));
+                        })
+                    " class="mt-1 flex items-start gap-1">
+                        <input type="text" x-model="editReason" required class="text-xs rounded border-gray-300 border p-1 flex-1 text-gray-900">
+                        <button type="submit" class="text-green-600 hover:underline shrink-0">save</button>
+                        <button type="button" @click="editing = false; editReason = '{{ v.reason|e }}'" class="text-gray-400 hover:underline shrink-0">cancel</button>
+                    </form>
+                </template>
+                {% else %}
+                <p class="text-gray-600 mt-1">{{ v.reason }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>

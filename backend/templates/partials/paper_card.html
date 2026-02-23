@@ -1,5 +1,6 @@
 {% set fc_count = fc_map.get(paper.id, 0) if fc_map is defined else 0 %}
 {% set rc_count = rc_map.get(paper.id, 0) if rc_map is defined else 0 %}
+{% set vc_count = vc_map.get(paper.id, 0) if vc_map is defined else 0 %}
 <div id="{{ paper.bibtex_key }}"
     x-data="{ panel: null }"
     class="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-4 pb-2">
@@ -44,6 +45,19 @@
     <div class="flex flex-wrap gap-2 mt-auto justify-between items-center">
         <!-- Left: resource links -->
         <div class="flex flex-wrap gap-2">
+            {% if paper.abstract %}
+            <button
+                @click="panel = panel === 'abstract' ? null : 'abstract'"
+                :class="panel === 'abstract' ? 'bg-gray-200 text-gray-800' : 'bg-gray-50 hover:bg-gray-100 text-gray-600'"
+                class="inline-flex items-center px-3 py-1 text-xs font-medium rounded transition-colors border border-gray-200">
+                <span x-text="panel === 'abstract' ? 'Hide' : 'Abstract'">Abstract</span>
+            </button>
+            {% else %}
+            <span class="inline-flex items-center px-3 py-1 bg-blue-25 text-gray-400 text-xs font-medium rounded border border-blue-100">
+                Abstract
+            </span>
+            {% endif %}
+
             {% if paper.doi %}
             <a href="{{ paper.doi if paper.doi.startswith('http') else 'https://doi.org/' ~ paper.doi }}"
                 target="_blank"
@@ -85,21 +99,27 @@
             <!-- Details toggle -->
             <button
                 @click="
-                    if (panel === 'details') { panel = null; document.getElementById('detail-{{ paper.bibtex_key }}').innerHTML = ''; }
-                    else { panel = 'details'; htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}', {target: document.getElementById('detail-{{ paper.bibtex_key }}'), swap: 'innerHTML'}); }
+                    if (panel === 'details') { panel = null; document.getElementById('detail-{{ paper.bibtex_key }}').innerHTML = ''; if($refs.poll) $refs.poll.style.display = ''; }
+                    else { panel = 'details'; htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}', {target: document.getElementById('detail-{{ paper.bibtex_key }}'), swap: 'innerHTML'}).then(() => { if($refs.poll) $refs.poll.style.display = 'none'; }); }
                 "
                 :class="panel === 'details' ? 'bg-gray-200 text-gray-800' : 'bg-gray-50 hover:bg-gray-100 text-gray-600'"
                 class="inline-flex items-center px-3 py-1 text-xs font-medium rounded transition-colors border border-gray-200">
                 <span x-text="panel === 'details' ? 'Hide' : 'Details'">Details</span>
             </button>
 
-            {% if user %}
             <!-- Edit toggle -->
+            {% if user %}
             <button
-                @click="panel = (panel === 'edit') ? null : 'edit'; document.getElementById('detail-{{ paper.bibtex_key }}').innerHTML = '';"
+                @click="let wasEdit = panel === 'edit'; panel = wasEdit ? null : 'edit'; document.getElementById('detail-{{ paper.bibtex_key }}').innerHTML = ''; if($refs.poll) $refs.poll.style.display = wasEdit ? '' : 'none';"
                 :class="panel === 'edit' ? 'bg-yellow-200 text-yellow-800' : 'bg-yellow-50 hover:bg-yellow-100 text-yellow-700'"
                 class="inline-flex items-center px-3 py-1 text-xs font-medium rounded transition-colors border border-yellow-200">
                 <span x-text="panel === 'edit' ? 'Cancel' : 'Edit'">Edit</span>
+            </button>
+            {% else %}
+            <button
+                @click="showAuthModal = true"
+                class="inline-flex items-center px-3 py-1 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 text-xs font-medium rounded transition-colors border border-yellow-200">
+                Edit
             </button>
             {% endif %}
 
@@ -119,8 +139,7 @@
         <div class="flex gap-2">
             <button
                 @click="
-                    if (panel === 'details') { panel = null; document.getElementById('detail-{{ paper.bibtex_key }}').innerHTML = ''; }
-                    else { panel = 'details'; htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab=reviews', {target: document.getElementById('detail-{{ paper.bibtex_key }}'), swap: 'innerHTML'}); }
+                    panel = 'details'; htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab=reviews', {target: document.getElementById('detail-{{ paper.bibtex_key }}'), swap: 'innerHTML'}).then(() => { if($refs.poll) $refs.poll.style.display = 'none'; });
                 "
                 class="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-medium rounded transition-colors border border-indigo-200">
                 <span>{{ rc_count }}</span> review{{ 's' if rc_count != 1 }}
@@ -128,8 +147,7 @@
             </button>
             <button
                 @click="
-                    if (panel === 'details') { panel = null; document.getElementById('detail-{{ paper.bibtex_key }}').innerHTML = ''; }
-                    else { panel = 'details'; htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab=formalisations', {target: document.getElementById('detail-{{ paper.bibtex_key }}'), swap: 'innerHTML'}); }
+                    panel = 'details'; htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab=formalisations', {target: document.getElementById('detail-{{ paper.bibtex_key }}'), swap: 'innerHTML'}).then(() => { if($refs.poll) $refs.poll.style.display = 'none'; });
                 "
                 class="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-medium rounded transition-colors border border-purple-200">
                 <span>{{ fc_count }}</span> formalisation{{ 's' if fc_count != 1 }}
@@ -151,8 +169,26 @@
                 authors: '{{ paper.authors|e }}',
                 year: '{{ paper.year or '' }}',
                 journal: '{{ paper.journal or '' }}',
+                booktitle: '{{ paper.booktitle or '' }}',
+                publisher: '{{ paper.publisher or '' }}',
+                volume: '{{ paper.volume or '' }}',
+                number: '{{ paper.number or '' }}',
+                pages: '{{ paper.pages or '' }}',
                 doi: '{{ paper.doi or '' }}',
                 url: '{{ paper.url or '' }}',
+                abstract: `{{ paper.abstract|default('', true)|e }}`,
+                note: '{{ paper.note or '' }}',
+                extra_fields: null,
+            },
+            extras: [{% if paper.extra_fields %}{% for k, v in paper.extra_fields.items() %}{ key: '{{ k|e }}', value: '{{ v|e }}' },{% endfor %}{% endif %}],
+            addExtra() { this.extras.push({ key: '', value: '' }); },
+            removeExtra(i) { this.extras.splice(i, 1); },
+            buildPayload() {
+                this.syncEntryType();
+                let ef = {};
+                this.extras.forEach(e => { if(e.key.trim()) ef[e.key.trim()] = e.value; });
+                this.fd.extra_fields = Object.keys(ef).length ? ef : null;
+                return this.fd;
             },
             init() {
                 this.entrySelect = this.knownTypes.includes(this.fd.entry_type) ? this.fd.entry_type : '__other__';
@@ -163,11 +199,10 @@
             }
          }">
         <form @submit.prevent="
-            syncEntryType();
             fetch('/api/papers/{{ paper.bibtex_key }}', {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(fd)
+                body: JSON.stringify(buildPayload())
             }).then(r => {
                 if(r.ok) window.location.reload();
                 else r.json().then(d => alert(d.detail || 'Error'));
@@ -181,22 +216,8 @@
                 <label class="block text-xs font-medium text-gray-700">Authors <span class="font-normal text-gray-400">— e.g. Albert Einstein and Kurt Gödel and Alan Turing</span></label>
                 <input type="text" x-model="fd.authors" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
             </div>
-            <div class="grid grid-cols-3 gap-2">
-                <div>
-                    <label class="block text-xs font-medium text-gray-700">Year</label>
-                    <input type="text" x-model="fd.year" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700">DOI</label>
-                    <input type="text" x-model="fd.doi" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700">URL</label>
-                    <input type="text" x-model="fd.url" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
-                </div>
-            </div>
             <div>
-                <label class="block text-xs font-medium text-gray-700">BibTeX entry type</label>
+                <label class="block text-xs font-medium text-gray-700">Entry Type (BibTeX)</label>
                 <div class="flex items-center gap-2">
                     <select x-model="entrySelect" @change="syncEntryType()" class="rounded border-gray-300 text-gray-900 text-sm p-2 border">
                         <option value="article">article</option>
@@ -211,8 +232,72 @@
                         <option value="__other__">other...</option>
                     </select>
                     <input x-show="entrySelect === '__other__'" x-cloak type="text" x-model="customType" @input="syncEntryType()"
-                        placeholder="e.g. proceedings" class="rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                        placeholder="e.g. proceedings" class="flex-1 rounded border-gray-300 text-gray-900 text-sm p-2 border">
                 </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">Year</label>
+                    <input type="text" x-model="fd.year" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">Journal</label>
+                    <input type="text" x-model="fd.journal" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">Booktitle</label>
+                    <input type="text" x-model="fd.booktitle" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">Publisher</label>
+                    <input type="text" x-model="fd.publisher" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">Volume</label>
+                    <input type="text" x-model="fd.volume" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">Number</label>
+                    <input type="text" x-model="fd.number" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">Pages</label>
+                    <input type="text" x-model="fd.pages" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">DOI</label>
+                    <input type="text" x-model="fd.doi" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">URL</label>
+                    <input type="text" x-model="fd.url" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-700">Abstract</label>
+                <textarea x-model="fd.abstract" rows="3" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border"></textarea>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-700">Note</label>
+                <input type="text" x-model="fd.note" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-700">Extra Fields (BibTeX)</label>
+                <template x-for="(extra, i) in extras" :key="i">
+                    <div class="flex gap-2 mb-1">
+                        <input type="text" x-model="extras[i].key" placeholder="Key"
+                            class="w-1/3 rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                        <input type="text" x-model="extras[i].value" placeholder="Value"
+                            class="flex-1 rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                        <button type="button" @click="removeExtra(i)" class="text-red-400 hover:text-red-600 text-sm px-1">&times;</button>
+                    </div>
+                </template>
+                <button type="button" @click="addExtra()"
+                    class="text-xs text-blue-600 hover:underline">+ Add field</button>
             </div>
             <div class="flex gap-2">
                 <button type="submit" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors">Save</button>
@@ -224,5 +309,20 @@
     {% endif %}
 
     <!-- Expanded detail area -->
+    {% if paper.abstract %}
+    <div x-show="panel === 'abstract'" x-cloak class="mt-3 border-t border-gray-200 pt-3">
+        <p class="text-sm text-gray-700 math-content">{{ paper.abstract }}</p>
+    </div>
+    {% endif %}
+
     <div id="detail-{{ paper.bibtex_key }}" class="mt-3"></div>
+
+    <!-- Poll (no formalisations = voting open, has votes + formalisations = voting closed) -->
+    {% if paper.computed_status.value == 'not_started' or vc_count > 0 %}
+    <div x-ref="poll" id="poll-{{ paper.bibtex_key }}" class="mt-3"
+         hx-get="/htmx/paper-poll/{{ paper.bibtex_key }}"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+    </div>
+    {% endif %}
 </div>

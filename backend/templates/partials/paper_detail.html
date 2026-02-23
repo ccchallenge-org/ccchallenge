@@ -67,7 +67,12 @@
         {% if user %}
         {% include "partials/forms/add_review.html" %}
         {% else %}
-        <p class="text-gray-400 text-xs mt-3">Log in to write a review.</p>
+        <div class="mt-3">
+            <button @click="showAuthModal = true"
+                class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                + Add Review Link
+            </button>
+        </div>
         {% endif %}
     </div>
 
@@ -87,7 +92,12 @@
         {% if user %}
         {% include "partials/forms/add_formalisation.html" %}
         {% else %}
-        <p class="text-gray-400 text-xs mt-3">Log in to add a formalisation.</p>
+        <div class="mt-3">
+            <button @click="showAuthModal = true"
+                class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                + Add Formalisation
+            </button>
+        </div>
         {% endif %}
     </div>
 

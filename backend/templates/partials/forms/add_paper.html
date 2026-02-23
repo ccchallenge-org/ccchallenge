@@ -1,8 +1,8 @@
 <!-- Add Paper Modal -->
 <div x-show="showAddModal" x-cloak
     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg shadow-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto" @click.away="showAddModal = false">
-        <div class="flex justify-between items-start mb-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto" @mousedown.away="showAddModal = false">
+        <div class="flex justify-between items-start mb-2">
             <h3 class="text-lg font-semibold text-gray-900">Add New Paper</h3>
             <button @click="showAddModal = false" class="text-gray-400 hover:text-gray-600 transition-colors">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -12,54 +12,13 @@
         </div>
 
         {% if user %}
-        <!-- Mode Toggle -->
-        <div class="flex space-x-2 mb-4">
-            <button @click="addMode = 'bibtex'"
-                :class="addMode === 'bibtex' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'"
-                class="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors">
-                Paste BibTeX
-            </button>
-            <button @click="addMode = 'form'"
-                :class="addMode === 'form' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'"
-                class="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors">
-                Fill Form
-            </button>
-        </div>
-
-        <!-- BibTeX Mode -->
-        <div x-show="addMode === 'bibtex'">
-            <form hx-post="/api/papers/bibtex" hx-target="#paper-list" hx-swap="innerHTML"
-                  hx-on::after-request="if(event.detail.successful) { showAddModal = false; }"
-                  hx-headers='{"Content-Type": "application/json"}'
-                  x-data="{ bibtexText: '' }"
-                  @submit.prevent="
-                    fetch('/api/papers/bibtex', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({raw_bibtex: bibtexText})
-                    }).then(r => {
-                        if(r.ok) { showAddModal = false; window.location.reload(); }
-                        else r.json().then(d => alert(d.detail || 'Error adding paper'));
-                    })
-                  ">
-                <label class="block text-sm font-medium text-gray-700 mb-1">BibTeX Entry</label>
-                <textarea x-model="bibtexText" rows="10" placeholder="@article{AuthorYear, ...}"
-                    class="w-full rounded-lg border-gray-300 text-gray-900 text-sm font-mono p-3 border focus:ring-blue-500 focus:border-blue-500"></textarea>
-                <button type="submit"
-                    class="mt-3 w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors">
-                    Add Paper
-                </button>
-            </form>
-        </div>
-
-        <!-- Form Mode -->
-        <div x-show="addMode === 'form'" x-cloak>
-            <form x-data="{ formData: { bibtex_key: '', entry_type: 'article', title: '', authors: '', year: '', journal: '', doi: '', url: '' } }"
+        <div>
+            <form x-data="addPaperForm()"
                   @submit.prevent="
                     fetch('/api/papers', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(formData)
+                        body: JSON.stringify(buildPayload())
                     }).then(r => {
                         if(r.ok) { showAddModal = false; window.location.reload(); }
                         else r.json().then(d => alert(d.detail || 'Error adding paper'));
@@ -67,23 +26,18 @@
                   "
                   class="space-y-3">
                 <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">BibTeX Key *</label>
-                    <input type="text" x-model="formData.bibtex_key" required placeholder="AuthorYear"
-                        class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
+                    <button type="button" @click="showBibtexParse = !showBibtexParse"
+                        class="text-xs text-blue-600 hover:underline" x-text="showBibtexParse ? 'Cancel' : 'Parse from BibTeX'"></button>
+                    <div x-show="showBibtexParse" x-cloak class="mt-2 space-y-2">
+                        <textarea x-model="bibtexRaw" rows="6" placeholder="Paste BibTeX entry here..."
+                            class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border font-mono focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        <button type="button" @click="parseBibtex()"
+                            class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors">Parse</button>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Entry Type</label>
-                    <select x-model="formData.entry_type" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
-                        <option value="article">article</option>
-                        <option value="incollection">incollection</option>
-                        <option value="inproceedings">inproceedings</option>
-                        <option value="book">book</option>
-                        <option value="phdthesis">phdthesis</option>
-                        <option value="mastersthesis">mastersthesis</option>
-                        <option value="techreport">techreport</option>
-                        <option value="misc">misc</option>
-                        <option value="unpublished">unpublished</option>
-                    </select>
+                <div x-show="formData.bibtex_key" x-cloak>
+                    <span x-text="formData.bibtex_key"
+                        class="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono text-gray-700 select-all"></span>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Title *</label>
@@ -93,17 +47,48 @@
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Authors * <span class="font-normal text-gray-400">— e.g. Albert Einstein and Kurt Gödel and Alan Turing</span></label>
                     <input type="text" x-model="formData.authors" required placeholder="Albert Einstein and Kurt Gödel and Alan Turing"
+                        @blur="computeKey()"
                         class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Year</label>
-                        <input type="text" x-model="formData.year"
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Year *</label>
+                        <input type="text" x-model="formData.year" required
+                            @blur="computeKey()"
                             class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Journal</label>
                         <input type="text" x-model="formData.journal"
+                            class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Booktitle</label>
+                        <input type="text" x-model="formData.booktitle"
+                            class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Publisher</label>
+                        <input type="text" x-model="formData.publisher"
+                            class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Volume</label>
+                        <input type="text" x-model="formData.volume"
+                            class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Number</label>
+                        <input type="text" x-model="formData.number"
+                            class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Pages <span class="font-normal text-gray-400">e.g. 1--20</span></label>
+                        <input type="text" x-model="formData.pages"
                             class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
                     </div>
                 </div>
@@ -118,6 +103,49 @@
                         <input type="url" x-model="formData.url"
                             class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
                     </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Abstract</label>
+                    <textarea x-model="formData.abstract" rows="3"
+                        class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Note</label>
+                    <input type="text" x-model="formData.note"
+                        class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Entry Type (BibTeX)</label>
+                    <div class="flex items-center gap-2">
+                        <select x-model="entrySelect" @change="syncEntryType()" class="rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                            <option value="article">article</option>
+                            <option value="inproceedings">inproceedings</option>
+                            <option value="incollection">incollection</option>
+                            <option value="book">book</option>
+                            <option value="phdthesis">phdthesis</option>
+                            <option value="mastersthesis">mastersthesis</option>
+                            <option value="techreport">techreport</option>
+                            <option value="misc">misc</option>
+                            <option value="unpublished">unpublished</option>
+                            <option value="__other__">other...</option>
+                        </select>
+                        <input x-show="entrySelect === '__other__'" x-cloak type="text" x-model="customType" @input="syncEntryType()"
+                            placeholder="e.g. proceedings" class="flex-1 rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Extra Fields (BibTeX)</label>
+                    <template x-for="(extra, i) in extras" :key="i">
+                        <div class="flex gap-2 mb-1">
+                            <input type="text" x-model="extras[i].key" placeholder="Key"
+                                class="w-1/3 rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
+                            <input type="text" x-model="extras[i].value" placeholder="Value"
+                                class="flex-1 rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
+                            <button type="button" @click="removeExtra(i)" class="text-red-400 hover:text-red-600 text-sm px-1">&times;</button>
+                        </div>
+                    </template>
+                    <button type="button" @click="addExtra()"
+                        class="text-xs text-blue-600 hover:underline">+ Add field</button>
                 </div>
                 <button type="submit"
                     class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors">
@@ -137,3 +165,115 @@
         {% endif %}
     </div>
 </div>
+
+{% raw %}<script>
+function addPaperForm() {
+    return {
+        formData: { bibtex_key: '', entry_type: 'article', title: '', authors: '', year: '', journal: '', booktitle: '', publisher: '', volume: '', number: '', pages: '', doi: '', url: '', abstract: '', note: '', extra_fields: null },
+        knownTypes: ['article','inproceedings','incollection','book','phdthesis','mastersthesis','techreport','misc','unpublished'],
+        entrySelect: 'article',
+        customType: '',
+        showBibtexParse: false,
+        bibtexRaw: '',
+        extras: [],
+
+        syncEntryType() {
+            this.formData.entry_type = this.entrySelect === '__other__' ? this.customType : this.entrySelect;
+        },
+
+        computeKey() {
+            var a = this.formData.authors.trim();
+            var y = this.formData.year.trim();
+            if (!a || !y) { this.formData.bibtex_key = ''; return; }
+            var names = a.split(/\s+and\s+/).map(function(n) {
+                var words = n.trim().split(/\s+/);
+                var last = words[words.length - 1];
+                return last.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z]/g, '');
+            }).filter(function(n) { return n; });
+            this.formData.bibtex_key = names.map(function(n) { return n.charAt(0).toUpperCase() + n.slice(1); }).join('') + y;
+        },
+
+        parseBibtex() {
+            var raw = this.bibtexRaw.trim();
+            if (!raw) return;
+
+            // Extract entry type
+            var typeMatch = raw.match(/^@(\w+)\s*\{/);
+            if (!typeMatch) { alert('Could not parse BibTeX entry.'); return; }
+            var entryType = typeMatch[1].toLowerCase();
+
+            // Remove @type{key, prefix and trailing }
+            var body = raw.replace(/^@\w+\s*\{[^,]*,/, '');
+            body = body.replace(/\}\s*$/, '');
+
+            // Parse fields
+            var fields = {};
+            var re = /(\w+)\s*=\s*/g;
+            var m;
+            while ((m = re.exec(body)) !== null) {
+                var key = m[1].toLowerCase();
+                var rest = body.slice(re.lastIndex);
+                var val = '';
+                if (rest[0] === '{') {
+                    var depth = 0, i = 0;
+                    for (; i < rest.length; i++) {
+                        if (rest[i] === '{') depth++;
+                        else if (rest[i] === '}') { depth--; if (depth === 0) break; }
+                    }
+                    val = rest.slice(1, i);
+                } else if (rest[0] === '"') {
+                    var end = rest.indexOf('"', 1);
+                    val = rest.slice(1, end);
+                } else {
+                    var end2 = rest.search(/[,\s}]/);
+                    val = end2 === -1 ? rest : rest.slice(0, end2);
+                }
+                // Strip double braces {{...}} -> content
+                val = val.replace(/^\{(.*)\}$/, '$1');
+                fields[key] = val.trim();
+            }
+
+            // Map author -> authors
+            if (fields.author) { fields.authors = fields.author; delete fields.author; }
+
+            // Populate known form fields
+            var knownFields = ['title','authors','year','journal','booktitle','publisher','volume','number','pages','doi','url','abstract','note'];
+            var self = this;
+            knownFields.forEach(function(k) { if (fields[k] !== undefined) self.formData[k] = fields[k]; });
+
+            // Entry type
+            if (this.knownTypes.includes(entryType)) {
+                this.entrySelect = entryType;
+                this.formData.entry_type = entryType;
+            } else {
+                this.entrySelect = '__other__';
+                this.customType = entryType;
+                this.formData.entry_type = entryType;
+            }
+
+            // Remaining fields -> extras
+            var allKnown = new Set(knownFields.concat(['author']));
+            this.extras = [];
+            Object.entries(fields).forEach(function(entry) {
+                if (!allKnown.has(entry[0])) self.extras.push({ key: entry[0], value: entry[1] });
+            });
+
+            this.computeKey();
+            this.showBibtexParse = false;
+            this.bibtexRaw = '';
+        },
+
+        addExtra() { this.extras.push({ key: '', value: '' }); },
+        removeExtra(i) { this.extras.splice(i, 1); },
+
+        buildPayload() {
+            this.syncEntryType();
+            this.computeKey();
+            var ef = {};
+            this.extras.forEach(function(e) { if (e.key.trim()) ef[e.key.trim()] = e.value; });
+            this.formData.extra_fields = Object.keys(ef).length ? ef : null;
+            return this.formData;
+        }
+    };
+}
+</script>{% endraw %}

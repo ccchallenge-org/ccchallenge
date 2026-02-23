@@ -220,3 +220,4 @@ ENV/
 # End of https://www.gitignore.io/api/macos,linux,django,python,pycharm
 # Local Netlify folder
 .netlify
+*.swp

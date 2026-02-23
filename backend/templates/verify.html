@@ -1,0 +1,53 @@
+{% extends "_layout.html" %}
+
+{% block content %}
+<div class="flex items-center justify-center min-h-[60vh]">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-8 text-center"
+         x-data="{ status: 'loading', message: '' }"
+         x-init="
+            fetch('/api/auth/verify', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({token: '{{ token }}'})
+            }).then(r => {
+                if (r.ok) {
+                    status = 'success';
+                    message = 'Your email has been verified! You can now log in.';
+                } else {
+                    r.json().then(d => {
+                        status = 'error';
+                        message = d.detail || 'Verification failed. The link may have expired.';
+                    }).catch(() => {
+                        status = 'error';
+                        message = 'Verification failed. The link may have expired.';
+                    });
+                }
+            }).catch(() => {
+                status = 'error';
+                message = 'Something went wrong. Please try again.';
+            })
+         ">
+        <div x-show="status === 'loading'">
+            <p class="text-gray-600 text-lg">Verifying your email...</p>
+        </div>
+        <div x-show="status === 'success'" x-cloak>
+            <svg class="w-16 h-16 text-green-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <p class="text-gray-900 text-lg font-semibold" x-text="message"></p>
+            <a href="/" class="inline-block mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors">
+                Go to homepage
+            </a>
+        </div>
+        <div x-show="status === 'error'" x-cloak>
+            <svg class="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            <p class="text-gray-900 text-lg font-semibold" x-text="message"></p>
+            <a href="/" class="inline-block mt-4 px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg transition-colors">
+                Go to homepage
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     discord_client_id: str = ""
     discord_client_secret: str = ""
 
+    resend_key: str = ""
+
     base_url: str = "http://localhost:8000"
 
     model_config = {"env_file": ".env", "extra": "ignore"}

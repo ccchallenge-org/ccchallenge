@@ -32,17 +32,14 @@ def generate_bibtex(paper) -> str:
     lines = [f"@{entry_type}{{{bibtex_key},"]
     for key, value in field_map:
         if value:
-            if key == "title":
-                lines.append(f"  {key:<10}= {{{{{value}}}}},")
-            else:
-                lines.append(f"  {key:<10}= {{{value}}},")
+            lines.append(f"  {key:<10}= {{{{{value}}}}},")
 
     # Include extra fields
     extra = get("extra_fields")
     if extra:
         for key, value in extra.items():
             if value:
-                lines.append(f"  {key:<10}= {{{value}}},")
+                lines.append(f"  {key:<10}= {{{{{value}}}}},")
 
     lines.append("}")
     return "\n".join(lines)

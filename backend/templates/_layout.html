@@ -104,13 +104,13 @@
                     <!-- Auth buttons -->
                     <li class="ml-4">
                         {% if user %}
-                        <div class="flex items-center space-x-2" x-data="{ showMenu: false }">
+                        <div class="relative flex items-center space-x-2" x-data="{ showMenu: false }">
                             <button @click="showMenu = !showMenu"
                                 class="text-white text-sm font-medium px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
                                 {{ user.username }}
                             </button>
                             <div x-show="showMenu" @click.away="showMenu = false" x-cloak
-                                class="absolute right-4 top-14 bg-white rounded-lg shadow-lg py-2 w-48 z-50">
+                                class="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg py-2 w-48 z-50">
                                 <button @click="fetch('/api/auth/logout', {method:'POST'}).then(() => window.location.href = '/')"
                                     class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     Log out
