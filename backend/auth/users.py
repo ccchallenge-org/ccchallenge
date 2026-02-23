@@ -49,14 +49,32 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
             raise exceptions.UserAlreadyExists()
         return await super().create(user_create, safe=safe, request=request)
 
-    async def _generate_username(self, email: str) -> str:
-        """Generate a unique username from an email address."""
-        base = email.split("@")[0][:20]
+    async def _unique_username(self, base: str) -> str:
+        """Ensure a username is unique, appending a suffix if needed."""
+        base = base[:20]
         session = self.user_db.session
         result = await session.execute(select(User).where(User.username == base))
-        if result.scalar_one_or_none() is None:
+        if result.unique().scalar_one_or_none() is None:
             return base
         return f"{base}_{secrets.token_hex(3)}"
+
+    async def _fetch_oauth_username(self, oauth_name: str, access_token: str) -> str | None:
+        """Fetch the display username from the OAuth provider."""
+        try:
+            from backend.auth.oauth import get_github_client, get_discord_client
+            if oauth_name == "github":
+                client = get_github_client()
+                if client:
+                    profile = await client.get_profile(access_token)
+                    return profile.get("login")
+            elif oauth_name == "discord":
+                client = get_discord_client()
+                if client:
+                    profile = await client.get_profile(access_token)
+                    return profile.get("username")
+        except Exception as e:
+            print(f"Failed to fetch {oauth_name} profile: {e}")
+        return None
 
     async def oauth_callback(
         self,
@@ -90,7 +108,10 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
                 user = await self.user_db.add_oauth_account(user, oauth_account_dict)
             except exceptions.UserNotExists:
                 password = self.password_helper.generate()
-                username = await self._generate_username(account_email)
+                oauth_username = await self._fetch_oauth_username(oauth_name, access_token)
+                username = await self._unique_username(
+                    oauth_username or account_email.split("@")[0]
+                )
                 user_dict = {
                     "email": _normalize_email(account_email),
                     "hashed_password": self.password_helper.hash(password),
