@@ -1,7 +1,8 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, Request, Response
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import case, func, select
@@ -35,6 +36,21 @@ app.mount("/static", StaticFiles(directory=BACKEND_DIR / "static"), name="static
 templates = Jinja2Templates(directory=BACKEND_DIR / "templates")
 templates.env.globals["oauth_github"] = bool(settings.github_client_id)
 templates.env.globals["oauth_discord"] = bool(settings.discord_client_id)
+
+@app.middleware("http")
+async def oauth_callback_redirect(request: Request, call_next):
+    response = await call_next(request)
+    if (
+        "/auth/" in request.url.path
+        and request.url.path.endswith("/callback")
+        and response.status_code == 204
+    ):
+        redirect = RedirectResponse(url="/", status_code=302)
+        for key, value in response.headers.raw:
+            if key == b"set-cookie":
+                redirect.headers.append("set-cookie", value.decode())
+        return redirect
+    return response
 
 # API routers
 app.include_router(auth_router, prefix="/api")
