@@ -120,17 +120,25 @@
         }
     }
 
-    // If the URL has a #hash pointing to a paper not on the current page, load the right page
+    // Scroll to #hash paper, loading the correct page if needed
     document.addEventListener('DOMContentLoaded', function() {
         var hash = window.location.hash.slice(1);
-        if (hash && !document.getElementById(hash)) {
+        if (!hash) return;
+
+        function scrollToHash() {
+            setTimeout(function() {
+                var el = document.getElementById(hash);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 400);
+        }
+
+        if (document.getElementById(hash)) {
+            scrollToHash();
+        } else {
             htmx.ajax('GET', '/htmx/paper-list?anchor=' + encodeURIComponent(hash), {
                 target: '#paper-list',
                 swap: 'innerHTML'
-            }).then(function() {
-                var el = document.getElementById(hash);
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-            });
+            }).then(scrollToHash);
         }
     });
 </script>
