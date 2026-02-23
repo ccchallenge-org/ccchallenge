@@ -111,6 +111,10 @@
                             </button>
                             <div x-show="showMenu" @click.away="showMenu = false" x-cloak
                                 class="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg py-2 w-48 z-50">
+                                <button @click="showProfileModal = true; showMenu = false"
+                                    class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    Profile
+                                </button>
                                 <button @click="fetch('/api/auth/logout', {method:'POST'}).then(() => window.location.href = '/')"
                                     class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     Log out
@@ -143,10 +147,16 @@
     {% include "partials/forms/login.html" %}
     {% endif %}
 
+    <!-- Profile Modal -->
+    {% if user %}
+    {% include "partials/forms/profile.html" %}
+    {% endif %}
+
     <script>
         function authState() {
             return {
                 showAuthModal: false,
+                showProfileModal: false,
                 authTab: 'login',
             }
         }

@@ -49,6 +49,34 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
             raise exceptions.UserAlreadyExists()
         return await super().create(user_create, safe=safe, request=request)
 
+    async def update(
+        self,
+        user_update: schemas.UU,
+        user: models.UP,
+        safe: bool = False,
+        request: Request | None = None,
+    ) -> models.UP:
+        if user_update.email is not None:
+            user_update.email = _normalize_email(user_update.email)
+        # Check username uniqueness on change
+        username = getattr(user_update, "username", None)
+        if username is not None and username != user.username:
+            session = self.user_db.session
+            existing = await session.execute(
+                select(User).where(User.username == username)
+            )
+            if existing.unique().scalar_one_or_none() is not None:
+                raise exceptions.UserAlreadyExists()
+        # Check email uniqueness on change
+        if user_update.email is not None and user_update.email != user.email:
+            try:
+                existing_user = await self.get_by_email(user_update.email)
+                if existing_user.id != user.id:
+                    raise exceptions.UserAlreadyExists()
+            except exceptions.UserNotExists:
+                pass
+        return await super().update(user_update, user, safe=safe, request=request)
+
     async def _unique_username(self, base: str) -> str:
         """Ensure a username is unique, appending a suffix if needed."""
         base = base[:20]
