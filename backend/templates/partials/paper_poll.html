@@ -127,7 +127,7 @@
         </div>
         <div x-show="showReasons" x-cloak class="space-y-2 mt-2">
             {% for v in votes %}
-            <div class="bg-gray-50 rounded p-2 text-xs"{% if user and v.user_id == user.id and not closed %} x-data="{ editing: false, editReason: '{{ v.reason|e }}' }"{% endif %}>
+            <div class="bg-gray-50 rounded p-2 text-xs"{% if user and v.user_id == user.id and not closed %} data-reason="{{ v.reason }}" x-data="{ editing: false, editReason: '' }" x-init="editReason = $el.dataset.reason"{% endif %}>
                 <span class="font-medium text-gray-700">{{ v._user_display_name or 'Anonymous' }}</span>
                 <span class="{{ 'text-green-600' if v.vote else 'text-red-600' }} font-medium ml-1">{{ 'Yes' if v.vote else 'No' }}</span>
                 {% if user and v.user_id == user.id and not closed %}
@@ -151,7 +151,7 @@
                     " class="mt-1 flex items-start gap-1">
                         <input type="text" x-model="editReason" required class="text-xs rounded border-gray-300 border p-1 flex-1 text-gray-900">
                         <button type="submit" class="text-green-600 hover:underline shrink-0">save</button>
-                        <button type="button" @click="editing = false; editReason = '{{ v.reason|e }}'" class="text-gray-400 hover:underline shrink-0">cancel</button>
+                        <button type="button" @click="editing = false; editReason = $el.closest('[data-reason]').dataset.reason" class="text-gray-400 hover:underline shrink-0">cancel</button>
                     </form>
                 </template>
                 {% else %}
