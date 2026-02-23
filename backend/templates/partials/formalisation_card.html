@@ -1,0 +1,138 @@
+{# Renders a single formalisation card. Expects: f, paper, user, current_tab #}
+<div class="bg-gray-50 rounded p-3 text-sm" x-data="{ editingUrl: false, newUrl: '{{ f.repository_url }}' }">
+    <div class="flex items-center gap-2 mb-1 flex-wrap">
+        <span class="inline-block bg-purple-100 text-purple-800 text-xs font-medium px-2 py-0.5 rounded">
+            {{ f.proof_assistant.value }}
+        </span>
+        {% if f.status.value == 'formalising' %}
+        <span class="inline-block bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded">Formalising</span>
+        {% elif f.status.value == 'audited' %}
+        <span class="inline-block bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded">Audited</span>
+        {% endif %}
+        <template x-if="!editingUrl">
+            <span class="flex items-center gap-1">
+                <a href="{{ f.repository_url }}" target="_blank" class="text-blue-600 hover:underline text-xs truncate">
+                    {{ f.repository_url }}
+                </a>
+                {% if user and (user.is_superuser or user.id == f.user_id) %}
+                <button @click="editingUrl = true" class="text-gray-400 hover:text-gray-600 text-xs">edit</button>
+                <button
+                    @click="if(confirm('Delete this formalisation?')) fetch('/api/papers/{{ paper.bibtex_key }}/formalisations/{{ f.id }}', {method:'DELETE'}).then(r => { if(r.ok) htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab={{ current_tab }}', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'}); })"
+                    class="text-red-400 hover:text-red-600 text-xs">delete</button>
+                {% endif %}
+            </span>
+        </template>
+        <template x-if="editingUrl">
+            <form class="flex items-center gap-1" @submit.prevent="
+                fetch('/api/papers/{{ paper.bibtex_key }}/formalisations/{{ f.id }}', {
+                    method: 'PATCH',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({repository_url: newUrl})
+                }).then(r => {
+                    if(r.ok) htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab={{ current_tab }}', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'});
+                    else r.json().then(d => alert(d.detail || 'Error'));
+                })
+            ">
+                <input type="url" x-model="newUrl" required class="text-xs rounded border-gray-300 p-1 border w-64">
+                <button type="submit" class="text-green-600 hover:text-green-800 text-xs">save</button>
+                <button type="button" @click="editingUrl = false; newUrl = '{{ f.repository_url }}'" class="text-gray-400 hover:text-gray-600 text-xs">cancel</button>
+            </form>
+        </template>
+    </div>
+
+    <!-- Audit Reports -->
+    {% if f.status.value in ('auditing', 'audited') and f._audit_reports %}
+    <div class="mt-2 space-y-1">
+        {% if f.status.value == 'audited' %}
+        <p class="text-xs font-medium text-gray-700">Audit report{{ 's' if f._audit_reports|length > 1 else '' }}:</p>
+        {% else %}
+        <p class="text-xs font-medium text-gray-700">Pending audit report{{ 's' if f._audit_reports|length > 1 else '' }}:</p>
+        {% endif %}
+        {% for ar in f._audit_reports %}
+        <div class="bg-white rounded p-2 border border-gray-200 text-xs" x-data="{ editingAr: false, arUrl: '{{ ar.external_url }}' }">
+            <template x-if="!editingAr">
+                <span class="flex items-center gap-1">
+                    <a href="{{ ar.external_url }}" target="_blank" class="text-blue-600 hover:underline truncate">
+                        {{ ar.external_url }}
+                    </a>
+                    {% if user and (user.is_superuser or user.id == ar.user_id) %}
+                    <button @click="editingAr = true" class="text-gray-400 hover:text-gray-600">edit</button>
+                    <button
+                        @click="if(confirm('Delete this audit report?')) fetch('/api/papers/{{ paper.bibtex_key }}/formalisations/{{ f.id }}/audit-reports/{{ ar.id }}', {method:'DELETE'}).then(r => { if(r.ok) htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab={{ current_tab }}', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'}); })"
+                        class="text-red-400 hover:text-red-600">delete</button>
+                    {% endif %}
+                </span>
+            </template>
+            <template x-if="editingAr">
+                <form class="flex items-center gap-1" @submit.prevent="
+                    fetch('/api/papers/{{ paper.bibtex_key }}/formalisations/{{ f.id }}/audit-reports/{{ ar.id }}', {
+                        method: 'PATCH',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({external_url: arUrl})
+                    }).then(r => {
+                        if(r.ok) htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab={{ current_tab }}', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'});
+                        else r.json().then(d => alert(d.detail || 'Error'));
+                    })
+                ">
+                    <input type="url" x-model="arUrl" required class="text-xs rounded border-gray-300 p-1 border flex-1">
+                    <button type="submit" class="text-green-600 hover:text-green-800">save</button>
+                    <button type="button" @click="editingAr = false; arUrl = '{{ ar.external_url }}'" class="text-gray-400 hover:text-gray-600">cancel</button>
+                </form>
+            </template>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Add Audit Link (formalising or auditing) -->
+    {% if user and f.status.value in ('formalising', 'auditing') %}
+    <div x-data="{ showAuditForm: false }" class="mt-2">
+        <button @click="showAuditForm = !showAuditForm"
+            class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+            + Add Audit Link
+        </button>
+        <div x-show="showAuditForm" x-cloak class="mt-2 bg-white rounded p-3 border border-gray-200">
+            <form x-data="{ rd: { external_url: '' } }"
+                  @submit.prevent="
+                    fetch('/api/papers/{{ paper.bibtex_key }}/formalisations/{{ f.id }}/audit-reports', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(rd)
+                    }).then(r => {
+                        if(r.ok) { htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab={{ current_tab }}', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'}); htmx.ajax('GET', '/htmx/paper-card/{{ paper.bibtex_key }}', {target: '#{{ paper.bibtex_key }}', swap: 'outerHTML'}); }
+                        else return r.json().then(d => alert(d.detail || 'Error'));
+                    })
+                  "
+                  class="space-y-2">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">URL *</label>
+                    <input type="url" x-model="rd.external_url" required placeholder="https://..."
+                        class="w-full rounded border-gray-300 text-gray-900 text-xs p-1.5 border">
+                </div>
+                <button type="submit"
+                    class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors">
+                    Add Link
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Accept Audit (admin only, when auditing) -->
+    {% if user and f.status.value == 'auditing' and (user.is_superuser or user.is_maintainer) %}
+    <div class="mt-2">
+        <button
+            @click="if(confirm('Accept this audit and mark as audited?')) fetch('/api/papers/{{ paper.bibtex_key }}/formalisations/{{ f.id }}/status', {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({status: 'audited'})
+            }).then(r => {
+                if(r.ok) { htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab={{ current_tab }}', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'}); htmx.ajax('GET', '/htmx/paper-card/{{ paper.bibtex_key }}', {target: '#{{ paper.bibtex_key }}', swap: 'outerHTML'}); }
+                else r.json().then(d => alert(d.detail || 'Error'));
+            })"
+            class="text-xs bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 transition-colors font-medium">
+            Accept Audit
+        </button>
+    </div>
+    {% endif %}
+</div>

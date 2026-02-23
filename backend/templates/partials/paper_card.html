@@ -1,0 +1,228 @@
+{% set fc_count = fc_map.get(paper.id, 0) if fc_map is defined else 0 %}
+{% set rc_count = rc_map.get(paper.id, 0) if rc_map is defined else 0 %}
+<div id="{{ paper.bibtex_key }}"
+    x-data="{ panel: null }"
+    class="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-4 pb-2">
+    <a name="{{ paper.bibtex_key }}"></a>
+
+    <!-- Paper Type Badge + Status + Year -->
+    <div class="flex justify-between items-start mb-3">
+        <div class="flex space-x-2 items-center flex-wrap gap-y-1">
+            <a href="#{{ paper.bibtex_key }}"
+                class="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono text-gray-700 select-all cursor-pointer hover:bg-gray-200 transition-colors"
+                title="Click to go to this paper">{{ paper.bibtex_key }}</a>
+            <!-- Formalisation Status Badge -->
+            {% if paper.computed_status.value == 'formalising' %}
+            <span class="inline-block bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded">Formalising</span>
+            {% elif paper.computed_status.value == 'auditing' %}
+            <span class="inline-block bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">Auditing</span>
+            {% elif paper.computed_status.value == 'audited' %}
+            <span class="inline-block bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded">Audited</span>
+            {% endif %}
+        </div>
+        <span class="text-sm font-semibold text-gray-900">{{ paper.year or '' }}</span>
+    </div>
+
+    <!-- Title -->
+    <h3 class="text-lg font-semibold text-gray-900 leading-tight math-content">{{ paper.title }}</h3>
+
+    <!-- Authors -->
+    <p class="text-sm text-gray-600">
+        <span class="font-medium">Authors:</span> {{ paper.authors }}
+    </p>
+
+    <!-- Venue Information -->
+    {% if paper.venue %}
+    <div class="venue-section">
+        <p class="text-xs text-gray-600 mb-4 max-w-xl truncate">
+            <span class="font-medium math-content" title="{{ paper.venue }}">{{ paper.venue }}</span>
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- Links + action buttons -->
+    <div class="flex flex-wrap gap-2 mt-auto justify-between items-center">
+        <!-- Left: resource links -->
+        <div class="flex flex-wrap gap-2">
+            {% if paper.doi %}
+            <a href="{{ paper.doi if paper.doi.startswith('http') else 'https://doi.org/' ~ paper.doi }}"
+                target="_blank"
+                class="inline-flex items-center px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-medium rounded transition-colors border border-blue-200">
+                DOI
+            </a>
+            {% else %}
+            <span class="inline-flex items-center px-3 py-1 bg-blue-25 text-gray-400 text-xs font-medium rounded border border-blue-100">
+                DOI
+            </span>
+            {% endif %}
+
+            {% if paper.url %}
+            <a href="{{ paper.url }}" target="_blank"
+                class="inline-flex items-center px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-medium rounded transition-colors border border-blue-200">
+                URL
+            </a>
+            {% else %}
+            <span class="inline-flex items-center px-3 py-1 bg-blue-25 text-gray-400 text-xs font-medium rounded border border-blue-100">
+                URL
+            </span>
+            {% endif %}
+
+            <div class="relative" x-data="{ bibMenu: false }">
+                <button @click="bibMenu = !bibMenu"
+                    class="inline-flex items-center px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-medium rounded transition-colors border border-blue-200">
+                    BibTeX <span class="ml-1">&#9662;</span>
+                </button>
+                <div x-show="bibMenu" @click.away="bibMenu = false" x-cloak
+                    class="absolute left-0 mt-1 bg-white rounded shadow-lg py-1 w-36 z-50 border border-gray-200">
+                    <button @click="fetch('/api/papers/{{ paper.bibtex_key }}/bibtex').then(r=>r.text()).then(t=>{navigator.clipboard.writeText(t);bibMenu=false})"
+                        class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100">Copy</button>
+                    <a href="/api/papers/{{ paper.bibtex_key }}/bibtex" download="{{ paper.bibtex_key }}.bib"
+                        @click="bibMenu=false"
+                        class="block px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100">Download</a>
+                </div>
+            </div>
+
+            <!-- Details toggle -->
+            <button
+                @click="
+                    if (panel === 'details') { panel = null; document.getElementById('detail-{{ paper.bibtex_key }}').innerHTML = ''; }
+                    else { panel = 'details'; htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}', {target: document.getElementById('detail-{{ paper.bibtex_key }}'), swap: 'innerHTML'}); }
+                "
+                :class="panel === 'details' ? 'bg-gray-200 text-gray-800' : 'bg-gray-50 hover:bg-gray-100 text-gray-600'"
+                class="inline-flex items-center px-3 py-1 text-xs font-medium rounded transition-colors border border-gray-200">
+                <span x-text="panel === 'details' ? 'Hide' : 'Details'">Details</span>
+            </button>
+
+            {% if user %}
+            <!-- Edit toggle -->
+            <button
+                @click="panel = (panel === 'edit') ? null : 'edit'; document.getElementById('detail-{{ paper.bibtex_key }}').innerHTML = '';"
+                :class="panel === 'edit' ? 'bg-yellow-200 text-yellow-800' : 'bg-yellow-50 hover:bg-yellow-100 text-yellow-700'"
+                class="inline-flex items-center px-3 py-1 text-xs font-medium rounded transition-colors border border-yellow-200">
+                <span x-text="panel === 'edit' ? 'Cancel' : 'Edit'">Edit</span>
+            </button>
+            {% endif %}
+
+            {% if user and user.is_superuser %}
+            <button
+                hx-delete="/api/papers/{{ paper.bibtex_key }}"
+                hx-confirm="Are you sure you want to delete this paper?"
+                hx-target="closest div[id='{{ paper.bibtex_key }}']"
+                hx-swap="outerHTML"
+                class="inline-flex items-center px-3 py-1 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium rounded transition-colors border border-red-200">
+                Delete
+            </button>
+            {% endif %}
+        </div>
+
+        <!-- Right: review & formalisation summary buttons -->
+        <div class="flex gap-2">
+            <button
+                @click="
+                    if (panel === 'details') { panel = null; document.getElementById('detail-{{ paper.bibtex_key }}').innerHTML = ''; }
+                    else { panel = 'details'; htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab=reviews', {target: document.getElementById('detail-{{ paper.bibtex_key }}'), swap: 'innerHTML'}); }
+                "
+                class="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-medium rounded transition-colors border border-indigo-200">
+                <span>{{ rc_count }}</span> review{{ 's' if rc_count != 1 }}
+                <span class="text-indigo-400 font-bold">+</span>
+            </button>
+            <button
+                @click="
+                    if (panel === 'details') { panel = null; document.getElementById('detail-{{ paper.bibtex_key }}').innerHTML = ''; }
+                    else { panel = 'details'; htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab=formalisations', {target: document.getElementById('detail-{{ paper.bibtex_key }}'), swap: 'innerHTML'}); }
+                "
+                class="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-medium rounded transition-colors border border-purple-200">
+                <span>{{ fc_count }}</span> formalisation{{ 's' if fc_count != 1 }}
+                <span class="text-purple-400 font-bold">+</span>
+            </button>
+        </div>
+    </div>
+
+    {% if user %}
+    <!-- Inline edit form -->
+    <div x-show="panel === 'edit'" x-cloak class="mt-3 border-t border-gray-200 pt-3"
+         x-data="{
+            knownTypes: ['article','inproceedings','incollection','book','phdthesis','mastersthesis','techreport','misc','unpublished'],
+            entrySelect: '',
+            customType: '',
+            fd: {
+                entry_type: '{{ paper.entry_type }}',
+                title: '{{ paper.title|e }}',
+                authors: '{{ paper.authors|e }}',
+                year: '{{ paper.year or '' }}',
+                journal: '{{ paper.journal or '' }}',
+                doi: '{{ paper.doi or '' }}',
+                url: '{{ paper.url or '' }}',
+            },
+            init() {
+                this.entrySelect = this.knownTypes.includes(this.fd.entry_type) ? this.fd.entry_type : '__other__';
+                this.customType = this.entrySelect === '__other__' ? this.fd.entry_type : '';
+            },
+            syncEntryType() {
+                this.fd.entry_type = this.entrySelect === '__other__' ? this.customType : this.entrySelect;
+            }
+         }">
+        <form @submit.prevent="
+            syncEntryType();
+            fetch('/api/papers/{{ paper.bibtex_key }}', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(fd)
+            }).then(r => {
+                if(r.ok) window.location.reload();
+                else r.json().then(d => alert(d.detail || 'Error'));
+            })
+        " class="space-y-2">
+            <div>
+                <label class="block text-xs font-medium text-gray-700">Title</label>
+                <input type="text" x-model="fd.title" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-700">Authors <span class="font-normal text-gray-400">— e.g. Albert Einstein and Kurt Gödel and Alan Turing</span></label>
+                <input type="text" x-model="fd.authors" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">Year</label>
+                    <input type="text" x-model="fd.year" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">DOI</label>
+                    <input type="text" x-model="fd.doi" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">URL</label>
+                    <input type="text" x-model="fd.url" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-700">BibTeX entry type</label>
+                <div class="flex items-center gap-2">
+                    <select x-model="entrySelect" @change="syncEntryType()" class="rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                        <option value="article">article</option>
+                        <option value="inproceedings">inproceedings</option>
+                        <option value="incollection">incollection</option>
+                        <option value="book">book</option>
+                        <option value="phdthesis">phdthesis</option>
+                        <option value="mastersthesis">mastersthesis</option>
+                        <option value="techreport">techreport</option>
+                        <option value="misc">misc</option>
+                        <option value="unpublished">unpublished</option>
+                        <option value="__other__">other...</option>
+                    </select>
+                    <input x-show="entrySelect === '__other__'" x-cloak type="text" x-model="customType" @input="syncEntryType()"
+                        placeholder="e.g. proceedings" class="rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button type="submit" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors">Save</button>
+                <button type="button" @click="panel = null"
+                    class="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium rounded transition-colors">Cancel</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Expanded detail area -->
+    <div id="detail-{{ paper.bibtex_key }}" class="mt-3"></div>
+</div>

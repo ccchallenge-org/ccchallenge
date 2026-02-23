@@ -1,0 +1,9 @@
+{% for paper in papers %}
+{% include "partials/paper_card.html" %}
+{% endfor %}
+
+{% if papers|length == 0 %}
+<div class="text-center py-8 text-blue-200">
+    <p>No papers found matching your criteria.</p>
+</div>
+{% endif %}

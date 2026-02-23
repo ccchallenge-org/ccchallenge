@@ -1,0 +1,21 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+    depends_on:
+      - app
+
+  app:
+    build: .
+    env_file: .env
+    volumes:
+      - app_data:/app/data
+
+volumes:
+  caddy_data:
+  app_data:

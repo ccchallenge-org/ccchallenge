@@ -1,0 +1,29 @@
+{% if total > 0 %}
+<div class="bg-white/10 rounded-lg p-3">
+    <div class="text-xs text-blue-200 mb-1 font-medium">Formalisation Pipeline</div>
+    <div class="flex h-4 rounded-full overflow-hidden">
+        {% set ns_pct = ((stats.get('not_started', 0) / total) * 100)|round(1) %}
+        {% set f_pct = ((stats.get('formalising', 0) / total) * 100)|round(1) %}
+        {% set a_pct = ((stats.get('auditing', 0) / total) * 100)|round(1) %}
+        {% set ac_pct = ((stats.get('audited', 0) / total) * 100)|round(1) %}
+        {% if ns_pct > 0 %}
+        <div class="bg-gray-400" style="width: {{ ns_pct }}%" title="Not started: {{ stats.get('not_started', 0) }}"></div>
+        {% endif %}
+        {% if f_pct > 0 %}
+        <div class="bg-yellow-400" style="width: {{ f_pct }}%" title="Formalising: {{ stats.get('formalising', 0) }}"></div>
+        {% endif %}
+        {% if a_pct > 0 %}
+        <div class="bg-blue-400" style="width: {{ a_pct }}%" title="Auditing: {{ stats.get('auditing', 0) }}"></div>
+        {% endif %}
+        {% if ac_pct > 0 %}
+        <div class="bg-green-400" style="width: {{ ac_pct }}%" title="Audited: {{ stats.get('audited', 0) }}"></div>
+        {% endif %}
+    </div>
+    <div class="flex justify-between text-xs text-blue-200 mt-1">
+        <span>Not started: {{ stats.get('not_started', 0) }}</span>
+        <span>Formalising: {{ stats.get('formalising', 0) }}</span>
+        <span>Auditing: {{ stats.get('auditing', 0) }}</span>
+        <span>Audited: {{ stats.get('audited', 0) }}</span>
+    </div>
+</div>
+{% endif %}

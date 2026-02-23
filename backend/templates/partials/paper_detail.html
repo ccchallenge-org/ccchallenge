@@ -1,0 +1,95 @@
+{% if paper %}
+<div x-data="{ tab: '{{ initial_tab|default('reviews') }}' }" class="border-t border-gray-200 pt-3 mt-2">
+    <!-- Tabs -->
+    <div class="flex space-x-4 mb-3 border-b border-gray-200">
+        <button @click="tab = 'reviews'"
+            :class="tab === 'reviews' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+            class="pb-2 text-sm font-medium border-b-2 transition-colors">
+            Reviews ({{ reviews|length }})
+        </button>
+        <button @click="tab = 'formalisations'"
+            :class="tab === 'formalisations' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+            class="pb-2 text-sm font-medium border-b-2 transition-colors">
+            Formalisations ({{ formalisations|length }})
+        </button>
+    </div>
+
+    <!-- Reviews Tab -->
+    <div x-show="tab === 'reviews'">
+        {% if reviews %}
+        <div class="space-y-2">
+            {% for r in reviews %}
+            <div class="bg-gray-50 rounded p-3 text-sm" x-data="{ editingReview: false, reviewUrl: '{{ r.external_url }}', reviewComment: '{{ r.comment|default('', true)|e }}' }">
+                <template x-if="!editingReview">
+                    <div>
+                        <span class="flex items-center gap-1">
+                            <a href="{{ r.external_url }}" target="_blank" class="text-blue-600 hover:underline text-xs truncate">
+                                {{ r.external_url }}
+                            </a>
+                            {% if user and (user.is_superuser or user.id == r.user_id) %}
+                            <button @click="editingReview = true" class="text-gray-400 hover:text-gray-600 text-xs">edit</button>
+                            <button
+                                @click="if(confirm('Delete this review?')) fetch('/api/papers/{{ paper.bibtex_key }}/reviews/{{ r.id }}', {method:'DELETE'}).then(resp => { if(resp.ok) htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab=reviews', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'}); })"
+                                class="text-red-400 hover:text-red-600 text-xs">delete</button>
+                            {% endif %}
+                        </span>
+                        {% if r.comment %}
+                        <p class="text-gray-600 text-xs mt-1">{{ r.comment }}</p>
+                        {% endif %}
+                    </div>
+                </template>
+                <template x-if="editingReview">
+                    <form class="space-y-1" @submit.prevent="
+                        fetch('/api/papers/{{ paper.bibtex_key }}/reviews/{{ r.id }}', {
+                            method: 'PATCH',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({external_url: reviewUrl, comment: reviewComment || null})
+                        }).then(resp => {
+                            if(resp.ok) htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab=reviews', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'});
+                            else resp.json().then(d => alert(d.detail || 'Error'));
+                        })
+                    ">
+                        <div class="flex items-center gap-1">
+                            <input type="url" x-model="reviewUrl" required class="text-xs rounded border-gray-300 p-1 border w-64">
+                            <button type="submit" class="text-green-600 hover:text-green-800 text-xs">save</button>
+                            <button type="button" @click="editingReview = false; reviewUrl = '{{ r.external_url }}'; reviewComment = '{{ r.comment|default('', true)|e }}'" class="text-gray-400 hover:text-gray-600 text-xs">cancel</button>
+                        </div>
+                        <input type="text" x-model="reviewComment" placeholder="Comment (optional)" class="text-xs rounded border-gray-300 p-1 border w-full">
+                    </form>
+                </template>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-sm">No reviews yet.</p>
+        {% endif %}
+
+        {% if user %}
+        {% include "partials/forms/add_review.html" %}
+        {% else %}
+        <p class="text-gray-400 text-xs mt-3">Log in to write a review.</p>
+        {% endif %}
+    </div>
+
+    <!-- Formalisations Tab -->
+    <div x-show="tab === 'formalisations'" x-cloak>
+        {% if formalisations %}
+        <div class="space-y-2">
+            {% for f in formalisations %}
+            {% set current_tab = 'formalisations' %}
+            {% include "partials/formalisation_card.html" %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-sm">No formalisations yet.</p>
+        {% endif %}
+
+        {% if user %}
+        {% include "partials/forms/add_formalisation.html" %}
+        {% else %}
+        <p class="text-gray-400 text-xs mt-3">Log in to add a formalisation.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endif %}

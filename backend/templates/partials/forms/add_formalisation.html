@@ -1,0 +1,51 @@
+<!-- Add Formalisation Form (inline, inside paper detail) -->
+<div x-data="{ showForm: false }" class="mt-3">
+    <button @click="showForm = !showForm"
+        class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+        + Add Formalisation
+    </button>
+    <div x-show="showForm" x-cloak class="mt-2 bg-gray-50 rounded p-3">
+        <form x-data="{ fd: { proof_assistant: 'lean4', repository_url: '' }, otherName: '' }"
+              @submit.prevent="
+                const payload = {...fd};
+                if (fd.proof_assistant === 'other' && otherName) {
+                    payload.description = otherName;
+                }
+                fetch('/api/papers/{{ paper.bibtex_key }}/formalisations', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                }).then(r => {
+                    if(r.ok) htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab=formalisations', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'});
+                    else return r.json().then(d => alert(d.detail || 'Error'));
+                })
+              "
+              class="space-y-2">
+            <div>
+                <label class="block text-xs font-medium text-gray-700">Proof Assistant</label>
+                <select x-model="fd.proof_assistant" class="w-full rounded border-gray-300 text-gray-900 text-xs p-1.5 border">
+                    <option value="lean4">Lean 4</option>
+                    <option value="rocq">Rocq</option>
+                    <option value="isabelle">Isabelle</option>
+                    <option value="agda">Agda</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div x-show="fd.proof_assistant === 'other'" x-cloak>
+                <label class="block text-xs font-medium text-gray-700">Specify proof assistant *</label>
+                <input type="text" x-model="otherName" placeholder="e.g. Mizar, HOL Light, Metamath"
+                    :required="fd.proof_assistant === 'other'"
+                    class="w-full rounded border-gray-300 text-gray-900 text-xs p-1.5 border">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-700">URL *</label>
+                <input type="url" x-model="fd.repository_url" required placeholder="https://..."
+                    class="w-full rounded border-gray-300 text-gray-900 text-xs p-1.5 border">
+            </div>
+            <button type="submit"
+                class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded transition-colors">
+                Submit
+            </button>
+        </form>
+    </div>
+</div>

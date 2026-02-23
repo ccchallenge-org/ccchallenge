@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ccchallenge</title>
+
+    <!-- Plausible Analytics -->
+    <script defer data-domain="ccchallenge.org"
+        src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"></script>
+    <script>window.plausible = window.plausible || function () { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+    <link rel="manifest" href="/static/site.webmanifest">
+
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- KaTeX for LaTeX math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+        integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"
+        integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8"
+        crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+        integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05"
+        crossorigin="anonymous"></script>
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        [x-cloak] { display: none !important; }
+    </style>
+
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body class="bg-[#0c63bb] text-[#faf8f6] antialiased" x-data="authState()">
+    <!-- Work in Progress Indicator -->
+    <div class="bg-yellow-600 bg-opacity-90 text-white text-center py-1 px-4">
+        <p class="text-sm font-medium">
+            Work in Progress — ccchallenge is under active development — chat with us on <a
+                href="https://discord.gg/PzgWnN6txJ" class="text-blue-700 hover:text-blue-800">Discord</a>
+        </p>
+    </div>
+
+    <nav class="shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+            <div class="flex justify-between items-center h-16">
+                <a href="/" class="text-white text-xl font-semibold hover:text-gray-300 transition-colors">
+                    The Collatz Conjecture Challenge
+                </a>
+                <ul class="flex space-x-2 items-center">
+                    <li><span class="text-gray-400 px-3 py-2 rounded-md font-medium">Story</span></li>
+                    <li><span class="text-gray-400 px-3 py-2 rounded-md font-medium">Method</span></li>
+                    <li><span class="text-gray-400 px-3 py-2 rounded-md font-medium">Contribute</span></li>
+                    <li><span class="text-gray-400 px-3 py-2 rounded-md font-medium">Forum</span></li>
+                    <li><span class="text-gray-400 px-3 py-2 rounded-md font-medium">Wiki</span></li>
+                    <div class="flex items-center space-x-4">
+                        <li>
+                            <a href="https://github.com/orgs/ccchallenge-org/repositories" class="cursor-pointer"><img
+                                    class="w-[23px] lg:w-[26px]" src="/static/GitHub-Mark-Light-32px.png"
+                                    alt="Github logo" /></a>
+                        </li>
+                        <li>
+                            <a href="https://ccchallenge.zulipchat.com/#inbox" class="cursor-pointer"><img
+                                    class="w-[18px] lg:w-[21px]" src="/static/zulip_discrete.svg" alt="Zulip logo" /></a>
+                        </li>
+                        <li>
+                            <a href="https://discord.gg/PzgWnN6txJ" class="cursor-pointer"><img
+                                    class="w-[23px] lg:w-[26px]" src="/static/Discord-Logo-White.png"
+                                    alt="Discord logo" /></a>
+                        </li>
+                    </div>
+                    <!-- Auth buttons -->
+                    <li class="ml-4">
+                        {% if user %}
+                        <div class="flex items-center space-x-2" x-data="{ showMenu: false }">
+                            <button @click="showMenu = !showMenu"
+                                class="text-white text-sm font-medium px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
+                                {{ user.username }}
+                            </button>
+                            <div x-show="showMenu" @click.away="showMenu = false" x-cloak
+                                class="absolute right-4 top-14 bg-white rounded-lg shadow-lg py-2 w-48 z-50">
+                                <button @click="fetch('/api/auth/logout', {method:'POST'}).then(() => window.location.href = '/')"
+                                    class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    Log out
+                                </button>
+                            </div>
+                        </div>
+                        {% else %}
+                        <button @click="showAuthModal = true"
+                            class="text-white text-sm font-medium px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
+                            Log in
+                        </button>
+                        {% endif %}
+                    </li>
+                    {% block nav_links %}{% endblock %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+        {% block content %}
+        <div class="text-center">
+            <h1 class="text-4xl font-semibold mb-4">Welcome</h1>
+        </div>
+        {% endblock %}
+    </main>
+
+    <!-- Auth Modal -->
+    {% if not user %}
+    {% include "partials/forms/login.html" %}
+    {% endif %}
+
+    <script>
+        function authState() {
+            return {
+                showAuthModal: false,
+                authTab: 'login',
+            }
+        }
+
+        // Initialize KaTeX auto-rendering when page loads
+        document.addEventListener("DOMContentLoaded", function () {
+            if (typeof renderMathInElement === 'function') {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        { left: "$$", right: "$$", display: true },
+                        { left: "$", right: "$", display: false },
+                        { left: "\\(", right: "\\)", display: false },
+                        { left: "\\[", right: "\\]", display: true }
+                    ],
+                    throwOnError: false
+                });
+            }
+        });
+
+        // Re-render KaTeX after HTMX swaps
+        document.body.addEventListener('htmx:afterSwap', function () {
+            if (typeof renderMathInElement === 'function') {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        { left: "$$", right: "$$", display: true },
+                        { left: "$", right: "$", display: false },
+                        { left: "\\(", right: "\\)", display: false },
+                        { left: "\\[", right: "\\]", display: true }
+                    ],
+                    throwOnError: false
+                });
+            }
+            // Typography fixes
+            document.querySelectorAll('.math-content').forEach(el => {
+                el.innerHTML = el.innerHTML
+                    .replace(/``/g, '\u201c')
+                    .replace(/''/g, '\u201d')
+                    .replace(/--/g, '\u2013');
+            });
+        });
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+
+</html>
