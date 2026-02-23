@@ -45,7 +45,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
         existing = await session.execute(
             select(User).where(User.username == user_create.username)
         )
-        if existing.scalar_one_or_none() is not None:
+        if existing.unique().scalar_one_or_none() is not None:
             raise exceptions.UserAlreadyExists()
         return await super().create(user_create, safe=safe, request=request)
 
