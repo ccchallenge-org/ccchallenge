@@ -135,18 +135,28 @@ async def verify_page(request: Request, token: str = ""):
 @app.get("/")
 async def index(
     request: Request,
+    anchor: str | None = None,
     session: AsyncSession = Depends(get_async_session),
     user: User | None = Depends(current_optional_user),
 ):
     # Total count for stats header
     total = (await session.execute(select(func.count(Paper.id)))).scalar() or 0
 
-    # First page of papers
+    # If anchor is set, load enough pages to include it
+    limit = PAGE_SIZE
+    page = 1
+    if anchor:
+        pos = (await session.execute(
+            select(func.count()).where(Paper.bibtex_key < anchor)
+        )).scalar() or 0
+        page = (pos // PAGE_SIZE) + 1
+        limit = page * PAGE_SIZE
+
     query = (
         select(Paper)
         .options(selectinload(Paper.formalisations))
         .order_by(Paper.bibtex_key)
-        .limit(PAGE_SIZE)
+        .limit(limit)
     )
     result = await session.execute(query)
     paper_list = result.scalars().unique().all()
@@ -179,7 +189,7 @@ async def index(
         )
         vc_map = dict((await session.execute(vc_q)).all())
 
-    has_more = len(paper_list) == PAGE_SIZE
+    has_more = len(paper_list) < total
 
     return templates.TemplateResponse(
         "index.html",
@@ -192,7 +202,7 @@ async def index(
             "fc_map": fc_map,
             "rc_map": rc_map,
             "vc_map": vc_map,
-            "page": 1,
+            "page": page,
             "has_more": has_more,
         },
     )
