@@ -210,6 +210,7 @@ async def htmx_paper_list(
     order: str = "authors",
     q: str | None = None,
     page: int = 1,
+    anchor: str | None = None,
     session: AsyncSession = Depends(get_async_session),
     user: User | None = Depends(current_optional_user),
 ):
@@ -241,13 +242,23 @@ async def htmx_paper_list(
     count_query = select(func.count()).select_from(query.subquery())
     total = (await session.execute(count_query)).scalar() or 0
 
-    offset = (page - 1) * PAGE_SIZE
     ordering = Paper.year.desc() if order == "year" else Paper.bibtex_key
+
+    # If anchor is set, figure out which page it's on and load pages 1..N
+    if anchor:
+        pos_q = select(func.count()).select_from(
+            query.where(Paper.bibtex_key < anchor).subquery()
+        )
+        position = (await session.execute(pos_q)).scalar() or 0
+        page = (position // PAGE_SIZE) + 1
+
+    offset = (page - 1) * PAGE_SIZE if not anchor else 0
+    limit = PAGE_SIZE if not anchor else page * PAGE_SIZE
     query = (
         query.options(selectinload(Paper.formalisations))
         .order_by(ordering)
         .offset(offset)
-        .limit(PAGE_SIZE)
+        .limit(limit)
     )
     papers = (await session.execute(query)).scalars().unique().all()
 
@@ -275,7 +286,8 @@ async def htmx_paper_list(
         )
         vc_map = dict((await session.execute(vc_q)).all())
 
-    has_more = (offset + len(papers)) < total
+    end = (offset + len(papers)) if not anchor else len(papers)
+    has_more = end < total
 
     # Build the current filter query string for the "Load more" button
     filter_params = []

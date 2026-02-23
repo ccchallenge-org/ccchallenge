@@ -120,24 +120,17 @@
         }
     }
 
-    // If the URL has a #hash pointing to a paper not on the current page, fetch and insert it
+    // If the URL has a #hash pointing to a paper not on the current page, load the right page
     document.addEventListener('DOMContentLoaded', function() {
         var hash = window.location.hash.slice(1);
         if (hash && !document.getElementById(hash)) {
-            fetch('/htmx/paper-card/' + encodeURIComponent(hash))
-                .then(function(r) { return r.text(); })
-                .then(function(html) {
-                    if (!html.trim()) return;
-                    var list = document.getElementById('paper-list');
-                    if (!list) return;
-                    var tmp = document.createElement('div');
-                    tmp.innerHTML = html;
-                    var card = tmp.firstElementChild;
-                    list.prepend(card);
-                    htmx.process(card);
-                    if (window.Alpine) Alpine.initTree(card);
-                    card.scrollIntoView({ behavior: 'smooth' });
-                });
+            htmx.ajax('GET', '/htmx/paper-list?anchor=' + encodeURIComponent(hash), {
+                target: '#paper-list',
+                swap: 'innerHTML'
+            }).then(function() {
+                var el = document.getElementById(hash);
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+            });
         }
     });
 </script>
