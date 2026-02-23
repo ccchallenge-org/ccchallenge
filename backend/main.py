@@ -324,10 +324,18 @@ async def htmx_paper_card(
 
     fc = (await session.execute(select(func.count()).where(Formalisation.paper_id == paper.id))).scalar() or 0
     rc = (await session.execute(select(func.count()).where(Review.paper_id == paper.id))).scalar() or 0
+    vc = (await session.execute(select(func.count()).where(Vote.paper_id == paper.id))).scalar() or 0
 
     return templates.TemplateResponse(
         "partials/paper_card.html",
-        {"request": request, "user": user, "paper": paper, "fc": fc, "rc": rc},
+        {
+            "request": request,
+            "user": user,
+            "paper": paper,
+            "fc_map": {paper.id: fc},
+            "rc_map": {paper.id: rc},
+            "vc_map": {paper.id: vc},
+        },
     )
 
 

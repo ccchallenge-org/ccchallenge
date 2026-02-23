@@ -119,5 +119,26 @@
             showAddModal: false,
         }
     }
+
+    // If the URL has a #hash pointing to a paper not on the current page, fetch and insert it
+    document.addEventListener('DOMContentLoaded', function() {
+        var hash = window.location.hash.slice(1);
+        if (hash && !document.getElementById(hash)) {
+            fetch('/htmx/paper-card/' + encodeURIComponent(hash))
+                .then(function(r) { return r.text(); })
+                .then(function(html) {
+                    if (!html.trim()) return;
+                    var list = document.getElementById('paper-list');
+                    if (!list) return;
+                    var tmp = document.createElement('div');
+                    tmp.innerHTML = html;
+                    var card = tmp.firstElementChild;
+                    list.prepend(card);
+                    htmx.process(card);
+                    if (window.Alpine) Alpine.initTree(card);
+                    card.scrollIntoView({ behavior: 'smooth' });
+                });
+        }
+    });
 </script>
 {% endblock %}
