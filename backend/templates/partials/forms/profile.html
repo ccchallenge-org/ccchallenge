@@ -2,13 +2,10 @@
 <div x-show="showProfileModal" x-cloak
     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-lg shadow-xl max-w-sm w-full p-6" @click.away="showProfileModal = false"
-         x-data="{
-            username: {{ user.username|tojson }},
-            email: {{ user.email|tojson }},
-            error: '',
-            success: '',
-            loading: false
-         }">
+         data-username="{{ user.username }}"
+         data-email="{{ user.email }}"
+         x-data="{ username: '', email: '', error: '', success: '', loading: false }"
+         x-init="username = $el.dataset.username; email = $el.dataset.email">
         <div class="flex justify-between items-start mb-4">
             <h3 class="text-lg font-semibold text-gray-900">Profile</h3>
             <button @click="showProfileModal = false" class="text-gray-400 hover:text-gray-600 transition-colors">
