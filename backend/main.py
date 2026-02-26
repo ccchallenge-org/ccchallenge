@@ -286,6 +286,7 @@ async def htmx_paper_detail(
     bibtex_key: str,
     request: Request,
     tab: str = "reviews",
+    add: bool = False,
     session: AsyncSession = Depends(get_async_session),
     user: User | None = Depends(current_optional_user),
 ):
@@ -330,6 +331,7 @@ async def htmx_paper_detail(
             "formalisations": formalisations_list,
             "reviews": reviews_list,
             "initial_tab": tab if tab in ("reviews", "formalisations", "audits") else "reviews",
+            "auto_add": add,
         },
     )
 

@@ -219,6 +219,7 @@
     <!-- Paper card helpers (vanilla JS, no Alpine needed) -->
     <script>
         const _cardState = {};
+        const _cardUrl = {};
 
         function _getCard(el) { return el.closest('[id]'); }
 
@@ -226,27 +227,34 @@
             const card = _getCard(btn);
             const key = card.id;
             const prev = _cardState[key];
+            const prevUrl = _cardUrl[key];
             const detailTarget = card.querySelector('[data-panel="detail-target"]');
+
+            // Switching between different detail tabs (e.g. reviews → formalisations)?
+            const switchingDetailTabs = prev === 'details' && panel === 'details' && url && url !== prevUrl;
 
             // Deactivate previous panel
             if (prev) {
                 const prevPanel = card.querySelector('[data-panel="' + prev + '"]');
                 if (prevPanel) prevPanel.classList.add('hidden');
-                if (prev !== 'abstract') detailTarget.innerHTML = '';
+                // Keep content visible when switching detail tabs to avoid flash
+                if (prev !== 'abstract' && !switchingDetailTabs) detailTarget.innerHTML = '';
                 card.querySelectorAll('[data-panel-btn="' + prev + '"]').forEach(b => {
                     b.textContent = prev === 'abstract' ? 'Abstract' : prev === 'details' ? 'Details' : 'Edit';
                     _resetBtnStyle(b, prev);
                 });
             }
 
-            // Toggle off
-            if (prev === panel || (prev === 'details' && panel === 'details' && !url)) {
+            // Toggle off (but not when switching between different detail tabs)
+            if (prev === panel && !switchingDetailTabs) {
                 delete _cardState[key];
+                delete _cardUrl[key];
                 return;
             }
 
             // Activate new panel
             _cardState[key] = panel;
+            _cardUrl[key] = url || null;
             if (panel === 'abstract') {
                 const abstractEl = card.querySelector('[data-panel="abstract"]');
                 if (abstractEl) abstractEl.classList.remove('hidden');

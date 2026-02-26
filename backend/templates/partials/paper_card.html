@@ -108,12 +108,12 @@
             {% if user %}
             <button onclick="cardToggle(this, 'edit', '/htmx/paper-edit/{{ paper.bibtex_key }}')"
                 data-panel-btn="edit"
-                class="inline-flex items-center px-3 py-1 text-xs font-medium rounded transition-colors border border-yellow-200 bg-yellow-50 hover:bg-yellow-100 text-yellow-700">
+                class="inline-flex items-center px-3 py-1 text-xs font-medium rounded transition-colors border border-yellow-200 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 cursor-pointer">
                 Edit
             </button>
             {% else %}
             <button onclick="document.body._x_dataStack[0].showAuthModal = true"
-                class="inline-flex items-center px-3 py-1 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 text-xs font-medium rounded transition-colors border border-yellow-200">
+                class="inline-flex items-center px-3 py-1 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 text-xs font-medium rounded transition-colors border border-yellow-200 cursor-pointer">
                 Edit
             </button>
             {% endif %}
@@ -121,15 +121,13 @@
 
         <!-- Right: review & formalisation summary buttons -->
         <div class="flex gap-2">
-            <button onclick="cardToggle(this, 'details', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab=reviews')"
-                class="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-medium rounded transition-colors border border-indigo-200">
-                <span>{{ rc_count }}</span> review{{ 's' if rc_count != 1 }}
-                <span class="text-indigo-400 font-bold">+</span>
+            <button onclick="cardToggle(this, 'details', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab=reviews{% if rc_count == 0 %}&add=true{% endif %}')"
+                class="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-medium rounded transition-colors border border-indigo-200 cursor-pointer">
+                <span id="rc-text-{{ paper.bibtex_key }}">{% if rc_count %}{{ rc_count }} review{{ 's' if rc_count != 1 else '' }}{% else %}Add review{% endif %}</span>
             </button>
-            <button onclick="cardToggle(this, 'details', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab=formalisations')"
-                class="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-medium rounded transition-colors border border-purple-200">
-                <span>{{ fc_count }}</span> formalisation{{ 's' if fc_count != 1 }}
-                <span class="text-purple-400 font-bold">+</span>
+            <button onclick="cardToggle(this, 'details', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab=formalisations{% if fc_count == 0 %}&add=true{% endif %}')"
+                class="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-medium rounded transition-colors border border-purple-200 cursor-pointer">
+                <span id="fc-text-{{ paper.bibtex_key }}">{% if fc_count %}{{ fc_count }} formalisation{{ 's' if fc_count != 1 else '' }}{% else %}Add formalisation{% endif %}</span>
             </button>
         </div>
     </div>
