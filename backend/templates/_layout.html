@@ -199,6 +199,18 @@
         });
     </script>
 
+    <!-- Scroll to hash anchor after full page render -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            if (window.location.hash) {
+                setTimeout(function () {
+                    var el = document.getElementById(window.location.hash.slice(1));
+                    if (el) el.scrollIntoView({ block: 'center' });
+                }, 100);
+            }
+        });
+    </script>
+
     <!-- Paper card helpers (vanilla JS, no Alpine needed) -->
     <script>
         const _cardState = {};
