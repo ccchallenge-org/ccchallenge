@@ -109,7 +109,10 @@ async def create_paper(
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=409, detail="Paper with this bibtex_key already exists")
 
-    paper = Paper(**data.model_dump(), added_by_id=user.id)
+    create_data = data.model_dump()
+    if not user.is_superuser:
+        create_data.pop("exclusion_reason", None)
+    paper = Paper(**create_data, added_by_id=user.id)
     session.add(paper)
     await session.commit()
     # Re-fetch with formalisations eagerly loaded to avoid lazy-load in async

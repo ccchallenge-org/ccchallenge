@@ -147,6 +147,18 @@
                     <button type="button" @click="addExtra()"
                         class="text-xs text-blue-600 hover:underline">+ Add field</button>
                 </div>
+                {% if user and user.is_superuser %}
+                <div class="bg-gray-50 border border-gray-200 rounded p-3 space-y-2">
+                    <label class="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer">
+                        <input type="checkbox" x-model="excluded" class="rounded border-gray-300 text-gray-600 focus:ring-gray-500">
+                        Exclude from formalisation goal
+                    </label>
+                    <div x-show="excluded" x-cloak>
+                        <input type="text" x-model="exclusionReason" placeholder="Reason for exclusion (e.g. duplicate, off-topic)"
+                            class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+                {% endif %}
                 <button type="submit"
                     class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors">
                     Add Paper
@@ -173,6 +185,8 @@ function addPaperForm() {
         knownTypes: ['article','inproceedings','incollection','book','phdthesis','mastersthesis','techreport','misc','unpublished'],
         entrySelect: 'article',
         customType: '',
+        excluded: false,
+        exclusionReason: '',
         showBibtexParse: false,
         bibtexRaw: '',
         extras: [],
@@ -272,7 +286,9 @@ function addPaperForm() {
             var ef = {};
             this.extras.forEach(function(e) { if (e.key.trim()) ef[e.key.trim()] = e.value; });
             this.formData.extra_fields = Object.keys(ef).length ? ef : null;
-            return this.formData;
+            var payload = Object.assign({}, this.formData);
+            payload.exclusion_reason = this.excluded ? this.exclusionReason : null;
+            return payload;
         }
     };
 }

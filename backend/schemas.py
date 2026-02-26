@@ -27,6 +27,7 @@ class PaperCreate(BaseModel):
     abstract: Optional[str] = None
     note: Optional[str] = None
     extra_fields: Optional[dict] = None
+    exclusion_reason: Optional[str] = None
 
 
 class PaperUpdate(BaseModel):
