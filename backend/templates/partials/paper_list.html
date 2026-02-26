@@ -7,15 +7,3 @@
     <p>No papers found matching your criteria.</p>
 </div>
 {% endif %}
-
-{% if has_more|default(false) %}
-<div id="load-more-btn" class="text-center py-4">
-    <button
-        hx-get="/htmx/paper-list?page={{ page + 1 }}{% if filter_qs|default('') %}&{{ filter_qs }}{% endif %}"
-        hx-target="#load-more-btn"
-        hx-swap="outerHTML"
-        class="px-6 py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-lg transition-colors border border-white/20">
-        Load more
-    </button>
-</div>
-{% endif %}
