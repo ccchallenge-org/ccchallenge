@@ -1,3 +1,4 @@
+data/*
 routes/contribute.md
 aux/
 deploy.sh
