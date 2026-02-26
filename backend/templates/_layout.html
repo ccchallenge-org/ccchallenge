@@ -201,14 +201,19 @@
 
     <!-- Scroll to hash anchor after full page render -->
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            if (window.location.hash) {
-                setTimeout(function () {
-                    var el = document.getElementById(window.location.hash.slice(1));
-                    if (el) el.scrollIntoView({ block: 'center' });
-                }, 100);
-            }
-        });
+        if (window.location.hash) {
+            // Prevent browser from restoring previous scroll position on reload
+            history.scrollRestoration = 'manual';
+            window.addEventListener('load', function () {
+                // Wait for Alpine/KaTeX to finish rendering
+                requestAnimationFrame(function () {
+                    setTimeout(function () {
+                        var el = document.getElementById(window.location.hash.slice(1));
+                        if (el) el.scrollIntoView({ block: 'center', behavior: 'instant' });
+                    }, 200);
+                });
+            });
+        }
     </script>
 
     <!-- Paper card helpers (vanilla JS, no Alpine needed) -->
