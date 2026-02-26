@@ -104,13 +104,6 @@
                 </div>
             </div>
 
-            <!-- Details toggle -->
-            <button onclick="cardToggle(this, 'details', '/htmx/paper-detail/{{ paper.bibtex_key }}')"
-                data-panel-btn="details"
-                class="inline-flex items-center px-3 py-1 text-xs font-medium rounded transition-colors border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-600">
-                Details
-            </button>
-
             <!-- Edit toggle -->
             {% if user %}
             <button onclick="cardToggle(this, 'edit', '/htmx/paper-edit/{{ paper.bibtex_key }}')"
