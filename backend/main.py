@@ -94,7 +94,6 @@ async def toggle_wishlist(
         notify(
             "Paper wishlisted",
             f"**{bibtex_key}** — now has {count} wishlist vote{'s' if count != 1 else ''}",
-            user_name=user.username,
             url=f"{settings.base_url}/papers/{bibtex_key}",
             color=COLOR_CREATE,
         )
@@ -102,7 +101,6 @@ async def toggle_wishlist(
         notify(
             "Paper unwishlisted",
             f"**{bibtex_key}** — now has {count} wishlist vote{'s' if count != 1 else ''}",
-            user_name=user.username,
             url=f"{settings.base_url}/papers/{bibtex_key}",
             color=COLOR_DELETE,
         )
