@@ -117,27 +117,6 @@
                 Edit
             </button>
             {% endif %}
-
-            {% if user and user.is_superuser %}
-            <button onclick="
-                if(!confirm('Are you sure you want to delete this paper?')) return;
-                var card = document.getElementById('{{ paper.bibtex_key }}');
-                fetch('/api/papers/{{ paper.bibtex_key }}', {method:'DELETE'}).then(r => {
-                    if(r.ok) {
-                        card.style.transition = 'opacity 300ms, max-height 300ms, margin 300ms, padding 300ms';
-                        card.style.opacity = '0';
-                        card.style.maxHeight = card.offsetHeight + 'px';
-                        requestAnimationFrame(() => { card.style.maxHeight = '0'; card.style.marginTop = '0'; card.style.marginBottom = '0'; card.style.paddingTop = '0'; card.style.paddingBottom = '0'; card.style.overflow = 'hidden'; });
-                        setTimeout(() => card.remove(), 300);
-                        var countEl = document.getElementById('entry-count');
-                        if(countEl) countEl.textContent = parseInt(countEl.textContent) - 1;
-                    } else { alert('Error deleting paper'); }
-                });
-                "
-                class="inline-flex items-center px-3 py-1 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium rounded transition-colors border border-red-200">
-                Delete
-            </button>
-            {% endif %}
         </div>
 
         <!-- Right: review & formalisation summary buttons -->
