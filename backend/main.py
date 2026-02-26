@@ -184,7 +184,7 @@ async def htmx_paper_list(
         if status == "excluded":
             query = query.where(Paper.exclusion_reason.isnot(None))
         elif status == FormalisationStatus.not_started.value:
-            query = query.where(~Paper.id.in_(select(Formalisation.paper_id)))
+            query = query.where(~Paper.id.in_(select(Formalisation.paper_id)), Paper.exclusion_reason.is_(None))
         else:
             query = query.where(
                 Paper.id.in_(
