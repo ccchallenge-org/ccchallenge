@@ -1,7 +1,11 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+
+logger = logging.getLogger(__name__)
 
 from backend.auth.users import current_active_user, current_superuser
 from backend.database import get_async_session
@@ -109,12 +113,21 @@ async def create_paper(
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=409, detail="Paper with this bibtex_key already exists")
 
-    paper = Paper(**data.model_dump(), added_by_id=user.id)
-    session.add(paper)
-    await session.commit()
-    await session.refresh(paper)
-    paper.formalisations = []
-    return _paper_to_read(paper)
+    try:
+        paper = Paper(**data.model_dump(), added_by_id=user.id)
+        session.add(paper)
+        logger.info("create_paper: committing paper %s", data.bibtex_key)
+        await session.commit()
+        logger.info("create_paper: committed, refreshing")
+        await session.refresh(paper)
+        logger.info("create_paper: refreshed, building response")
+        paper.formalisations = []
+        result = _paper_to_read(paper)
+        logger.info("create_paper: success for %s", data.bibtex_key)
+        return result
+    except Exception:
+        logger.exception("create_paper: failed for %s", data.bibtex_key)
+        raise
 
 
 @router.post("/bibtex", status_code=201)
