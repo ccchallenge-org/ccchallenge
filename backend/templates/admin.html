@@ -13,6 +13,7 @@
                     <th class="py-2 pr-4">Verified</th>
                     <th class="py-2 pr-4">Superuser</th>
                     <th class="py-2 pr-4">Maintainer</th>
+                    <th class="py-2 pr-4">Login</th>
                     <th class="py-2"></th>
                 </tr>
             </thead>
@@ -25,6 +26,13 @@
                     <td class="py-2 pr-4">{{ "Yes" if u.is_verified else "No" }}</td>
                     <td class="py-2 pr-4">{{ "Yes" if u.is_superuser else "No" }}</td>
                     <td class="py-2 pr-4">{{ "Yes" if u.is_maintainer else "No" }}</td>
+                    <td class="py-2 pr-4">
+                        {%- if u.oauth_accounts -%}
+                            {{ u.oauth_accounts | map(attribute='oauth_name') | join(', ') }}
+                        {%- else -%}
+                            email
+                        {%- endif -%}
+                    </td>
                     <td class="py-2 text-right">
                         {% if u.id != user.id %}
                         <button onclick="deleteUser('{{ u.id }}', '{{ u.username }}', this)"
