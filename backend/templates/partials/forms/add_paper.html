@@ -20,8 +20,8 @@
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify(buildPayload())
                     }).then(r => {
-                        if(r.ok) r.json().then(d => { showAddModal = false; window.location.hash = d.bibtex_key; window.location.reload(); });
-                        else r.json().then(d => alert(d.detail || 'Error adding paper'));
+                        if(r.status < 400) { showAddModal = false; window.location.hash = formData.bibtex_key; window.location.reload(); }
+                        else r.json().catch(() => null).then(d => alert(d?.detail || 'Error adding paper'));
                     })
                   "
                   class="space-y-3">
