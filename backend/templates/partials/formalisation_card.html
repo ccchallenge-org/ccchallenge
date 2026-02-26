@@ -5,9 +5,9 @@
             {{ f.proof_assistant.value }}
         </span>
         {% if f.status.value == 'formalising' %}
-        <span class="inline-block bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded">Formalising</span>
+        <span class="inline-block bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded">Being formalised</span>
         {% elif f.status.value == 'audited' %}
-        <span class="inline-block bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded">Audited</span>
+        <span class="inline-block bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded">Formalised</span>
         {% endif %}
         <template x-if="!editingUrl">
             <span class="flex items-center gap-1">

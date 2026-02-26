@@ -10,20 +10,20 @@
         <div class="bg-gray-400" style="width: {{ ns_pct }}%" title="Not started: {{ stats.get('not_started', 0) }}"></div>
         {% endif %}
         {% if f_pct > 0 %}
-        <div class="bg-yellow-400" style="width: {{ f_pct }}%" title="Formalising: {{ stats.get('formalising', 0) }}"></div>
+        <div class="bg-yellow-400" style="width: {{ f_pct }}%" title="Being formalised: {{ stats.get('formalising', 0) }}"></div>
         {% endif %}
         {% if a_pct > 0 %}
-        <div class="bg-blue-400" style="width: {{ a_pct }}%" title="Auditing: {{ stats.get('auditing', 0) }}"></div>
+        <div class="bg-blue-400" style="width: {{ a_pct }}%" title="Being audited: {{ stats.get('auditing', 0) }}"></div>
         {% endif %}
         {% if ac_pct > 0 %}
-        <div class="bg-green-400" style="width: {{ ac_pct }}%" title="Audited: {{ stats.get('audited', 0) }}"></div>
+        <div class="bg-green-400" style="width: {{ ac_pct }}%" title="Formalised: {{ stats.get('audited', 0) }}"></div>
         {% endif %}
     </div>
     <div class="flex justify-between text-xs text-blue-200 mt-1">
         <span>Not started: {{ stats.get('not_started', 0) }}</span>
-        <span>Formalising: {{ stats.get('formalising', 0) }}</span>
-        <span>Auditing: {{ stats.get('auditing', 0) }}</span>
-        <span>Audited: {{ stats.get('audited', 0) }}</span>
+        <span>Being formalised: {{ stats.get('formalising', 0) }}</span>
+        <span>Being audited: {{ stats.get('auditing', 0) }}</span>
+        <span>Formalised: {{ stats.get('audited', 0) }}</span>
     </div>
 </div>
 {% endif %}

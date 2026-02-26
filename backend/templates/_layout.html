@@ -199,6 +199,83 @@
         });
     </script>
 
+    <!-- Paper card helpers (vanilla JS, no Alpine needed) -->
+    <script>
+        const _cardState = {};
+
+        function _getCard(el) { return el.closest('[id]'); }
+
+        function cardToggle(btn, panel, url) {
+            const card = _getCard(btn);
+            const key = card.id;
+            const prev = _cardState[key];
+            const detailTarget = card.querySelector('[data-panel="detail-target"]');
+
+            // Deactivate previous panel
+            if (prev) {
+                const prevPanel = card.querySelector('[data-panel="' + prev + '"]');
+                if (prevPanel) prevPanel.classList.add('hidden');
+                if (prev !== 'abstract') detailTarget.innerHTML = '';
+                card.querySelectorAll('[data-panel-btn="' + prev + '"]').forEach(b => {
+                    b.textContent = prev === 'abstract' ? 'Abstract' : prev === 'details' ? 'Details' : 'Edit';
+                    _resetBtnStyle(b, prev);
+                });
+            }
+
+            // Toggle off
+            if (prev === panel || (prev === 'details' && panel === 'details' && !url)) {
+                delete _cardState[key];
+                return;
+            }
+
+            // Activate new panel
+            _cardState[key] = panel;
+            if (panel === 'abstract') {
+                const abstractEl = card.querySelector('[data-panel="abstract"]');
+                if (abstractEl) abstractEl.classList.remove('hidden');
+                btn.textContent = 'Hide';
+            } else if (url) {
+                htmx.ajax('GET', url, { target: detailTarget, swap: 'innerHTML' });
+            }
+            card.querySelectorAll('[data-panel-btn="' + panel + '"]').forEach(b => {
+                b.textContent = panel === 'abstract' ? 'Hide' : panel === 'details' ? 'Hide' : 'Cancel';
+                _activeBtnStyle(b, panel);
+            });
+        }
+
+        function _resetBtnStyle(b, panel) {
+            if (panel === 'edit') {
+                b.className = b.className.replace(/bg-yellow-200|text-yellow-800/g, '').trim();
+                b.classList.add('bg-yellow-50', 'text-yellow-700');
+            } else {
+                b.className = b.className.replace(/bg-gray-200|text-gray-800/g, '').trim();
+                b.classList.add('bg-gray-50', 'text-gray-600');
+            }
+        }
+
+        function _activeBtnStyle(b, panel) {
+            if (panel === 'edit') {
+                b.classList.remove('bg-yellow-50', 'text-yellow-700');
+                b.classList.add('bg-yellow-200', 'text-yellow-800');
+            } else {
+                b.classList.remove('bg-gray-50', 'text-gray-600');
+                b.classList.add('bg-gray-200', 'text-gray-800');
+            }
+        }
+
+        function toggleBibMenu(btn) {
+            const menu = btn.nextElementSibling;
+            menu.classList.toggle('hidden');
+        }
+
+        // Close bib menus on outside click
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.bib-menu') && !e.target.closest('[onclick*="toggleBibMenu"]')) {
+                document.querySelectorAll('.bib-menu:not(.hidden)').forEach(m => m.classList.add('hidden'));
+            }
+        });
+    </script>
+
     {% block extra_scripts %}{% endblock %}
 </body>
 
