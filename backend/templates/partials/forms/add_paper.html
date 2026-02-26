@@ -20,7 +20,7 @@
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify(buildPayload())
                     }).then(r => {
-                        if(r.status < 400) { showAddModal = false; window.location.hash = formData.bibtex_key; window.location.reload(); }
+                        if(r.status < 400) { showAddModal = false; window.location = '/#' + formData.bibtex_key; window.location.reload(); }
                         else r.json().catch(() => null).then(d => alert(d?.detail || 'Error adding paper'));
                     })
                   "
