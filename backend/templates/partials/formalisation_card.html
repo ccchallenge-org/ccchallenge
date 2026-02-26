@@ -42,7 +42,7 @@
             ">
                 <div>
                     <label class="block text-xs font-medium text-gray-700">URL *</label>
-                    <input type="url" x-model="newUrl" required class="text-xs rounded border-gray-300 p-1 border w-full">
+                    <input type="url" x-model="newUrl" required class="text-xs text-gray-900 rounded border-gray-300 p-1 border w-full">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Is the formalisation mainly done by AI (e.g. autoformalisation)? *</label>
@@ -59,7 +59,7 @@
                     <label class="block text-xs font-medium text-gray-700">Which models are used? *</label>
                     <input type="text" x-model="editAiModels" placeholder="e.g. Opus 4.6"
                         :required="editAiAssisted"
-                        class="text-xs rounded border-gray-300 p-1 border w-full">
+                        class="text-xs text-gray-900 rounded border-gray-300 p-1 border w-full">
                 </div>
                 <div class="flex items-center gap-2">
                     <button type="submit" class="text-green-600 hover:text-green-800 text-xs font-medium">save</button>
@@ -103,7 +103,7 @@
                         else r.json().then(d => alert(d.detail || 'Error'));
                     })
                 ">
-                    <input type="url" x-model="arUrl" required class="text-xs rounded border-gray-300 p-1 border flex-1">
+                    <input type="url" x-model="arUrl" required class="text-xs text-gray-900 rounded border-gray-300 p-1 border flex-1">
                     <button type="submit" class="text-green-600 hover:text-green-800">save</button>
                     <button type="button" @click="editingAr = false; arUrl = '{{ ar.external_url }}'" class="text-gray-400 hover:text-gray-600">cancel</button>
                 </form>
