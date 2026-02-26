@@ -301,6 +301,23 @@
                 document.querySelectorAll('.bib-menu:not(.hidden)').forEach(m => m.classList.add('hidden'));
             }
         });
+
+        function toggleWishlist(bibtexKey, paperId) {
+            fetch('/api/papers/' + bibtexKey + '/wishlist', { method: 'POST' })
+                .then(r => {
+                    if (r.status === 401) { document.body._x_dataStack[0].showAuthModal = true; return null; }
+                    return r.json();
+                })
+                .then(d => {
+                    if (!d) return;
+                    const btn = document.getElementById('wl-' + bibtexKey);
+                    if (!btn) return;
+                    btn.querySelector('.wl-star').innerHTML = d.wishlisted ? '&#9733;' : '&#9734;';
+                    btn.querySelector('.wl-count').textContent = d.count ? '(' + d.count + ')' : '';
+                    if (d.wishlisted) { btn.classList.remove('text-gray-400'); btn.classList.add('text-amber-500'); }
+                    else { btn.classList.remove('text-amber-500'); btn.classList.add('text-gray-400'); }
+                });
+        }
     </script>
 
     {% block extra_scripts %}{% endblock %}

@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 
 from fastapi_users.db import SQLAlchemyBaseOAuthAccountTableUUID, SQLAlchemyBaseUserTableUUID
-from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, String, Text, JSON
+from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, String, Text, JSON, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, relationship
 
 
@@ -146,3 +146,13 @@ class StatusChange(Base):
 
     formalisation = relationship("Formalisation", back_populates="status_changes")
     changed_by = relationship("User")
+
+
+class Wishlist(Base):
+    __tablename__ = "wishlist"
+    __table_args__ = (UniqueConstraint("paper_id", "user_id"),)
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    paper_id = Column(Integer, ForeignKey("paper.id"), nullable=False)
+    user_id = Column(ForeignKey("user.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)

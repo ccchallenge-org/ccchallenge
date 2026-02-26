@@ -11,10 +11,11 @@ from sqlalchemy.orm import selectinload
 
 from backend.auth.router import router as auth_router
 from backend.config import settings
-from backend.auth.users import current_optional_user, current_superuser
+from backend.auth.users import current_active_user, current_optional_user, current_superuser
 from backend.database import engine, get_async_session
-from backend.models import AuditReport, Base, Formalisation, FormalisationStatus, Paper, Review, User
+from backend.models import AuditReport, Base, Formalisation, FormalisationStatus, Paper, Review, User, Wishlist
 from backend.routers import formalisations, papers, reviews, stats
+from backend.services.discord_notify import COLOR_CREATE, COLOR_DELETE, notify
 
 BACKEND_DIR = Path(__file__).resolve().parent
 
@@ -64,6 +65,48 @@ app.include_router(papers.router, prefix="/api")
 app.include_router(formalisations.router, prefix="/api")
 app.include_router(reviews.router, prefix="/api")
 app.include_router(stats.router, prefix="/api")
+
+
+@app.post("/api/papers/{bibtex_key}/wishlist")
+async def toggle_wishlist(
+    bibtex_key: str,
+    session: AsyncSession = Depends(get_async_session),
+    user: User = Depends(current_active_user),
+):
+    paper = (await session.execute(select(Paper).where(Paper.bibtex_key == bibtex_key))).scalar_one_or_none()
+    if not paper:
+        raise HTTPException(status_code=404, detail="Paper not found")
+    existing = (await session.execute(
+        select(Wishlist).where(Wishlist.paper_id == paper.id, Wishlist.user_id == user.id)
+    )).scalar_one_or_none()
+    if existing:
+        await session.delete(existing)
+        await session.commit()
+        wishlisted = False
+    else:
+        session.add(Wishlist(paper_id=paper.id, user_id=user.id))
+        await session.commit()
+        wishlisted = True
+    count = (await session.execute(
+        select(func.count(Wishlist.id)).where(Wishlist.paper_id == paper.id)
+    )).scalar() or 0
+    if wishlisted:
+        notify(
+            "Paper wishlisted",
+            f"**{bibtex_key}** — now has {count} wishlist vote{'s' if count != 1 else ''}",
+            user_name=user.username,
+            url=f"{settings.base_url}/papers/{bibtex_key}",
+            color=COLOR_CREATE,
+        )
+    else:
+        notify(
+            "Paper unwishlisted",
+            f"**{bibtex_key}** — now has {count} wishlist vote{'s' if count != 1 else ''}",
+            user_name=user.username,
+            url=f"{settings.base_url}/papers/{bibtex_key}",
+            color=COLOR_DELETE,
+        )
+    return {"wishlisted": wishlisted, "count": count}
 
 
 # ── Page routes ─────────────────────────────────────────────────────────────
@@ -125,11 +168,17 @@ async def index(
     total = (await session.execute(select(func.count(Paper.id)))).scalar() or 0
     goal_total = (await session.execute(select(func.count(Paper.id)).where(Paper.exclusion_reason.is_(None)))).scalar() or 0
 
-    # All papers
+    # All papers (default: order by wishlist count desc)
+    wl_count_sub = (
+        select(Wishlist.paper_id, func.count().label("wl_cnt"))
+        .group_by(Wishlist.paper_id)
+        .subquery()
+    )
     query = (
         select(Paper)
+        .outerjoin(wl_count_sub, Paper.id == wl_count_sub.c.paper_id)
         .options(selectinload(Paper.formalisations))
-        .order_by(Paper.bibtex_key)
+        .order_by(func.coalesce(wl_count_sub.c.wl_cnt, 0).desc(), Paper.bibtex_key)
     )
     result = await session.execute(query)
     paper_list = result.scalars().unique().all()
@@ -141,6 +190,7 @@ async def index(
     paper_ids = [p.id for p in paper_list]
     fc_map = {}
     rc_map = {}
+    wl_map = {}
     if paper_ids:
         fc_q = (
             select(Formalisation.paper_id, func.count().label("cnt"))
@@ -154,6 +204,16 @@ async def index(
             .group_by(Review.paper_id)
         )
         rc_map = dict((await session.execute(rc_q)).all())
+        wl_q = (
+            select(Wishlist.paper_id, func.count().label("cnt"))
+            .where(Wishlist.paper_id.in_(paper_ids))
+            .group_by(Wishlist.paper_id)
+        )
+        wl_map = dict((await session.execute(wl_q)).all())
+    user_wl = set()
+    if user and paper_ids:
+        user_wl_q = select(Wishlist.paper_id).where(Wishlist.user_id == user.id, Wishlist.paper_id.in_(paper_ids))
+        user_wl = set((await session.execute(user_wl_q)).scalars().all())
 
     return templates.TemplateResponse(
         "index.html",
@@ -166,6 +226,8 @@ async def index(
             "stats": stat_counts,
             "fc_map": fc_map,
             "rc_map": rc_map,
+            "wl_map": wl_map,
+            "user_wl": user_wl,
         },
     )
 
@@ -178,7 +240,7 @@ async def htmx_paper_list(
     request: Request,
     status: str | None = None,
     has_reviews: bool | None = None,
-    order: str = "authors",
+    order: str = "wishlist",
     q: str | None = None,
     session: AsyncSession = Depends(get_async_session),
     user: User | None = Depends(current_optional_user),
@@ -209,16 +271,27 @@ async def htmx_paper_list(
             Paper.title.ilike(pattern) | Paper.authors.ilike(pattern) | Paper.bibtex_key.ilike(pattern)
         )
 
-    ordering = Paper.year.desc() if order == "year" else Paper.bibtex_key
-    query = (
-        query.options(selectinload(Paper.formalisations))
-        .order_by(ordering)
-    )
+    if order == "wishlist":
+        wl_count_sub = (
+            select(Wishlist.paper_id, func.count().label("wl_cnt"))
+            .group_by(Wishlist.paper_id)
+            .subquery()
+        )
+        query = (
+            query.outerjoin(wl_count_sub, Paper.id == wl_count_sub.c.paper_id)
+            .options(selectinload(Paper.formalisations))
+            .order_by(func.coalesce(wl_count_sub.c.wl_cnt, 0).desc(), Paper.bibtex_key)
+        )
+    elif order == "year":
+        query = query.options(selectinload(Paper.formalisations)).order_by(Paper.year.desc())
+    else:
+        query = query.options(selectinload(Paper.formalisations)).order_by(Paper.bibtex_key)
     papers = (await session.execute(query)).scalars().unique().all()
 
     paper_ids = [p.id for p in papers]
     fc_map = {}
     rc_map = {}
+    wl_map = {}
     if paper_ids:
         fc_q = (
             select(Formalisation.paper_id, func.count().label("cnt"))
@@ -232,6 +305,16 @@ async def htmx_paper_list(
             .group_by(Review.paper_id)
         )
         rc_map = dict((await session.execute(rc_q)).all())
+        wl_q = (
+            select(Wishlist.paper_id, func.count().label("cnt"))
+            .where(Wishlist.paper_id.in_(paper_ids))
+            .group_by(Wishlist.paper_id)
+        )
+        wl_map = dict((await session.execute(wl_q)).all())
+    user_wl = set()
+    if user and paper_ids:
+        user_wl_q = select(Wishlist.paper_id).where(Wishlist.user_id == user.id, Wishlist.paper_id.in_(paper_ids))
+        user_wl = set((await session.execute(user_wl_q)).scalars().all())
 
     return templates.TemplateResponse(
         "partials/paper_list.html",
@@ -241,6 +324,8 @@ async def htmx_paper_list(
             "papers": papers,
             "fc_map": fc_map,
             "rc_map": rc_map,
+            "wl_map": wl_map,
+            "user_wl": user_wl,
         },
     )
 

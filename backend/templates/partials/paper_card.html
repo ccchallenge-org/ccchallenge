@@ -31,7 +31,19 @@
             </span>
             {% endif %}
         </div>
-        <span class="text-sm font-semibold text-gray-900">{{ paper.year or '' }}</span>
+        <div class="flex items-center gap-4">
+            {% set wl_count = wl_map.get(paper.id, 0) if wl_map is defined else 0 %}
+            {% set is_wishlisted = paper.id in user_wl if user_wl is defined else false %}
+            <button id="wl-{{ paper.bibtex_key }}"
+                title="Click here if you'd like this paper to be formalised"
+                onclick="toggleWishlist('{{ paper.bibtex_key }}', {{ paper.id }})"
+                class="inline-flex items-center gap-1 transition-colors text-sm font-medium {% if is_wishlisted %}text-amber-500{% else %}text-gray-400 hover:text-amber-500{% endif %}">
+                <span class="wl-star text-base leading-none">{% if is_wishlisted %}&#9733;{% else %}&#9734;{% endif %}</span>
+                <span class="wl-label">Wishlist</span>
+                <span class="wl-count">{% if wl_count %}({{ wl_count }}){% endif %}</span>
+            </button>
+            <span class="text-sm font-semibold text-gray-900">{{ paper.year or '' }}</span>
+        </div>
     </div>
 
     <!-- Title -->
