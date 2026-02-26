@@ -254,7 +254,10 @@ async def htmx_paper_list(
         elif status == "ai_assisted":
             query = query.where(
                 Paper.id.in_(
-                    select(Formalisation.paper_id).where(Formalisation.ai_assisted == True)
+                    select(Formalisation.paper_id).where(
+                        Formalisation.ai_assisted == True,
+                        Formalisation.status == FormalisationStatus.audited,
+                    )
                 )
             )
         else:
