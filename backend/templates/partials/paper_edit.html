@@ -1,0 +1,179 @@
+<!-- Inline edit form, loaded on demand via HTMX -->
+<div x-data="{
+    knownTypes: ['article','inproceedings','incollection','book','phdthesis','mastersthesis','techreport','misc','unpublished'],
+    entrySelect: '',
+    customType: '',
+    fd: { entry_type: '', title: '', authors: '', year: '', journal: '', booktitle: '', publisher: '', volume: '', number: '', pages: '', doi: '', url: '', abstract: '', note: '', extra_fields: null },
+    excluded: false,
+    exclusionReason: '',
+    extras: [],
+    addExtra() { this.extras.push({ key: '', value: '' }); },
+    removeExtra(i) { this.extras.splice(i, 1); },
+    buildPayload() {
+        this.syncEntryType();
+        let ef = {};
+        this.extras.forEach(e => { if(e.key.trim()) ef[e.key.trim()] = e.value; });
+        this.fd.extra_fields = Object.keys(ef).length ? ef : null;
+        let payload = {...this.fd};
+        {% if user and user.is_superuser %}
+        payload.exclusion_reason = this.excluded ? this.exclusionReason : null;
+        {% endif %}
+        return payload;
+    },
+    init() {
+        const d = JSON.parse(this.$el.querySelector('[data-paper-json]').textContent);
+        Object.keys(this.fd).forEach(k => { if (d[k] !== undefined && d[k] !== null) this.fd[k] = d[k]; });
+        this.entrySelect = this.knownTypes.includes(this.fd.entry_type) ? this.fd.entry_type : '__other__';
+        this.customType = this.entrySelect === '__other__' ? this.fd.entry_type : '';
+        if (d.extra_fields) this.extras = Object.entries(d.extra_fields).map(([k, v]) => ({ key: k, value: String(v) }));
+        if (d.exclusion_reason) { this.excluded = true; this.exclusionReason = d.exclusion_reason; }
+    },
+    syncEntryType() {
+        this.fd.entry_type = this.entrySelect === '__other__' ? this.customType : this.entrySelect;
+    }
+}">
+    <script type="application/json" data-paper-json>
+    {
+        "entry_type": {{ paper.entry_type|tojson }},
+        "title": {{ paper.title|tojson }},
+        "authors": {{ paper.authors|tojson }},
+        "year": {{ (paper.year or '')|tojson }},
+        "journal": {{ (paper.journal or '')|tojson }},
+        "booktitle": {{ (paper.booktitle or '')|tojson }},
+        "publisher": {{ (paper.publisher or '')|tojson }},
+        "volume": {{ (paper.volume or '')|tojson }},
+        "number": {{ (paper.number or '')|tojson }},
+        "pages": {{ (paper.pages or '')|tojson }},
+        "doi": {{ (paper.doi or '')|tojson }},
+        "url": {{ (paper.url or '')|tojson }},
+        "abstract": {{ (paper.abstract or '')|tojson }},
+        "note": {{ (paper.note or '')|tojson }},
+        "extra_fields": {{ paper.extra_fields|tojson }},
+        "exclusion_reason": {{ (paper.exclusion_reason or '')|tojson }}
+    }
+    </script>
+    <form @submit.prevent="
+        fetch('/api/papers/{{ paper.bibtex_key }}', {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(buildPayload())
+        }).then(r => {
+            if(r.ok) { window.location.hash = '{{ paper.bibtex_key }}'; window.location.reload(); }
+            else r.json().then(d => alert(d.detail || 'Error'));
+        })
+    " class="space-y-2">
+        {% if user and user.is_superuser %}
+        <div class="bg-gray-50 border border-gray-200 rounded p-3 space-y-2">
+            <label class="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer">
+                <input type="checkbox" x-model="excluded" class="rounded border-gray-300 text-gray-600 focus:ring-gray-500">
+                Exclude from formalisation goal
+            </label>
+            <div x-show="excluded" x-cloak>
+                <input type="text" x-model="exclusionReason" placeholder="Reason for exclusion (e.g. duplicate, off-topic)"
+                    class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+            </div>
+        </div>
+        {% endif %}
+        <div>
+            <label class="block text-xs font-medium text-gray-700">Title</label>
+            <input type="text" x-model="fd.title" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-gray-700">Authors <span class="font-normal text-gray-400">— e.g. Albert Einstein and Kurt Gödel and Alan Turing</span></label>
+            <input type="text" x-model="fd.authors" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-gray-700">Entry Type (BibTeX)</label>
+            <div class="flex items-center gap-2">
+                <select x-model="entrySelect" @change="syncEntryType()" class="rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                    <option value="article">article</option>
+                    <option value="inproceedings">inproceedings</option>
+                    <option value="incollection">incollection</option>
+                    <option value="book">book</option>
+                    <option value="phdthesis">phdthesis</option>
+                    <option value="mastersthesis">mastersthesis</option>
+                    <option value="techreport">techreport</option>
+                    <option value="misc">misc</option>
+                    <option value="unpublished">unpublished</option>
+                    <option value="__other__">other...</option>
+                </select>
+                <input x-show="entrySelect === '__other__'" x-cloak type="text" x-model="customType" @input="syncEntryType()"
+                    placeholder="e.g. proceedings" class="flex-1 rounded border-gray-300 text-gray-900 text-sm p-2 border">
+            </div>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+            <div>
+                <label class="block text-xs font-medium text-gray-700">Year</label>
+                <input type="text" x-model="fd.year" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-700">Journal</label>
+                <input type="text" x-model="fd.journal" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-700">Booktitle</label>
+                <input type="text" x-model="fd.booktitle" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+            </div>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+            <div>
+                <label class="block text-xs font-medium text-gray-700">Publisher</label>
+                <input type="text" x-model="fd.publisher" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-700">Volume</label>
+                <input type="text" x-model="fd.volume" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-700">Number</label>
+                <input type="text" x-model="fd.number" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+            </div>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+            <div>
+                <label class="block text-xs font-medium text-gray-700">Pages</label>
+                <input type="text" x-model="fd.pages" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-700">DOI</label>
+                <input type="text" x-model="fd.doi" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-700">URL</label>
+                <input type="text" x-model="fd.url" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+            </div>
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-gray-700">Abstract</label>
+            <textarea x-model="fd.abstract" rows="3" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border"></textarea>
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-gray-700">Note</label>
+            <input type="text" x-model="fd.note" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-gray-700">Extra Fields (BibTeX)</label>
+            <template x-for="(extra, i) in extras" :key="i">
+                <div class="flex gap-2 mb-1">
+                    <input type="text" x-model="extras[i].key" placeholder="Key"
+                        class="w-1/3 rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                    <input type="text" x-model="extras[i].value" placeholder="Value"
+                        class="flex-1 rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                    <button type="button" @click="removeExtra(i)" class="text-red-400 hover:text-red-600 text-sm px-1">&times;</button>
+                </div>
+            </template>
+            <button type="button" @click="addExtra()"
+                class="text-xs text-blue-600 hover:underline">+ Add field</button>
+        </div>
+        <div class="flex gap-2">
+            <button type="submit" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors">Save</button>
+            <button type="button" onclick="
+                var card = this.closest('[id]');
+                card.querySelector('[data-panel=detail-target]').innerHTML = '';
+                delete _cardState[card.id];
+                var editBtn = card.querySelector('[data-panel-btn=edit]');
+                if (editBtn) { editBtn.textContent = 'Edit'; _resetBtnStyle(editBtn, 'edit'); }
+            " class="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-medium rounded transition-colors">Cancel</button>
+        </div>
+    </form>
+</div>

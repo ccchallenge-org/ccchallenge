@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 
 from fastapi_users.db import SQLAlchemyBaseOAuthAccountTableUUID, SQLAlchemyBaseUserTableUUID
-from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, String, Text, JSON, UniqueConstraint
+from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, String, Text, JSON
 from sqlalchemy.orm import DeclarativeBase, relationship
 
 
@@ -47,13 +47,14 @@ class Paper(Base):
     abstract = Column(Text, nullable=True)
     note = Column(Text, nullable=True)
     extra_fields = Column(JSON, nullable=True)
+    exclusion_reason = Column(Text, nullable=True)
     added_by_id = Column(ForeignKey("user.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     formalisations = relationship("Formalisation", back_populates="paper", cascade="all, delete-orphan")
     reviews = relationship("Review", back_populates="paper", cascade="all, delete-orphan")
-    votes = relationship("Vote", back_populates="paper", cascade="all, delete-orphan")
+
 
     @property
     def computed_status(self):
@@ -143,18 +144,3 @@ class StatusChange(Base):
 
     formalisation = relationship("Formalisation", back_populates="status_changes")
     changed_by = relationship("User")
-
-
-class Vote(Base):
-    __tablename__ = "vote"
-    __table_args__ = (UniqueConstraint("paper_id", "user_id", name="uq_vote_paper_user"),)
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    paper_id = Column(Integer, ForeignKey("paper.id"), nullable=False)
-    user_id = Column(ForeignKey("user.id"), nullable=False)
-    vote = Column(Boolean, nullable=False)
-    reason = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    paper = relationship("Paper", back_populates="votes")
-    user = relationship("User")

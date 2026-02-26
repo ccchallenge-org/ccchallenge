@@ -6,8 +6,7 @@
     <!-- Hero Section -->
     <div class="text-center mb-8 pt-4">
         <h1 class="text-4xl font-bold mb-1">The Collatz Conjecture Challenge</h1>
-        <p class="text-blue-100 text-lg mb-1">Formalising the Collatz literature with proof assistants</p>
-        <p class="text-white/70 text-sm mb-6">GOAL: <span class="font-semibold text-white">{{ stats.get('audited', 0) }}</span> / <span class="font-semibold text-white">{{ total }}</span> formalised</p>
+        <p class="text-blue-100 text-lg mb-6">Formalising the Collatz literature with proof assistants</p>
         <div class="flex justify-center gap-4 flex-wrap">
             <a href="#paper-list" class="px-5 py-2.5 bg-white text-blue-700 font-semibold rounded-lg hover:bg-blue-50 transition-colors">
                 Browse Papers
@@ -23,27 +22,23 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto mb-8">
+    <div class="max-w-3xl mx-auto mb-8">
         <button @click="document.querySelector('#filter-bar select[name=status]').value = ''; htmx.trigger(document.querySelector('#filter-bar select[name=status]'), 'change');"
-            class="bg-white/10 hover:bg-white/20 rounded-lg p-4 text-center transition-colors cursor-pointer">
-            <div class="text-3xl font-bold">{{ total }}</div>
-            <div class="text-sm text-blue-200">Papers to formalise</div>
+            class="bg-white/10 hover:bg-white/20 rounded-lg p-5 text-center transition-colors cursor-pointer mx-auto block">
+            <div class="text-xs font-semibold uppercase tracking-wide text-blue-200 mb-1">Goal</div>
+            <div class="text-4xl font-bold">{{ stats.get('audited', 0) }}/{{ goal_total }}</div>
+            <div class="text-sm text-blue-200">papers formalised</div>
         </button>
-        <button @click="document.querySelector('#filter-bar select[name=status]').value = ''; htmx.ajax('GET', '/htmx/paper-list?has_reviews=true', {target: '#paper-list', swap: 'innerHTML'});"
-            class="bg-purple-300/15 hover:bg-purple-300/25 rounded-lg p-4 text-center transition-colors cursor-pointer">
-            <div class="text-3xl font-bold">{{ stats.get('reviews', 0) }}</div>
-            <div class="text-sm text-purple-200">Reviews</div>
-        </button>
-        <button @click="document.querySelector('#filter-bar select[name=status]').value = 'formalising'; htmx.trigger(document.querySelector('#filter-bar select[name=status]'), 'change');"
-            class="bg-yellow-500/20 hover:bg-yellow-500/30 rounded-lg p-4 text-center transition-colors cursor-pointer">
-            <div class="text-3xl font-bold">{{ stats.get('formalising', 0) }}</div>
-            <div class="text-sm text-yellow-200">Formalising</div>
-        </button>
-        <button @click="document.querySelector('#filter-bar select[name=status]').value = 'auditing'; htmx.trigger(document.querySelector('#filter-bar select[name=status]'), 'change');"
-            class="bg-blue-400/20 hover:bg-blue-400/30 rounded-lg p-4 text-center transition-colors cursor-pointer">
-            <div class="text-3xl font-bold">{{ stats.get('auditing', 0) }}</div>
-            <div class="text-sm text-blue-200">Auditing</div>
-        </button>
+        <div class="flex justify-center gap-6 mt-3 text-sm">
+            <button @click="document.querySelector('#filter-bar select[name=status]').value = 'formalising'; htmx.trigger(document.querySelector('#filter-bar select[name=status]'), 'change');"
+                class="text-yellow-200 hover:text-yellow-100 transition-colors cursor-pointer">
+                <span class="font-semibold">{{ stats.get('formalising', 0) }}</span> {{ "paper" if stats.get('formalising', 0) == 1 else "papers" }} being formalised
+            </button>
+            <button @click="document.querySelector('#filter-bar select[name=status]').value = 'auditing'; htmx.trigger(document.querySelector('#filter-bar select[name=status]'), 'change');"
+                class="text-blue-200 hover:text-blue-100 transition-colors cursor-pointer">
+                <span class="font-semibold">{{ stats.get('auditing', 0) }}</span> {{ "formalisation" if stats.get('auditing', 0) == 1 else "formalisations" }} being audited
+            </button>
+        </div>
     </div>
 
     <!-- Filter Bar -->
@@ -53,9 +48,9 @@
             class="rounded-lg px-3 py-2 bg-white/10 text-white border border-white/20 text-sm">
             <option value="">All papers</option>
             <option value="not_started">Not formalised</option>
-            <option value="formalising">Formalising</option>
-            <option value="auditing">Auditing</option>
-            <option value="audited">Audited</option>
+            <option value="formalising">Being formalised</option>
+            <option value="auditing">Being audited</option>
+            <option value="audited">Formalised</option>
         </select>
         <select name="order"
             hx-get="/htmx/paper-list" hx-target="#paper-list" hx-include="#filter-bar" hx-swap="innerHTML"
@@ -67,11 +62,18 @@
             hx-get="/htmx/paper-list" hx-target="#paper-list" hx-include="#filter-bar" hx-swap="innerHTML"
             hx-trigger="input changed delay:300ms"
             class="flex-1 rounded-lg px-3 py-2 bg-white/10 text-white placeholder-blue-200 border border-white/20 text-sm">
+        <label class="flex items-center gap-1.5 text-xs text-blue-200 cursor-pointer select-none sm:ml-1">
+            <input type="checkbox" name="in_goal" value="true" checked
+                hx-get="/htmx/paper-list" hx-target="#paper-list" hx-include="#filter-bar" hx-swap="innerHTML"
+                hx-trigger="change"
+                class="rounded border-white/30 bg-white/10 text-blue-400 focus:ring-blue-400 focus:ring-offset-0 w-3.5 h-3.5">
+            Only in formalisation goal
+        </label>
     </div>
 
     <!-- Paper List Header + Add Button -->
     <div class="flex justify-between items-center mb-2 max-w-3xl mx-auto">
-        <h2 class="text-2xl font-bold">Literature (<span>{{ total }}</span> entries)</h2>
+        <h2 class="text-2xl font-bold">Literature (<span id="entry-count">{{ total }}</span> entries)</h2>
         <button @click="{% if user %}showAddModal = true{% else %}showAuthModal = true{% endif %}"
             class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm">
             + Add Paper

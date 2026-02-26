@@ -45,6 +45,7 @@ class PaperUpdate(BaseModel):
     abstract: Optional[str] = None
     note: Optional[str] = None
     extra_fields: Optional[dict] = None
+    exclusion_reason: Optional[str] = None
 
 
 class PaperRead(BaseModel):
@@ -151,24 +152,6 @@ class ReviewRead(BaseModel):
 
     model_config = {"from_attributes": True}
 
-
-# ── Votes ──────────────────────────────────────────────────────────────────
-
-
-class VoteCreate(BaseModel):
-    vote: bool
-    reason: str
-
-
-class VoteRead(BaseModel):
-    id: int
-    vote: bool
-    reason: str
-    user_id: uuid.UUID
-    user_display_name: Optional[str] = None
-    created_at: Optional[datetime] = None
-
-    model_config = {"from_attributes": True}
 
 
 # ── Stats ───────────────────────────────────────────────────────────────────

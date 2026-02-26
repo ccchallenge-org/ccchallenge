@@ -64,9 +64,13 @@ app.include_router(stats.router, prefix="/api")
 
 
 async def _compute_stats(session: AsyncSession) -> dict:
-    total = (await session.execute(select(func.count(Paper.id)))).scalar() or 0
+    # Only count papers that are not excluded from the goal
+    included_filter = Paper.exclusion_reason.is_(None)
+    total = (await session.execute(select(func.count(Paper.id)).where(included_filter))).scalar() or 0
 
     # Compute max status priority per paper: audited(3) > auditing(2) > formalising(1)
+    # Only for papers not excluded from the goal
+    included_paper_ids = select(Paper.id).where(included_filter)
     status_priority = case(
         (Formalisation.status == FormalisationStatus.audited, 3),
         (Formalisation.status == FormalisationStatus.auditing, 2),
@@ -77,6 +81,7 @@ async def _compute_stats(session: AsyncSession) -> dict:
             Formalisation.paper_id,
             func.max(status_priority).label("max_priority"),
         )
+        .where(Formalisation.paper_id.in_(included_paper_ids))
         .group_by(Formalisation.paper_id)
         .subquery()
     )
@@ -110,12 +115,14 @@ async def index(
     session: AsyncSession = Depends(get_async_session),
     user: User | None = Depends(current_optional_user),
 ):
-    # Total count for stats header
+    # Total counts: all papers for the literature header, goal-only for the GOAL stat
     total = (await session.execute(select(func.count(Paper.id)))).scalar() or 0
+    goal_total = (await session.execute(select(func.count(Paper.id)).where(Paper.exclusion_reason.is_(None)))).scalar() or 0
 
-    # All papers
+    # Papers in formalisation goal (matching default checkbox state)
     query = (
         select(Paper)
+        .where(Paper.exclusion_reason.is_(None))
         .options(selectinload(Paper.formalisations))
         .order_by(Paper.bibtex_key)
     )
@@ -149,7 +156,8 @@ async def index(
             "request": request,
             "user": user,
             "papers": paper_list,
-            "total": total,
+            "total": goal_total,
+            "goal_total": goal_total,
             "stats": stat_counts,
             "fc_map": fc_map,
             "rc_map": rc_map,
@@ -167,10 +175,13 @@ async def htmx_paper_list(
     has_reviews: bool | None = None,
     order: str = "authors",
     q: str | None = None,
+    in_goal: bool | None = None,
     session: AsyncSession = Depends(get_async_session),
     user: User | None = Depends(current_optional_user),
 ):
     query = select(Paper)
+    if in_goal:
+        query = query.where(Paper.exclusion_reason.is_(None))
     if has_reviews:
         query = query.where(Paper.id.in_(select(Review.paper_id)))
     elif status:
@@ -253,6 +264,25 @@ async def htmx_paper_card(
     )
 
 
+@app.get("/htmx/paper-edit/{bibtex_key}")
+async def htmx_paper_edit(
+    bibtex_key: str,
+    request: Request,
+    session: AsyncSession = Depends(get_async_session),
+    user: User | None = Depends(current_optional_user),
+):
+    if not user:
+        return Response(status_code=403)
+    result = await session.execute(select(Paper).where(Paper.bibtex_key == bibtex_key))
+    paper = result.scalar_one_or_none()
+    if not paper:
+        return Response(status_code=404)
+    return templates.TemplateResponse(
+        "partials/paper_edit.html",
+        {"request": request, "user": user, "paper": paper},
+    )
+
+
 @app.get("/htmx/paper-detail/{bibtex_key}")
 async def htmx_paper_detail(
     bibtex_key: str,
@@ -311,7 +341,7 @@ async def htmx_stats(
     request: Request,
     session: AsyncSession = Depends(get_async_session),
 ):
-    total = (await session.execute(select(func.count(Paper.id)))).scalar() or 0
+    total = (await session.execute(select(func.count(Paper.id)).where(Paper.exclusion_reason.is_(None)))).scalar() or 0
     counts = await _compute_stats(session)
 
     return templates.TemplateResponse(

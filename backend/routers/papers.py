@@ -175,6 +175,8 @@ async def update_paper(
 ):
     paper = await _get_paper_or_404(bibtex_key, session)
     update_data = data.model_dump(exclude_unset=True)
+    if "exclusion_reason" in update_data and not user.is_superuser:
+        update_data.pop("exclusion_reason")
     for key, value in update_data.items():
         setattr(paper, key, value)
     await session.commit()
