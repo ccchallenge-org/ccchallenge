@@ -12,8 +12,10 @@ from backend.schemas import (
     PaperRead,
     PaperUpdate,
 )
+from backend.config import settings
 from backend.services.bibtex_generator import generate_bibtex
 from backend.services.bibtex_parser import parse_single_bibtex
+from backend.services.discord_notify import COLOR_CREATE, COLOR_DELETE, COLOR_STATUS, COLOR_UPDATE, notify
 
 router = APIRouter(prefix="/papers", tags=["papers"])
 
@@ -120,6 +122,13 @@ async def create_paper(
         select(Paper).where(Paper.id == paper.id).options(selectinload(Paper.formalisations))
     )
     paper = result.scalar_one()
+    notify(
+        "Paper added",
+        f"**{paper.bibtex_key}** — {paper.title}",
+        user_name=user.username,
+        url=f"{settings.base_url}/papers/{paper.bibtex_key}",
+        color=COLOR_CREATE,
+    )
     return _paper_to_read(paper)
 
 
@@ -163,6 +172,13 @@ async def create_paper_from_bibtex(
         select(Paper).where(Paper.id == paper.id).options(selectinload(Paper.formalisations))
     )
     paper = result.scalar_one()
+    notify(
+        "Paper added (BibTeX)",
+        f"**{paper.bibtex_key}** — {paper.title}",
+        user_name=user.username,
+        url=f"{settings.base_url}/papers/{paper.bibtex_key}",
+        color=COLOR_CREATE,
+    )
     return _paper_to_read(paper)
 
 
@@ -182,6 +198,7 @@ async def update_paper(
     user: User = Depends(current_active_user),
 ):
     paper = await _get_paper_or_404(bibtex_key, session)
+    old_exclusion = paper.exclusion_reason
     update_data = data.model_dump(exclude_unset=True)
     if "exclusion_reason" in update_data and not user.is_superuser:
         update_data.pop("exclusion_reason")
@@ -189,6 +206,17 @@ async def update_paper(
         setattr(paper, key, value)
     await session.commit()
     await session.refresh(paper)
+
+    paper_url = f"{settings.base_url}/papers/{paper.bibtex_key}"
+    new_exclusion = paper.exclusion_reason
+    if not old_exclusion and new_exclusion:
+        notify("Paper excluded from goal", f"**{paper.bibtex_key}** — {new_exclusion}", user_name=user.username, url=paper_url, color=COLOR_STATUS)
+    elif old_exclusion and not new_exclusion:
+        notify("Paper re-included in goal", f"**{paper.bibtex_key}**", user_name=user.username, url=paper_url, color=COLOR_STATUS)
+    else:
+        changed = ", ".join(update_data.keys())
+        notify("Paper updated", f"**{paper.bibtex_key}** — changed: {changed}", user_name=user.username, url=paper_url, color=COLOR_UPDATE)
+
     return _paper_to_read(paper)
 
 
@@ -199,8 +227,10 @@ async def delete_paper(
     user: User = Depends(current_superuser),
 ):
     paper = await _get_paper_or_404(bibtex_key, session)
+    title = paper.title
     await session.delete(paper)
     await session.commit()
+    notify("Paper deleted", f"**{bibtex_key}** — {title}", user_name=user.username, color=COLOR_DELETE)
 
 
 @router.get("/{bibtex_key}/bibtex")

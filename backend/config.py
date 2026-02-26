@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     discord_client_secret: str = ""
 
     resend_key: str = ""
+    discord_webhook_url: str = ""
 
     base_url: str = "http://localhost:8000"
 

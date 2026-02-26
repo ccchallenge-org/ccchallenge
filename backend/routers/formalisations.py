@@ -5,11 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.auth.users import current_active_user
 from backend.database import get_async_session
 from backend.models import AuditReport, Formalisation, FormalisationStatus, Paper, StatusChange, User
+from backend.config import settings
 from backend.schemas import (
     AuditReportCreate, AuditReportRead, AuditReportUpdate,
     FormalisationCreate, FormalisationRead, FormalisationUpdate,
     StatusChangeRequest,
 )
+from backend.services.discord_notify import COLOR_CREATE, COLOR_DELETE, COLOR_STATUS, COLOR_UPDATE, notify
 
 router = APIRouter(prefix="/papers/{bibtex_key}/formalisations", tags=["formalisations"])
 
@@ -63,6 +65,13 @@ async def create_formalisation(
     session.add(formalisation)
     await session.commit()
     await session.refresh(formalisation)
+    notify(
+        "Formalisation added",
+        f"**{bibtex_key}** — {formalisation.proof_assistant}\n{formalisation.repository_url}",
+        user_name=user.username,
+        url=f"{settings.base_url}/papers/{bibtex_key}",
+        color=COLOR_CREATE,
+    )
     return FormalisationRead(
         id=formalisation.id,
         proof_assistant=formalisation.proof_assistant,
@@ -99,6 +108,14 @@ async def update_formalisation(
     await session.refresh(formalisation)
 
     display_name = (await session.execute(select(User.username).where(User.id == formalisation.user_id))).scalar_one_or_none()
+    changed = ", ".join(update_data.keys())
+    notify(
+        "Formalisation updated",
+        f"**{bibtex_key}** — changed: {changed}",
+        user_name=user.username,
+        url=f"{settings.base_url}/papers/{bibtex_key}",
+        color=COLOR_UPDATE,
+    )
     return FormalisationRead(
         id=formalisation.id,
         proof_assistant=formalisation.proof_assistant,
@@ -126,8 +143,16 @@ async def delete_formalisation(
         raise HTTPException(status_code=404, detail="Formalisation not found")
     if formalisation.user_id != user.id and not user.is_superuser:
         raise HTTPException(status_code=403, detail="Not authorized")
+    proof_assistant = formalisation.proof_assistant
     await session.delete(formalisation)
     await session.commit()
+    notify(
+        "Formalisation deleted",
+        f"**{bibtex_key}** — {proof_assistant}",
+        user_name=user.username,
+        url=f"{settings.base_url}/papers/{bibtex_key}",
+        color=COLOR_DELETE,
+    )
 
 
 @router.patch("/{formalisation_id}/status")
@@ -162,6 +187,15 @@ async def change_formalisation_status(
     formalisation.status = data.status
     await session.commit()
     await session.refresh(formalisation)
+
+    reason_text = f"\nReason: {data.reason}" if data.reason else ""
+    notify(
+        "Formalisation status changed",
+        f"**{bibtex_key}** — {old_status.value} → {data.status.value}{reason_text}",
+        user_name=user.username,
+        url=f"{settings.base_url}/papers/{bibtex_key}",
+        color=COLOR_STATUS,
+    )
 
     display_name = (await session.execute(select(User.username).where(User.id == formalisation.user_id))).scalar_one_or_none()
     return FormalisationRead(
@@ -247,6 +281,13 @@ async def create_audit_report(
 
     await session.commit()
     await session.refresh(report)
+    notify(
+        "Audit report added",
+        f"**{bibtex_key}** — {report.external_url}",
+        user_name=user.username,
+        url=f"{settings.base_url}/papers/{bibtex_key}",
+        color=COLOR_CREATE,
+    )
     return AuditReportRead(
         id=report.id,
         external_url=report.external_url,
@@ -282,6 +323,13 @@ async def update_audit_report(
     await session.refresh(report)
 
     display_name = (await session.execute(select(User.username).where(User.id == report.user_id))).scalar_one_or_none()
+    notify(
+        "Audit report updated",
+        f"**{bibtex_key}** — {report.external_url}",
+        user_name=user.username,
+        url=f"{settings.base_url}/papers/{bibtex_key}",
+        color=COLOR_UPDATE,
+    )
     return AuditReportRead(
         id=report.id,
         external_url=report.external_url,
@@ -308,5 +356,13 @@ async def delete_audit_report(
         raise HTTPException(status_code=404, detail="Audit report not found")
     if report.user_id != user.id and not user.is_superuser:
         raise HTTPException(status_code=403, detail="Not authorized")
+    external_url = report.external_url
     await session.delete(report)
     await session.commit()
+    notify(
+        "Audit report deleted",
+        f"**{bibtex_key}** — {external_url}",
+        user_name=user.username,
+        url=f"{settings.base_url}/papers/{bibtex_key}",
+        color=COLOR_DELETE,
+    )

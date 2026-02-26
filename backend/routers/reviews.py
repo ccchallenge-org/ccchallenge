@@ -4,8 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.auth.users import current_active_user
 from backend.database import get_async_session
+from backend.config import settings
 from backend.models import Paper, Review, User
 from backend.schemas import ReviewCreate, ReviewRead, ReviewUpdate
+from backend.services.discord_notify import COLOR_CREATE, COLOR_DELETE, COLOR_UPDATE, notify
 
 router = APIRouter(prefix="/papers/{bibtex_key}/reviews", tags=["reviews"])
 
@@ -58,6 +60,13 @@ async def create_review(
     session.add(review)
     await session.commit()
     await session.refresh(review)
+    notify(
+        "Review added",
+        f"**{bibtex_key}** — {review.external_url}",
+        user_name=user.username,
+        url=f"{settings.base_url}/papers/{bibtex_key}",
+        color=COLOR_CREATE,
+    )
     return ReviewRead(
         id=review.id,
         external_url=review.external_url,
@@ -93,6 +102,14 @@ async def update_review(
     await session.refresh(review)
 
     display_name = (await session.execute(select(User.username).where(User.id == review.user_id))).scalar_one_or_none()
+    changed = ", ".join(update_data.keys())
+    notify(
+        "Review updated",
+        f"**{bibtex_key}** — changed: {changed}",
+        user_name=user.username,
+        url=f"{settings.base_url}/papers/{bibtex_key}",
+        color=COLOR_UPDATE,
+    )
     return ReviewRead(
         id=review.id,
         external_url=review.external_url,
@@ -119,5 +136,13 @@ async def delete_review(
         raise HTTPException(status_code=404, detail="Review not found")
     if review.user_id != user.id and not user.is_superuser:
         raise HTTPException(status_code=403, detail="Not authorized")
+    external_url = review.external_url
     await session.delete(review)
     await session.commit()
+    notify(
+        "Review deleted",
+        f"**{bibtex_key}** — {external_url}",
+        user_name=user.username,
+        url=f"{settings.base_url}/papers/{bibtex_key}",
+        color=COLOR_DELETE,
+    )

@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.config import settings
 from backend.database import get_async_session
 from backend.models import OAuthAccount, User
+from backend.services.discord_notify import COLOR_CREATE, notify
 
 resend.api_key = settings.resend_key
 
@@ -163,6 +164,11 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
 
     async def on_after_register(self, user: User, request: Optional[Request] = None):
         print(f"User {user.id} ({user.username}) registered.")
+        notify(
+            "New user registered",
+            f"**{user.username}**",
+            color=COLOR_CREATE,
+        )
         if not user.is_verified:
             await self.request_verify(user, request)
 
