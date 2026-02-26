@@ -314,8 +314,9 @@
                     if (!btn) return;
                     btn.querySelector('.wl-star').innerHTML = d.wishlisted ? '&#9733;' : '&#9734;';
                     btn.querySelector('.wl-count').textContent = d.count ? '(' + d.count + ')' : '';
-                    if (d.wishlisted) { btn.classList.remove('text-gray-400'); btn.classList.add('text-amber-500'); }
-                    else { btn.classList.remove('text-amber-500'); btn.classList.add('text-gray-400'); }
+                    btn.dataset.wlCount = d.count;
+                    btn.classList.remove('text-gray-400', 'text-amber-500');
+                    btn.classList.add(d.count > 0 ? 'text-amber-500' : 'text-gray-400');
                 });
         }
     </script>
