@@ -209,7 +209,7 @@
                 requestAnimationFrame(function () {
                     setTimeout(function () {
                         var el = document.getElementById(window.location.hash.slice(1));
-                        if (el) el.scrollIntoView({ block: 'center', behavior: 'instant' });
+                        if (el) el.scrollIntoView({ block: 'start', behavior: 'instant' });
                     }, 200);
                 });
             });
