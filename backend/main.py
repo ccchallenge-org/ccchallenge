@@ -37,6 +37,12 @@ templates = Jinja2Templates(directory=BACKEND_DIR / "templates")
 templates.env.globals["oauth_github"] = bool(settings.github_client_id)
 templates.env.globals["oauth_discord"] = bool(settings.discord_client_id)
 
+def latex_quotes(s: str) -> str:
+    """Convert LaTeX-style quotes to plain double quotes."""
+    return s.replace("``", '"').replace("''", '"')
+
+templates.env.filters["latex_quotes"] = latex_quotes
+
 @app.middleware("http")
 async def oauth_callback_redirect(request: Request, call_next):
     response = await call_next(request)
