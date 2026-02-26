@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.config import settings
 from backend.database import get_async_session
 from backend.models import OAuthAccount, User
-from backend.services.discord_notify import COLOR_CREATE, notify
+from backend.services.discord_notify import COLOR_CREATE, COLOR_UPDATE, notify
 
 resend.api_key = settings.resend_key
 
@@ -61,7 +61,8 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
             user_update.email = _normalize_email(user_update.email)
         # Check username uniqueness on change
         username = getattr(user_update, "username", None)
-        if username is not None and username != user.username:
+        old_username = user.username
+        if username is not None and username != old_username:
             session = self.user_db.session
             existing = await session.execute(
                 select(User).where(User.username == username)
@@ -76,7 +77,11 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
                     raise exceptions.UserAlreadyExists()
             except exceptions.UserNotExists:
                 pass
-        return await super().update(user_update, user, safe=safe, request=request)
+        result = await super().update(user_update, user, safe=safe, request=request)
+        new_username = getattr(user_update, "username", None)
+        if new_username is not None and new_username != old_username:
+            notify("Username changed", f"**{old_username}** → **{new_username}**", color=COLOR_UPDATE)
+        return result
 
     async def _unique_username(self, base: str) -> str:
         """Ensure a username is unique, appending a suffix if needed."""
