@@ -22,7 +22,7 @@
             {% if is_excluded %}
             <span x-data="{ show: false }" class="relative inline-flex">
                 <button type="button" @click="show = !show"
-                    class="inline-block bg-orange-100 text-orange-700 text-xs font-medium px-2 py-0.5 rounded cursor-pointer hover:bg-orange-200 transition-colors">Not in formalisation goal</button>
+                    class="inline-block bg-gray-100 text-gray-500 text-[10px] font-medium px-1.5 py-0.5 rounded cursor-pointer hover:bg-gray-200 transition-colors">Not in goal</button>
                 <span x-show="show" x-cloak @click.away="show = false"
                     class="absolute left-0 top-6 z-10 w-56 bg-white border border-gray-200 rounded shadow-md p-2">
                     <span class="block text-xs font-bold text-gray-900 mb-0.5">Reason</span>

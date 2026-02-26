@@ -51,6 +51,7 @@
             <option value="formalising">Being formalised</option>
             <option value="auditing">Being audited</option>
             <option value="audited">Formalised</option>
+            <option value="excluded">Not in formalisation goal</option>
         </select>
         <select name="order"
             hx-get="/htmx/paper-list" hx-target="#paper-list" hx-include="#filter-bar" hx-swap="innerHTML"
@@ -62,13 +63,6 @@
             hx-get="/htmx/paper-list" hx-target="#paper-list" hx-include="#filter-bar" hx-swap="innerHTML"
             hx-trigger="input changed delay:300ms"
             class="flex-1 rounded-lg px-3 py-2 bg-white/10 text-white placeholder-blue-200 border border-white/20 text-sm">
-        <label class="flex items-center gap-1.5 text-xs text-blue-200 cursor-pointer select-none sm:ml-1">
-            <input type="checkbox" name="in_goal" value="true" checked
-                hx-get="/htmx/paper-list" hx-target="#paper-list" hx-include="#filter-bar" hx-swap="innerHTML"
-                hx-trigger="change"
-                class="rounded border-white/30 bg-white/10 text-blue-400 focus:ring-blue-400 focus:ring-offset-0 w-3.5 h-3.5">
-            Only in formalisation goal
-        </label>
     </div>
 
     <!-- Paper List Header + Add Button -->

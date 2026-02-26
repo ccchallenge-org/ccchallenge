@@ -115,14 +115,13 @@ async def index(
     session: AsyncSession = Depends(get_async_session),
     user: User | None = Depends(current_optional_user),
 ):
-    # Total counts: all papers for the literature header, goal-only for the GOAL stat
+    # Total counts
     total = (await session.execute(select(func.count(Paper.id)))).scalar() or 0
     goal_total = (await session.execute(select(func.count(Paper.id)).where(Paper.exclusion_reason.is_(None)))).scalar() or 0
 
-    # Papers in formalisation goal (matching default checkbox state)
+    # All papers
     query = (
         select(Paper)
-        .where(Paper.exclusion_reason.is_(None))
         .options(selectinload(Paper.formalisations))
         .order_by(Paper.bibtex_key)
     )
@@ -156,7 +155,7 @@ async def index(
             "request": request,
             "user": user,
             "papers": paper_list,
-            "total": goal_total,
+            "total": total,
             "goal_total": goal_total,
             "stats": stat_counts,
             "fc_map": fc_map,
@@ -175,17 +174,16 @@ async def htmx_paper_list(
     has_reviews: bool | None = None,
     order: str = "authors",
     q: str | None = None,
-    in_goal: bool | None = None,
     session: AsyncSession = Depends(get_async_session),
     user: User | None = Depends(current_optional_user),
 ):
     query = select(Paper)
-    if in_goal:
-        query = query.where(Paper.exclusion_reason.is_(None))
     if has_reviews:
         query = query.where(Paper.id.in_(select(Review.paper_id)))
     elif status:
-        if status == FormalisationStatus.not_started.value:
+        if status == "excluded":
+            query = query.where(Paper.exclusion_reason.isnot(None))
+        elif status == FormalisationStatus.not_started.value:
             query = query.where(~Paper.id.in_(select(Formalisation.paper_id)))
         else:
             query = query.where(
