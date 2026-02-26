@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, Request, Response
+from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -11,7 +11,7 @@ from sqlalchemy.orm import selectinload
 
 from backend.auth.router import router as auth_router
 from backend.config import settings
-from backend.auth.users import current_optional_user
+from backend.auth.users import current_optional_user, current_superuser
 from backend.database import engine, get_async_session
 from backend.models import AuditReport, Base, Formalisation, FormalisationStatus, Paper, Review, User
 from backend.routers import formalisations, papers, reviews, stats
@@ -348,3 +348,36 @@ async def htmx_stats(
         "partials/stats_bar.html",
         {"request": request, "total": total, "stats": counts},
     )
+
+
+# ── Admin routes ───────────────────────────────────────────────────────────
+
+
+@app.get("/admin")
+async def admin_page(
+    request: Request,
+    session: AsyncSession = Depends(get_async_session),
+    user: User = Depends(current_superuser),
+):
+    result = await session.execute(select(User).order_by(User.username))
+    users = result.unique().scalars().all()
+    return templates.TemplateResponse(
+        "admin.html",
+        {"request": request, "user": user, "users": users},
+    )
+
+
+@app.delete("/api/admin/users/{user_id}")
+async def admin_delete_user(
+    user_id: str,
+    session: AsyncSession = Depends(get_async_session),
+    user: User = Depends(current_superuser),
+):
+    target = (await session.execute(select(User).where(User.id == user_id))).unique().scalar_one_or_none()
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    if target.id == user.id:
+        raise HTTPException(status_code=400, detail="Cannot delete yourself")
+    await session.delete(target)
+    await session.commit()
+    return Response(status_code=204)

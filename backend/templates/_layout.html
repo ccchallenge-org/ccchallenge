@@ -111,6 +111,12 @@
                                     class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     Profile
                                 </button>
+                                {% if user.is_superuser %}
+                                <a href="/admin"
+                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    Admin
+                                </a>
+                                {% endif %}
                                 <button @click="fetch('/api/auth/logout', {method:'POST'}).then(() => window.location.href = '/')"
                                     class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     Log out
