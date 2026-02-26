@@ -1,5 +1,5 @@
 {# Renders a single formalisation card. Expects: f, paper, user, current_tab #}
-<div class="bg-gray-50 rounded p-3 text-sm" x-data="{ editingUrl: false, newUrl: '{{ f.repository_url }}' }">
+<div class="bg-gray-50 rounded p-3 text-sm" x-data="{ editing: false, newUrl: '{{ f.repository_url }}', editAiAssisted: {{ 'true' if f.ai_assisted else 'false' }}, editAiModels: '{{ f.ai_models or '' }}' }">
     <div class="flex items-center gap-2 mb-1 flex-wrap">
         <span class="inline-block bg-purple-100 text-purple-800 text-xs font-medium px-2 py-0.5 rounded">
             {{ f.proof_assistant.value }}
@@ -9,33 +9,62 @@
         {% elif f.status.value == 'audited' %}
         <span class="inline-block bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded">Formalised</span>
         {% endif %}
-        <template x-if="!editingUrl">
+        {% if f.ai_assisted %}
+        <span class="inline-block bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">AI-assisted{% if f.ai_models %}: {{ f.ai_models }}{% endif %}</span>
+        {% endif %}
+        <template x-if="!editing">
             <span class="flex items-center gap-1">
                 <a href="{{ f.repository_url }}" target="_blank" class="text-blue-600 hover:underline text-xs truncate">
                     {{ f.repository_url }}
                 </a>
                 {% if user and (user.is_superuser or user.id == f.user_id) %}
-                <button @click="editingUrl = true" class="text-gray-400 hover:text-gray-600 text-xs">edit</button>
+                <button @click="editing = true" class="text-gray-400 hover:text-gray-600 text-xs">edit</button>
                 <button
                     @click="if(confirm('Delete this formalisation?')) fetch('/api/papers/{{ paper.bibtex_key }}/formalisations/{{ f.id }}', {method:'DELETE'}).then(r => { if(r.ok) htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab={{ current_tab }}', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'}); })"
                     class="text-red-400 hover:text-red-600 text-xs">delete</button>
                 {% endif %}
             </span>
         </template>
-        <template x-if="editingUrl">
-            <form class="flex items-center gap-1" @submit.prevent="
+        <template x-if="editing">
+            <form class="w-full space-y-2 mt-1" @submit.prevent="
+                if (editAiAssisted && !editAiModels.trim()) { alert('Please specify which models are used.'); return; }
+                const payload = { repository_url: newUrl, ai_assisted: editAiAssisted };
+                if (editAiAssisted) payload.ai_models = editAiModels.trim();
+                else payload.ai_models = null;
                 fetch('/api/papers/{{ paper.bibtex_key }}/formalisations/{{ f.id }}', {
                     method: 'PATCH',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({repository_url: newUrl})
+                    body: JSON.stringify(payload)
                 }).then(r => {
                     if(r.ok) htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab={{ current_tab }}', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'});
                     else r.json().then(d => alert(d.detail || 'Error'));
                 })
             ">
-                <input type="url" x-model="newUrl" required class="text-xs rounded border-gray-300 p-1 border w-64">
-                <button type="submit" class="text-green-600 hover:text-green-800 text-xs">save</button>
-                <button type="button" @click="editingUrl = false; newUrl = '{{ f.repository_url }}'" class="text-gray-400 hover:text-gray-600 text-xs">cancel</button>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">URL *</label>
+                    <input type="url" x-model="newUrl" required class="text-xs rounded border-gray-300 p-1 border w-full">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Is the formalisation mainly done by AI (e.g. autoformalisation)? *</label>
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center gap-1 text-xs text-gray-700">
+                            <input type="radio" :checked="editAiAssisted === true" @click="editAiAssisted = true" class="text-purple-600"> Yes
+                        </label>
+                        <label class="flex items-center gap-1 text-xs text-gray-700">
+                            <input type="radio" :checked="editAiAssisted === false" @click="editAiAssisted = false" class="text-purple-600"> No
+                        </label>
+                    </div>
+                </div>
+                <div x-show="editAiAssisted" x-cloak>
+                    <label class="block text-xs font-medium text-gray-700">Which models are used? *</label>
+                    <input type="text" x-model="editAiModels" placeholder="e.g. Opus 4.6"
+                        :required="editAiAssisted"
+                        class="text-xs rounded border-gray-300 p-1 border w-full">
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="submit" class="text-green-600 hover:text-green-800 text-xs font-medium">save</button>
+                    <button type="button" @click="editing = false; newUrl = '{{ f.repository_url }}'; editAiAssisted = {{ 'true' if f.ai_assisted else 'false' }}; editAiModels = '{{ f.ai_models or '' }}'" class="text-gray-400 hover:text-gray-600 text-xs">cancel</button>
+                </div>
             </form>
         </template>
     </div>

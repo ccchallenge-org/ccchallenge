@@ -90,17 +90,23 @@ class StatusChangeRequest(BaseModel):
 class FormalisationCreate(BaseModel):
     proof_assistant: ProofAssistant
     repository_url: str
+    ai_assisted: bool = False
+    ai_models: str | None = None
 
 
 class FormalisationUpdate(BaseModel):
     proof_assistant: Optional[ProofAssistant] = None
     repository_url: Optional[str] = None
+    ai_assisted: Optional[bool] = None
+    ai_models: Optional[str] = None
 
 
 class FormalisationRead(BaseModel):
     id: int
     proof_assistant: ProofAssistant
     repository_url: str
+    ai_assisted: bool = False
+    ai_models: str | None = None
     status: FormalisationStatus
     user_id: uuid.UUID
     user_display_name: Optional[str] = None

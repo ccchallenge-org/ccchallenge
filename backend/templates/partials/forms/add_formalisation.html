@@ -6,11 +6,15 @@
     </button>
     <div x-show="showForm" x-cloak class="mt-2 bg-gray-50 rounded p-3">
         <h4 class="text-sm font-bold text-gray-900 mb-2">Add formalisation</h4>
-        <form x-data="{ fd: { proof_assistant: 'lean4', repository_url: '' }, otherName: '' }"
+        <form x-data="{ fd: { proof_assistant: 'lean4', repository_url: '', ai_assisted: false }, otherName: '', ai_models: '' }"
               @submit.prevent="
                 const payload = {...fd};
                 if (fd.proof_assistant === 'other' && otherName) {
                     payload.description = otherName;
+                }
+                if (fd.ai_assisted) {
+                    if (!ai_models.trim()) { alert('Please specify which models are used.'); return; }
+                    payload.ai_models = ai_models.trim();
                 }
                 fetch('/api/papers/{{ paper.bibtex_key }}/formalisations', {
                     method: 'POST',
@@ -41,6 +45,23 @@
             <div>
                 <label class="block text-xs font-medium text-gray-700">URL *</label>
                 <input type="url" x-model="fd.repository_url" required placeholder="https://..."
+                    class="w-full rounded border-gray-300 text-gray-900 text-xs p-1.5 border">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Is the formalisation mainly done by AI (e.g. autoformalisation)? *</label>
+                <div class="flex items-center gap-4">
+                    <label class="flex items-center gap-1 text-xs text-gray-700">
+                        <input type="radio" :checked="fd.ai_assisted === true" @click="fd.ai_assisted = true" class="text-purple-600"> Yes
+                    </label>
+                    <label class="flex items-center gap-1 text-xs text-gray-700">
+                        <input type="radio" :checked="fd.ai_assisted === false" @click="fd.ai_assisted = false" class="text-purple-600"> No
+                    </label>
+                </div>
+            </div>
+            <div x-show="fd.ai_assisted" x-cloak>
+                <label class="block text-xs font-medium text-gray-700">Which models are used? *</label>
+                <input type="text" x-model="ai_models" placeholder="e.g. Opus 4.6"
+                    :required="fd.ai_assisted"
                     class="w-full rounded border-gray-300 text-gray-900 text-xs p-1.5 border">
             </div>
             <button type="submit"

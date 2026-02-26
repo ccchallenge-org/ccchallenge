@@ -95,6 +95,8 @@ class Formalisation(Base):
     user_id = Column(ForeignKey("user.id"), nullable=False)
     proof_assistant = Column(Enum(ProofAssistant), nullable=False)
     repository_url = Column(Text, nullable=False)
+    ai_assisted = Column(Boolean, default=False, nullable=False)
+    ai_models = Column(Text, nullable=True)
     status = Column(Enum(FormalisationStatus), default=FormalisationStatus.formalising, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
