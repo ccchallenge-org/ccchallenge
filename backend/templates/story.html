@@ -1,0 +1,381 @@
+{% extends "_layout.html" %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="max-w-none space-y-8 text-lg leading-relaxed">
+
+        <nav class="bg-white/10 border border-white/20 rounded-xl p-6 text-base space-y-1 mb-4 mt-4">
+            <p class="font-semibold mb-3">Contents</p>
+            <ol class="list-decimal pl-6 space-y-1">
+                <li><a href="#goal" class="underline hover:text-blue-200">Goal</a></li>
+                <li><a href="#collatz-conjecture" class="underline hover:text-blue-200">The Collatz Conjecture</a>
+                    <ol class="list-decimal pl-6 space-y-1 mt-1">
+                        <li><a href="#beyond-natural-numbers" class="underline hover:text-blue-200">The Collatz problem beyond natural numbers</a></li>
+                        <li><a href="#collatz-hard" class="underline hover:text-blue-200">The Collatz problem is hard</a></li>
+                    </ol>
+                </li>
+                <li><a href="#proof-assistants" class="underline hover:text-blue-200">Proof Assistants</a></li>
+                <li><a href="#references" class="underline hover:text-blue-200">References</a></li>
+                <li><a href="#related-links" class="underline hover:text-blue-200">Related Links</a></li>
+            </ol>
+        </nav>
+
+        <h1 id="goal" class="text-3xl font-bold mt-10">Goal</h1>
+
+        <p>
+            The goal of the Collatz Conjecture Challenge (ccchallenge for short) is to collaboratively formalise the papers on the
+            Collatz conjecture using proof assistants.
+        </p>
+
+        <h1 id="collatz-conjecture" class="text-3xl font-bold mt-10">The Collatz Conjecture</h1>
+
+        <p>
+            The Collatz problem is known under many names such as: the \(3n + 1\) problem, the \(3x + 1\) problem,
+            Ulam's conjecture, Thwaites' conjecture, the Syracuse problem, etc. The essence of the problem seems to
+            trace back to Lothar Collatz's notebooks from the 1930s and is known to have circulated in mathematical
+            circles in the 1950s <a href="#ref-lagarias-2021" class="underline hover:text-blue-200">[Lagarias,
+                2021]</a>. The first printed occurrence of the problem seems to be a 1971 written version
+            of a lecture by H. S. Coxeter <a href="#ref-coxeter-1971" class="underline hover:text-blue-200">[Coxeter,
+                1971]</a>.
+        </p>
+
+        <p>
+            Let \(\mathbb{N} = \{0, 1, 2, \ldots\}\) be the set of natural numbers and \(\mathbb{N}^+ = \{1, 2,
+            \ldots\}\).
+            The Collatz process is defined on the natural numbers as iterating the map \(C(x) = x/2\) when \(x \in
+            \mathbb{N}\)
+            is even and \(C(x) = 3x + 1\) when \(x\) is odd. Because \(3x + 1\) is always even when \(x\) is odd,
+            it is also natural to consider a slight variant of \(C\), the map \(T\) where \(T(x) = x/2\) when \(x\) is
+            even
+            and \(T(x) = (3x + 1)/2\) when \(x\) is odd.
+        </p>
+
+        <div class="bg-white/10 border border-white/20 rounded-xl p-6 my-6">
+            <p class="font-semibold text-xl mb-3">Collatz conjecture</p>
+            <p>
+                Iterating \(T\) (or \(C\)) from any natural number \(x \in \mathbb{N}^+\) leads to 1.
+            </p>
+        </div>
+
+        <div class="bg-white/5 border border-white/15 rounded-xl p-6 my-6" x-data="collatzWidget()" x-init="compute()">
+            <p class="font-medium text-lg mb-3">Try it yourself</p>
+            <div class="flex gap-3 items-center mb-4">
+                <label class="text-sm text-blue-200">Starting number:</label>
+                <input type="number" min="1" x-model.number="input" @keydown.enter="compute()"
+                    class="w-32 rounded-lg px-3 py-1.5 bg-white/10 text-white border border-white/20 text-sm"
+                    placeholder="e.g. 45">
+                <button @click="compute()"
+                    class="px-4 py-1.5 bg-white/15 hover:bg-white/25 text-white text-sm font-medium rounded-lg transition-colors border border-white/20">
+                    Go
+                </button>
+            </div>
+            <div x-show="sequence.length > 0" class="text-base leading-relaxed">
+                <p class="text-sm text-blue-200 mb-1">Iterations of \(T\)</p>
+                <template x-for="(val, i) in sequence" :key="i">
+                    <span>
+                        <span :class="i >= steps ? 'font-bold text-green-300' : ''" x-text="val"></span><span
+                            x-show="i < sequence.length - 1" class="text-blue-300">, </span>
+                    </span>
+                </template>
+                <span x-show="reachedOne" class="text-blue-300">, ...</span>
+                <p x-show="reachedOne" class="text-sm text-green-300 mt-2">
+                    Reached 1 after <span x-text="steps"></span> steps!
+                </p>
+            </div>
+        </div>
+
+        <p>
+            As of 2025, the conjecture had been computer-verified up to \(2^{71}\) <a href="#ref-barina-2025"
+                class="underline hover:text-blue-200">[Barina, 2025]</a>.
+        </p>
+
+        <p>
+            The conjecture can be divided in two seemingly independent conjectures: (<em>No divergent orbits
+                conjecture</em>)
+            there are no \(x \in \mathbb{N}\) such that \(\lim_{n\to\infty} T^n(x) = +\infty\) and
+            (<em>No nontrivial cycles conjecture</em>) the only cycle of \(T\) in \(\mathbb{N}^+\) is \(\{1, 2\}\).
+            The latter is sometimes referred to as the "Weak Collatz conjecture" <a href="#ref-tao-2011"
+                class="underline hover:text-blue-200">[Tao, 2011]</a>.
+        </p>
+
+        <h2 id="beyond-natural-numbers" class="text-2xl font-bold mt-10">The Collatz problem beyond natural numbers</h2>
+
+        <p>
+            Although \(T\) and \(C\) are defined in \(\mathbb{N}\), there are no obstacles to looking at the Collatz map
+            in the negative numbers. Three new cycles show up in the negative numbers: the cycle of \(-1\), the cycle of \(-5\) and the
+            cycle of \(-17\) <a href="#ref-bohm-1978" class="underline hover:text-blue-200">[Böhm and Sontacchi, 1978]</a>.
+            Furthermore, any negative number seems to reach one of these cycles.
+        </p>
+
+        <p>
+            It turns out that Collatz iterations are more generally well-defined on all rational numbers with odd denominator<a href="#fn-1" class="text-blue-300 hover:text-blue-100"><sup>1</sup></a>
+            <a href="#ref-lagarias-1985" class="underline hover:text-blue-200">[Lagarias, 1985]</a>:
+            the parity of such a rational is defined as the parity of its numerator, dividing by 2 and computing \(3x + 1\) preserve
+            odd denominators.
+        </p>
+
+        <div class="bg-white/5 border border-white/15 rounded-xl p-6 my-6" x-data="rationalCollatzWidget()" x-init="compute()">
+            <p class="font-medium text-lg mb-3">Try it yourself</p>
+            <div class="flex gap-3 items-center mb-4">
+                <label class="text-sm text-blue-200">Starting value:</label>
+                <input type="text" x-model="input"
+                    @keydown.enter="compute()"
+                    class="w-32 rounded-lg px-3 py-1.5 bg-white/10 text-white border border-white/20 text-sm"
+                    placeholder="e.g. -1/23">
+                <button @click="compute()"
+                    class="px-4 py-1.5 bg-white/15 hover:bg-white/25 text-white text-sm font-medium rounded-lg transition-colors border border-white/20">
+                    Go
+                </button>
+            </div>
+            <p x-show="error" class="text-sm text-red-400 mb-2" x-text="error"></p>
+            <div x-show="sequence.length > 0 && !error" class="text-base leading-relaxed">
+                <p class="text-sm text-blue-200 mb-1">Iterations of \(T\)</p>
+                <template x-for="(val, i) in sequence" :key="i">
+                    <span>
+                        <span :class="i >= cycleStart ? 'font-bold text-green-300' : ''" x-text="val"></span><span
+                            x-show="i < sequence.length - 1" class="text-blue-300">, </span>
+                    </span>
+                </template>
+                <span x-show="cycleStart >= 0" class="text-blue-300">, ...</span>
+                <p x-show="cycleStart >= 0" class="text-sm text-green-300 mt-2">
+                    Reached a cycle after <span x-text="cycleStart"></span> steps (cycle length: <span x-text="sequence.length - cycleStart - 1"></span>)
+                </p>
+            </div>
+        </div>
+
+        <p>
+            A natural generalisation of the no-divergent-orbits part of the Collatz conjecture to the rationals is:
+        </p>
+
+        <div class="bg-white/10 border border-white/20 rounded-xl p-6 my-6">
+            <p class="font-semibold text-xl mb-3">Lagarias' periodicity conjecture <a href="#ref-lagarias-1985"
+                    class="underline hover:text-blue-200 text-base font-normal">[Lagarias, 1985]</a></p>
+            <p>
+                The Collatz sequence of any rational number with odd denominator is eventually periodic.
+            </p>
+        </div>
+
+        <h2 id="collatz-hard" class="text-2xl font-bold mt-10">The Collatz problem is hard</h2>
+
+        <p>
+            The Collatz problem is notoriously extremely hard and its solution seems to be still very far away in
+            spite of more than half a century of research, wonderfully summarised in Jeffrey C. Lagarias's annotated
+            bibliographies
+            <a href="#ref-lagarias-2003" class="underline hover:text-blue-200">[Lagarias, 2003]</a><a href="#ref-lagarias-2006" class="underline hover:text-blue-200">[Lagarias, 2006]</a>
+            and overview
+            <a href="#ref-lagarias-2021" class="underline hover:text-blue-200">[Lagarias, 2021]</a>.
+        </p>
+
+        <p>
+            Famously, mathematician Paul Erdős said that "Mathematics is not yet ready for such problems" and, reportedly,
+            he would also have described the problem as "Hopeless. Absolutely hopeless".
+            As a warning, the Collatz problem is also given as <em>Problem 2</em> in Richard Guy's 1983 paper
+            "Don't try to solve these problems!"
+            <a href="#ref-guy-1983" class="underline hover:text-blue-200">[Guy, 1983]</a>.
+        </p>
+
+        <h1 id="proof-assistants" class="text-3xl font-bold mt-10">Proof Assistants</h1>
+
+        <p>
+            Proof assistants are software tools able to express and verify formal proofs.
+            Popular proof assistants include Lean, Coq/Rocq, Isabelle, HOL Light and Metamath.
+            Using a proof assistant to formalise a result immensely facilitates scientific consensus
+            on its correctness: once a proof is verified by the tool, trust only relies on the
+            (relatively small and well-audited) proof-checking kernel, not on the complexity of the proof itself.
+        </p>
+
+        <p>
+            Milestones in the use of proof assistants include the Coq proofs of the four-colour theorem
+            <a href="#ref-gonthier-2008" class="underline hover:text-blue-200">[Gonthier, 2008]</a>
+            and the Feit-Thompson theorem on odd order finite groups
+            <a href="#ref-gonthier-2013" class="underline hover:text-blue-200">[Gonthier et al., 2013]</a>,
+            the HOL Light proof of the Kepler conjecture
+            <a href="#ref-hales-2017" class="underline hover:text-blue-200">[Hales et al., 2017]</a>,
+            and the liquid tensor experiment in Lean
+            <a href="#ref-commelin-2024" class="underline hover:text-blue-200">[Commelin et al., 2024]</a>.
+        </p>
+
+        <h1 id="references" class="text-3xl font-bold mt-10">References</h1>
+
+        <ul class="list-disc pl-6 space-y-3 text-base">
+            <li id="ref-bohm-1978">
+                [Böhm and Sontacchi, 1978] Corrado Böhm and Giovanna Sontacchi. "On the existence of cycles of given
+                length in integer
+                sequences like \(x_{n+1} = x_n/2\) if \(x_n\) even, and \(x_{n+1} = 3x_n + 1\)".
+                In: <em>Atti della Accademia Nazionale dei Lincei. Rendiconti</em> 64 (1978), pp. 260&ndash;264.
+            </li>
+            <li id="ref-barina-2025">
+                [Barina, 2025] David Barina. "Improved verification limit for the convergence of the Collatz
+                conjecture".
+                In: <em>The Journal of Supercomputing</em> 81, 810 (2025).
+                <a href="https://doi.org/10.1007/s11227-025-07337-0" target="_blank"
+                    class="text-blue-300 hover:text-blue-100 underline">doi:10.1007/s11227-025-07337-0</a>
+                — <a href="https://pcbarina.fit.vutbr.cz/" target="_blank"
+                    class="text-blue-300 hover:text-blue-100 underline">pcbarina.fit.vutbr.cz</a>
+            </li>
+            <li id="ref-commelin-2024">
+                [Commelin et al., 2024] Johan Commelin, Adam Topaz et al. "Liquid tensor experiment".
+                2024.
+                <a href="https://doi.org/10.1017/exp.2024.7" target="_blank"
+                    class="text-blue-300 hover:text-blue-100 underline">doi:10.1017/exp.2024.7</a>
+            </li>
+            <li id="ref-coxeter-1971">
+                [Coxeter, 1971] H. S. M. Coxeter. <em>Cyclic sequences and frieze patterns: The Fourth Felix Behrend
+                    Memorial Lecture</em>,
+                Vinculum 8. 1971.
+            </li>
+            <li id="ref-guy-1983">
+                [Guy, 1983] Richard K. Guy. "Don't Try to Solve These Problems!"
+                In: <em>The American Mathematical Monthly</em> 90.1 (1983), pp. 35&ndash;41.
+            </li>
+            <li id="ref-gonthier-2008">
+                [Gonthier, 2008] Georges Gonthier. "Formal proof &mdash; The four-color theorem".
+                In: <em>Notices of the American Mathematical Society</em> 55.11 (2008), pp. 1382&ndash;1393.
+            </li>
+            <li id="ref-gonthier-2013">
+                [Gonthier et al., 2013] Georges Gonthier et al. "A machine-checked proof of the odd order theorem".
+                In: <em>Interactive Theorem Proving (ITP 2013)</em>. Springer, 2013, pp. 163&ndash;179.
+                <a href="https://doi.org/10.1007/978-3-642-39634-2_14" target="_blank"
+                    class="text-blue-300 hover:text-blue-100 underline">doi:10.1007/978-3-642-39634-2_14</a>
+            </li>
+            <li id="ref-hales-2017">
+                [Hales et al., 2017] Thomas Hales et al. "A formal proof of the Kepler conjecture".
+                In: <em>Forum of Mathematics, Pi</em> 5 (2017), e2.
+                <a href="https://doi.org/10.1017/fmp.2017.1" target="_blank"
+                    class="text-blue-300 hover:text-blue-100 underline">doi:10.1017/fmp.2017.1</a>
+            </li>
+            <li id="ref-lagarias-1985">
+                [Lagarias, 1985] Jeffrey C. Lagarias. "The \(3x + 1\) Problem and Its Generalizations".
+                In: <em>The American Mathematical Monthly</em> 92.1 (1985), pp. 3&ndash;23.
+            </li>
+            <li id="ref-lagarias-2003">
+                [Lagarias, 2003] Jeffrey C. Lagarias. <em>The \(3x + 1\) problem: An annotated bibliography (1963&ndash;1999) (sorted by author)</em>.
+                2003.
+                <a href="https://arxiv.org/abs/math/0309224" target="_blank"
+                    class="text-blue-300 hover:text-blue-100 underline">arXiv:math/0309224</a>
+            </li>
+            <li id="ref-lagarias-2006">
+                [Lagarias, 2006] Jeffrey C. Lagarias. <em>The \(3x + 1\) Problem: An Annotated Bibliography, II (2000&ndash;2009)</em>.
+                2006.
+                <a href="https://arxiv.org/abs/math/0608208" target="_blank"
+                    class="text-blue-300 hover:text-blue-100 underline">arXiv:math/0608208</a>
+            </li>
+            <li id="ref-lagarias-2021">
+                [Lagarias, 2021] Jeffrey C. Lagarias. "The 3x+1 Problem: An Overview". 2021.
+                <a href="https://arxiv.org/abs/2111.02635" target="_blank"
+                    class="text-blue-300 hover:text-blue-100 underline">arXiv:2111.02635</a>
+            </li>
+            <li id="ref-tao-2011">
+                [Tao, 2011] Terence Tao. "The Collatz conjecture, Littlewood-Offord theory, and powers of 2 and 3".
+                2011.
+                <a href="https://terrytao.wordpress.com/2011/08/25/the-collatz-conjecture-littlewood-offord-theory-and-powers-of-2-and-3/"
+                    target="_blank" class="text-blue-300 hover:text-blue-100 underline">Blog post</a>
+            </li>
+        </ul>
+
+        <h1 id="related-links" class="text-3xl font-bold mt-10">Related Links</h1>
+
+        <hr class="border-white/20 mt-12">
+        <p id="fn-1" class="text-sm text-blue-200 mt-4">
+            <sup>1</sup> Rationals with odd denominators exactly correspond to eventually-periodic 2-adic integers: Collatz iterations are more generally naturally defined on all 2-adic integers (\(\mathbb{Z}_2\))
+            <a href="#ref-lagarias-1985" class="underline hover:text-blue-200">[Lagarias, 1985]</a>.
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function collatzWidget() {
+        return {
+            input: 45,
+            sequence: [],
+            reachedOne: false,
+            steps: 0,
+            compute() {
+                let n = Math.floor(this.input);
+                if (n < 1) return;
+                this.sequence = [n];
+                this.reachedOne = false;
+                this.steps = 0;
+                let limit = 10000;
+                while (n !== 1 && this.sequence.length < limit) {
+                    if (n % 2 === 0) {
+                        n = n / 2;
+                    } else {
+                        n = (3 * n + 1) / 2;
+                    }
+                    this.sequence.push(n);
+                }
+                if (n === 1) {
+                    this.steps = this.sequence.length - 1;
+                    // Add 2 repetitions of the trivial cycle {1, 2}
+                    this.sequence.push(2, 1, 2, 1);
+                    this.reachedOne = true;
+                }
+            }
+        }
+    }
+
+    function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { [a, b] = [b, a % b]; } return a; }
+
+    function fmtFrac(n, d) {
+        if (d < 0) { n = -n; d = -d; }
+        var g = gcd(n, d);
+        n = n / g; d = d / g;
+        return d === 1 ? '' + n : n + '/' + d;
+    }
+
+    function rationalCollatzWidget() {
+        return {
+            input: '-1/23',
+            sequence: [],
+            cycleStart: -1,
+            error: '',
+            compute() {
+                this.sequence = [];
+                this.cycleStart = -1;
+                this.error = '';
+                var parts = this.input.toString().trim().split('/');
+                var n = parseInt(parts[0]);
+                var d = parts.length > 1 ? parseInt(parts[1]) : 1;
+                if (isNaN(n) || isNaN(d)) { this.error = 'Enter an integer or fraction (e.g. -1/23).'; return; }
+                if (d === 0) { this.error = 'Denominator cannot be 0.'; return; }
+                if (d % 2 === 0) { this.error = 'Denominator must be odd.'; return; }
+                var g = gcd(n, d);
+                n = n / g; d = d / g;
+                if (d < 0) { n = -n; d = -d; }
+                if (n === 0) { this.error = 'Starting number cannot be 0.'; return; }
+
+                var seen = {};
+                var seq = [];
+                var limit = 5000;
+                while (seq.length < limit) {
+                    var key = n + '/' + d;
+                    if (seen.hasOwnProperty(key)) {
+                        this.cycleStart = seen[key];
+                        seq.push(fmtFrac(n, d));
+                        break;
+                    }
+                    seen[key] = seq.length;
+                    seq.push(fmtFrac(n, d));
+                    // Apply T: parity is parity of numerator
+                    if (n % 2 === 0) {
+                        // even: divide by 2
+                        n = n / 2;
+                    } else {
+                        // odd: (3x+1)/2 = (3n/d + 1)/2 = (3n + d) / (2d)
+                        n = 3 * n + d;
+                        d = 2 * d;
+                    }
+                    // Reduce
+                    g = gcd(n, d);
+                    n = n / g; d = d / g;
+                    if (d < 0) { n = -n; d = -d; }
+                }
+                this.sequence = seq;
+            }
+        }
+    }
+</script>
+{% endblock %}

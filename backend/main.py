@@ -151,6 +151,14 @@ async def _compute_stats(session: AsyncSession) -> dict:
     }
 
 
+@app.get("/story")
+async def story_page(
+    request: Request,
+    user: User | None = Depends(current_optional_user),
+):
+    return templates.TemplateResponse("story.html", {"request": request, "user": user})
+
+
 @app.get("/verify")
 async def verify_page(request: Request, token: str = ""):
     return templates.TemplateResponse("verify.html", {"request": request, "token": token})
