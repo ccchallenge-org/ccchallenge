@@ -10,8 +10,10 @@
                 <li><a href="#goal" class="underline hover:text-blue-200">Goal</a></li>
                 <li><a href="#collatz-conjecture" class="underline hover:text-blue-200">The Collatz Conjecture</a>
                     <ol class="list-decimal pl-6 space-y-1 mt-1">
-                        <li><a href="#beyond-natural-numbers" class="underline hover:text-blue-200">The Collatz problem beyond natural numbers</a></li>
-                        <li><a href="#collatz-hard" class="underline hover:text-blue-200">The Collatz problem is hard</a></li>
+                        <li><a href="#beyond-natural-numbers" class="underline hover:text-blue-200">The Collatz problem
+                                beyond natural numbers</a></li>
+                        <li><a href="#collatz-hard" class="underline hover:text-blue-200">The Collatz problem is
+                                hard</a></li>
                     </ol>
                 </li>
                 <li><a href="#proof-assistants" class="underline hover:text-blue-200">Proof Assistants</a></li>
@@ -23,9 +25,11 @@
         <h1 id="goal" class="text-3xl font-bold mt-10">Goal</h1>
 
         <p>
-            The goal of the Collatz Conjecture Challenge (ccchallenge for short) is to collaboratively formalise the papers on the
-            Collatz conjecture using proof assistants.
+            The goal of the Collatz Conjecture Challenge (ccchallenge for short) aims to collaboratively formalise the
+            research literature on the Collatz conjecture using proof assistants.
         </p>
+
+
 
         <h1 id="collatz-conjecture" class="text-3xl font-bold mt-10">The Collatz Conjecture</h1>
 
@@ -45,7 +49,8 @@
             The Collatz process is defined on the natural numbers as iterating the map \(C(x) = x/2\) when \(x \in
             \mathbb{N}\)
             is even and \(C(x) = 3x + 1\) when \(x\) is odd. Because \(3x + 1\) is always even when \(x\) is odd,
-            it is also natural to consider a slight variant of \(C\), the map \(T\) where \(T(x) = x/2\) when \(x\) is
+            it is also natural to consider a slight variant of \(C\), the map \(T\) where \(T(x) = x/2\) when \(x\)
+            is
             even
             and \(T(x) = (3x + 1)/2\) when \(x\) is odd.
         </p>
@@ -98,28 +103,34 @@
                 class="underline hover:text-blue-200">[Tao, 2011]</a>.
         </p>
 
-        <h2 id="beyond-natural-numbers" class="text-2xl font-bold mt-10">The Collatz problem beyond natural numbers</h2>
+        <h2 id="beyond-natural-numbers" class="text-2xl font-bold mt-10">The Collatz problem beyond natural numbers
+        </h2>
 
         <p>
-            Although \(T\) and \(C\) are defined in \(\mathbb{N}\), there are no obstacles to looking at the Collatz map
-            in the negative numbers. Three new cycles show up in the negative numbers: the cycle of \(-1\), the cycle of \(-5\) and the
-            cycle of \(-17\) <a href="#ref-bohm-1978" class="underline hover:text-blue-200">[Böhm and Sontacchi, 1978]</a>.
+            Although \(T\) and \(C\) are defined in \(\mathbb{N}\), there are no obstacles to looking at the Collatz
+            map
+            in the negative numbers. Three new cycles show up in the negative numbers: the cycle of \(-1\), the
+            cycle of \(-5\) and the
+            cycle of \(-17\) <a href="#ref-bohm-1978" class="underline hover:text-blue-200">[Böhm and Sontacchi,
+                1978]</a>.
             Furthermore, any negative number seems to reach one of these cycles.
         </p>
 
         <p>
-            It turns out that Collatz iterations are more generally well-defined on all rational numbers with odd denominator<a href="#fn-1" class="text-blue-300 hover:text-blue-100"><sup>1</sup></a>
+            It turns out that Collatz iterations are more generally well-defined on all rational numbers with odd
+            denominator<a href="#fn-1" class="text-blue-300 hover:text-blue-100"><sup>1</sup></a>
             <a href="#ref-lagarias-1985" class="underline hover:text-blue-200">[Lagarias, 1985]</a>:
-            the parity of such a rational is defined as the parity of its numerator, dividing by 2 and computing \(3x + 1\) preserve
+            the parity of such a rational is defined as the parity of its numerator, dividing by 2 and computing
+            \(3x + 1\) preserve
             odd denominators.
         </p>
 
-        <div class="bg-white/5 border border-white/15 rounded-xl p-6 my-6" x-data="rationalCollatzWidget()" x-init="compute()">
+        <div class="bg-white/5 border border-white/15 rounded-xl p-6 my-6" x-data="rationalCollatzWidget()"
+            x-init="compute()">
             <p class="font-medium text-lg mb-3">Try it yourself</p>
             <div class="flex gap-3 items-center mb-4">
                 <label class="text-sm text-blue-200">Starting value:</label>
-                <input type="text" x-model="input"
-                    @keydown.enter="compute()"
+                <input type="text" x-model="input" @keydown.enter="compute()"
                     class="w-32 rounded-lg px-3 py-1.5 bg-white/10 text-white border border-white/20 text-sm"
                     placeholder="e.g. -1/23">
                 <button @click="compute()"
@@ -138,7 +149,8 @@
                 </template>
                 <span x-show="cycleStart >= 0" class="text-blue-300">, ...</span>
                 <p x-show="cycleStart >= 0" class="text-sm text-green-300 mt-2">
-                    Reached a cycle after <span x-text="cycleStart"></span> steps (cycle length: <span x-text="sequence.length - cycleStart - 1"></span>)
+                    Reached a cycle after <span x-text="cycleStart"></span> steps (cycle length: <span
+                        x-text="sequence.length - cycleStart - 1"></span>)
                 </p>
             </div>
         </div>
@@ -161,13 +173,15 @@
             The Collatz problem is notoriously extremely hard and its solution seems to be still very far away in
             spite of more than half a century of research, wonderfully summarised in Jeffrey C. Lagarias's annotated
             bibliographies
-            <a href="#ref-lagarias-2003" class="underline hover:text-blue-200">[Lagarias, 2003]</a><a href="#ref-lagarias-2006" class="underline hover:text-blue-200">[Lagarias, 2006]</a>
+            <a href="#ref-lagarias-2003" class="underline hover:text-blue-200">[Lagarias, 2003]</a><a
+                href="#ref-lagarias-2006" class="underline hover:text-blue-200">[Lagarias, 2006]</a>
             and overview
             <a href="#ref-lagarias-2021" class="underline hover:text-blue-200">[Lagarias, 2021]</a>.
         </p>
 
         <p>
-            Famously, mathematician Paul Erdős said that "Mathematics is not yet ready for such problems" and, reportedly,
+            Famously, mathematician Paul Erdős said that "Mathematics is not yet ready for such problems" and,
+            reportedly,
             he would also have described the problem as "Hopeless. Absolutely hopeless".
             As a warning, the Collatz problem is also given as <em>Problem 2</em> in Richard Guy's 1983 paper
             "Don't try to solve these problems!"
@@ -249,13 +263,15 @@
                 In: <em>The American Mathematical Monthly</em> 92.1 (1985), pp. 3&ndash;23.
             </li>
             <li id="ref-lagarias-2003">
-                [Lagarias, 2003] Jeffrey C. Lagarias. <em>The \(3x + 1\) problem: An annotated bibliography (1963&ndash;1999) (sorted by author)</em>.
+                [Lagarias, 2003] Jeffrey C. Lagarias. <em>The \(3x + 1\) problem: An annotated bibliography
+                    (1963&ndash;1999) (sorted by author)</em>.
                 2003.
                 <a href="https://arxiv.org/abs/math/0309224" target="_blank"
                     class="text-blue-300 hover:text-blue-100 underline">arXiv:math/0309224</a>
             </li>
             <li id="ref-lagarias-2006">
-                [Lagarias, 2006] Jeffrey C. Lagarias. <em>The \(3x + 1\) Problem: An Annotated Bibliography, II (2000&ndash;2009)</em>.
+                [Lagarias, 2006] Jeffrey C. Lagarias. <em>The \(3x + 1\) Problem: An Annotated Bibliography, II
+                    (2000&ndash;2009)</em>.
                 2006.
                 <a href="https://arxiv.org/abs/math/0608208" target="_blank"
                     class="text-blue-300 hover:text-blue-100 underline">arXiv:math/0608208</a>
@@ -277,7 +293,8 @@
 
         <hr class="border-white/20 mt-12">
         <p id="fn-1" class="text-sm text-blue-200 mt-4">
-            <sup>1</sup> Rationals with odd denominators exactly correspond to eventually-periodic 2-adic integers: Collatz iterations are more generally naturally defined on all 2-adic integers (\(\mathbb{Z}_2\))
+            <sup>1</sup> Rationals with odd denominators exactly correspond to eventually-periodic 2-adic integers:
+            Collatz iterations are more generally naturally defined on all 2-adic integers (\(\mathbb{Z}_2\))
             <a href="#ref-lagarias-1985" class="underline hover:text-blue-200">[Lagarias, 1985]</a>.
         </p>
     </div>
