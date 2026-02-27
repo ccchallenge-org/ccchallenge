@@ -64,7 +64,7 @@ async def create_review(
         "Review added",
         f"**{bibtex_key}** — {review.external_url}",
         user_name=user.username,
-        url=f"{settings.base_url}/papers/{bibtex_key}",
+        url=f"{settings.base_url}/#{bibtex_key}",
         color=COLOR_CREATE,
     )
     return ReviewRead(
@@ -107,7 +107,7 @@ async def update_review(
         "Review updated",
         f"**{bibtex_key}** — changed: {changed}",
         user_name=user.username,
-        url=f"{settings.base_url}/papers/{bibtex_key}",
+        url=f"{settings.base_url}/#{bibtex_key}",
         color=COLOR_UPDATE,
     )
     return ReviewRead(
@@ -143,6 +143,6 @@ async def delete_review(
         "Review deleted",
         f"**{bibtex_key}** — {external_url}",
         user_name=user.username,
-        url=f"{settings.base_url}/papers/{bibtex_key}",
+        url=f"{settings.base_url}/#{bibtex_key}",
         color=COLOR_DELETE,
     )

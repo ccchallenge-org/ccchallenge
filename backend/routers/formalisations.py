@@ -73,7 +73,7 @@ async def create_formalisation(
         "Formalisation added",
         f"**{bibtex_key}** — {formalisation.proof_assistant}\n{formalisation.repository_url}",
         user_name=user.username,
-        url=f"{settings.base_url}/papers/{bibtex_key}",
+        url=f"{settings.base_url}/#{bibtex_key}",
         color=COLOR_CREATE,
     )
     return FormalisationRead(
@@ -119,7 +119,7 @@ async def update_formalisation(
         "Formalisation updated",
         f"**{bibtex_key}** — changed: {changed}",
         user_name=user.username,
-        url=f"{settings.base_url}/papers/{bibtex_key}",
+        url=f"{settings.base_url}/#{bibtex_key}",
         color=COLOR_UPDATE,
     )
     return FormalisationRead(
@@ -158,7 +158,7 @@ async def delete_formalisation(
         "Formalisation deleted",
         f"**{bibtex_key}** — {proof_assistant}",
         user_name=user.username,
-        url=f"{settings.base_url}/papers/{bibtex_key}",
+        url=f"{settings.base_url}/#{bibtex_key}",
         color=COLOR_DELETE,
     )
 
@@ -201,7 +201,7 @@ async def change_formalisation_status(
         "Formalisation status changed",
         f"**{bibtex_key}** — {old_status.value} → {data.status.value}{reason_text}",
         user_name=user.username,
-        url=f"{settings.base_url}/papers/{bibtex_key}",
+        url=f"{settings.base_url}/#{bibtex_key}",
         color=COLOR_STATUS,
     )
 
@@ -295,7 +295,7 @@ async def create_audit_report(
         "Audit report added",
         f"**{bibtex_key}** — {report.external_url}",
         user_name=user.username,
-        url=f"{settings.base_url}/papers/{bibtex_key}",
+        url=f"{settings.base_url}/#{bibtex_key}",
         color=COLOR_CREATE,
     )
     return AuditReportRead(
@@ -337,7 +337,7 @@ async def update_audit_report(
         "Audit report updated",
         f"**{bibtex_key}** — {report.external_url}",
         user_name=user.username,
-        url=f"{settings.base_url}/papers/{bibtex_key}",
+        url=f"{settings.base_url}/#{bibtex_key}",
         color=COLOR_UPDATE,
     )
     return AuditReportRead(
@@ -373,6 +373,6 @@ async def delete_audit_report(
         "Audit report deleted",
         f"**{bibtex_key}** — {external_url}",
         user_name=user.username,
-        url=f"{settings.base_url}/papers/{bibtex_key}",
+        url=f"{settings.base_url}/#{bibtex_key}",
         color=COLOR_DELETE,
     )

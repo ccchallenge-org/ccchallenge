@@ -126,7 +126,7 @@ async def create_paper(
         "Paper added",
         f"**{paper.bibtex_key}** — {paper.title}",
         user_name=user.username,
-        url=f"{settings.base_url}/papers/{paper.bibtex_key}",
+        url=f"{settings.base_url}/#{paper.bibtex_key}",
         color=COLOR_CREATE,
     )
     return _paper_to_read(paper)
@@ -176,7 +176,7 @@ async def create_paper_from_bibtex(
         "Paper added (BibTeX)",
         f"**{paper.bibtex_key}** — {paper.title}",
         user_name=user.username,
-        url=f"{settings.base_url}/papers/{paper.bibtex_key}",
+        url=f"{settings.base_url}/#{paper.bibtex_key}",
         color=COLOR_CREATE,
     )
     return _paper_to_read(paper)
@@ -207,7 +207,7 @@ async def update_paper(
     await session.commit()
     await session.refresh(paper)
 
-    paper_url = f"{settings.base_url}/papers/{paper.bibtex_key}"
+    paper_url = f"{settings.base_url}/#{paper.bibtex_key}"
     new_exclusion = paper.exclusion_reason
     if not old_exclusion and new_exclusion:
         notify("Paper excluded from goal", f"**{paper.bibtex_key}** — {new_exclusion}", user_name=user.username, url=paper_url, color=COLOR_STATUS)

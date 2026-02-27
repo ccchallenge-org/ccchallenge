@@ -94,14 +94,14 @@ async def toggle_wishlist(
         notify(
             "Paper wishlisted",
             f"**{bibtex_key}** — now has {count} wishlist vote{'s' if count != 1 else ''}",
-            url=f"{settings.base_url}/papers/{bibtex_key}",
+            url=f"{settings.base_url}/#{bibtex_key}",
             color=COLOR_CREATE,
         )
     else:
         notify(
             "Paper unwishlisted",
             f"**{bibtex_key}** — now has {count} wishlist vote{'s' if count != 1 else ''}",
-            url=f"{settings.base_url}/papers/{bibtex_key}",
+            url=f"{settings.base_url}/#{bibtex_key}",
             color=COLOR_DELETE,
         )
     return {"wishlisted": wishlisted, "count": count}
