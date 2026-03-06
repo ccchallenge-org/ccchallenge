@@ -216,8 +216,12 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
         if updated_hash is not None:
             await self.user_db.update(user, {"hashed_password": updated_hash})
         if not user.is_verified:
-            return None
+            raise UserNotVerifiedError()
         return user
+
+
+class UserNotVerifiedError(Exception):
+    pass
 
 
 async def get_user_manager(user_db=Depends(get_user_db)):

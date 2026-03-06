@@ -3,7 +3,7 @@
 {% block content %}
 <div class="flex items-center justify-center min-h-[60vh]">
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-8 text-center"
-         x-data="{ status: 'loading', message: '' }"
+         x-data="{ status: 'loading', message: '', resendUsername: '', resent: false }"
          x-init="
             fetch('/api/auth/verify', {
                 method: 'POST',
@@ -43,8 +43,24 @@
             <svg class="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
-            <p class="text-gray-900 text-lg font-semibold" x-text="message"></p>
-            <a href="/" class="inline-block mt-4 px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg transition-colors">
+            <p class="text-gray-900 text-lg font-semibold">Verification failed</p>
+            <p class="text-gray-600 text-sm mt-1">The link may have expired. Enter your username to receive a new one.</p>
+            <div x-show="!resent" class="mt-4">
+                <input type="text" x-model="resendUsername" placeholder="Your username"
+                    class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500 mb-2">
+                <button @click="
+                    if (!resendUsername.trim()) return;
+                    fetch('/api/auth/resend-verification', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({username: resendUsername.trim()})
+                    }).then(() => { resent = true; })
+                " class="inline-block px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-sm">
+                    Resend verification email
+                </button>
+            </div>
+            <p x-show="resent" x-cloak class="text-green-600 text-sm mt-4">Verification email sent. Check your inbox.</p>
+            <a href="/" class="inline-block mt-4 px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg transition-colors text-sm">
                 Go to homepage
             </a>
         </div>

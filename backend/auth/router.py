@@ -1,12 +1,23 @@
 import uuid
 from typing import Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_users import schemas as fu_schemas
+from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.auth.oauth import get_discord_client, get_github_client, get_google_client
-from backend.auth.users import auth_backend, fastapi_users
+from backend.auth.users import (
+    UserNotVerifiedError,
+    auth_backend,
+    fastapi_users,
+    get_user_manager,
+)
 from backend.config import settings
+from backend.database import get_async_session
+from backend.models import User
 
 
 class UserRead(fu_schemas.BaseUser[uuid.UUID]):
@@ -23,7 +34,26 @@ class UserUpdate(fu_schemas.BaseUserUpdate):
 
 router = APIRouter()
 
-# Email / password auth
+
+# Custom login that distinguishes unverified users — registered BEFORE default auth router
+@router.post("/auth/login")
+async def custom_login(
+    request: Request,
+    credentials: OAuth2PasswordRequestForm = Depends(),
+    user_manager=Depends(get_user_manager),
+):
+    try:
+        user = await user_manager.authenticate(credentials)
+    except UserNotVerifiedError:
+        raise HTTPException(status_code=400, detail="LOGIN_USER_NOT_VERIFIED")
+    if user is None:
+        raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
+    strategy = auth_backend.get_strategy()
+    response = await auth_backend.login(strategy, user)
+    return response
+
+
+# Default auth router (login route shadowed by custom_login above, logout still works)
 router.include_router(fastapi_users.get_auth_router(auth_backend), prefix="/auth")
 router.include_router(
     fastapi_users.get_register_router(UserRead, UserCreate),
@@ -33,6 +63,29 @@ router.include_router(
     fastapi_users.get_verify_router(UserRead),
     prefix="/auth",
 )
+
+
+class ResendVerificationRequest(BaseModel):
+    username: str
+
+
+@router.post("/auth/resend-verification")
+async def resend_verification(
+    data: ResendVerificationRequest,
+    request: Request,
+    session: AsyncSession = Depends(get_async_session),
+    user_manager=Depends(get_user_manager),
+):
+    """Resend verification email for an unverified user identified by username."""
+    result = await session.execute(
+        select(User).where(User.username == data.username)
+    )
+    user = result.unique().scalar_one_or_none()
+    if user is None or user.is_verified:
+        # Don't reveal whether the user exists
+        return {"status": "ok"}
+    await user_manager.request_verify(user, request)
+    return {"status": "ok"}
 
 # "Me" endpoint
 router.include_router(fastapi_users.get_users_router(UserRead, UserUpdate), prefix="/users")

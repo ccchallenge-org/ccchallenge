@@ -51,9 +51,9 @@
 
         <!-- Login Form -->
         <div x-show="authTab === 'login'">
-            <form x-data="{ username: '', password: '', error: '' }"
+            <form x-data="{ username: '', password: '', error: '', notVerified: false, resent: false }"
                   @submit.prevent="
-                    error = '';
+                    error = ''; notVerified = false; resent = false;
                     const fd = new URLSearchParams();
                     fd.append('username', username);
                     fd.append('password', password);
@@ -63,7 +63,14 @@
                         body: fd
                     }).then(r => {
                         if(r.ok || r.status === 204) { window.location.reload(); }
-                        else r.json().then(d => { error = d.detail || 'Login failed'; });
+                        else r.json().then(d => {
+                            if (d.detail === 'LOGIN_USER_NOT_VERIFIED') {
+                                notVerified = true;
+                                error = 'Your email is not verified yet.';
+                            } else {
+                                error = d.detail === 'LOGIN_BAD_CREDENTIALS' ? 'Invalid username or password.' : (d.detail || 'Login failed');
+                            }
+                        });
                     })
                   "
                   class="space-y-3">
@@ -78,6 +85,16 @@
                         class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <p x-show="error" class="text-red-600 text-xs" x-text="error"></p>
+                <div x-show="notVerified && !resent" x-cloak class="text-xs">
+                    <button type="button" @click="
+                        fetch('/api/auth/resend-verification', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({username: username})
+                        }).then(() => { resent = true; })
+                    " class="text-blue-600 hover:text-blue-800 underline">Resend verification email</button>
+                </div>
+                <p x-show="resent" x-cloak class="text-green-600 text-xs">Verification email sent. Check your inbox.</p>
                 <button type="submit"
                     class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors">
                     Log in
