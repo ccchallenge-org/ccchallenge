@@ -32,6 +32,7 @@ class PaperCreate(BaseModel):
 
 
 class PaperUpdate(BaseModel):
+    bibtex_key: Optional[str] = None
     entry_type: Optional[str] = None
     title: Optional[str] = None
     authors: Optional[str] = None

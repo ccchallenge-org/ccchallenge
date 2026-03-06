@@ -4,6 +4,7 @@
     entrySelect: '',
     customType: '',
     fd: { entry_type: '', title: '', authors: '', year: '', journal: '', booktitle: '', publisher: '', volume: '', number: '', pages: '', doi: '', abstract: '', note: '', extra_fields: null },
+    newKey: '',
     urls: [''],
     addUrl() { this.urls.push(''); },
     removeUrl(i) { this.urls.splice(i, 1); if (!this.urls.length) this.urls.push(''); },
@@ -27,8 +28,26 @@
         payload.extra_urls = filtered.length > 1 ? filtered.slice(1) : null;
         {% if user and user.is_superuser %}
         payload.exclusion_reason = this.excluded ? this.exclusionReason : null;
+        if (this.newKey && this.newKey !== '{{ paper.bibtex_key }}') payload.bibtex_key = this.newKey;
         {% endif %}
         return payload;
+    },
+    computeKey() {
+        var a = this.fd.authors.trim();
+        var y = this.fd.year.trim();
+        if (!a || !y) return;
+        var names = a.split(/\s+and\s+/).map(function(n) {
+            n = n.trim();
+            var last;
+            if (n.indexOf(',') !== -1) {
+                last = n.split(',')[0].trim().split(/\s+/).pop();
+            } else {
+                var words = n.split(/\s+/);
+                last = words[words.length - 1];
+            }
+            return last.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z]/g, '');
+        }).filter(function(n) { return n; });
+        this.newKey = names.map(function(n) { return n.charAt(0).toUpperCase() + n.slice(1); }).join('') + y;
     },
     init() {
         const d = JSON.parse(this.$el.querySelector('[data-paper-json]').textContent);
@@ -104,7 +123,7 @@
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(buildPayload())
         }).then(r => {
-            if(r.ok) { window.location.hash = '{{ paper.bibtex_key }}'; window.location.reload(); }
+            if(r.ok) r.json().then(d => { window.location.hash = d.bibtex_key || '{{ paper.bibtex_key }}'; window.location.reload(); });
             else r.json().then(d => alert(d.detail || 'Error'));
         })
     " class="space-y-2">
@@ -200,6 +219,20 @@
             <label class="block text-xs font-medium text-gray-700">Authors <span class="font-normal text-gray-400">— e.g. Albert Einstein and Kurt Gödel and Alan Turing</span></label>
             <input type="text" x-model="fd.authors" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
         </div>
+        {% if user and user.is_superuser %}
+        <div class="flex items-center gap-2">
+            <button type="button" @click="computeKey()"
+                class="text-xs text-orange-600 hover:underline">Regenerate BibTeX key</button>
+            <span x-show="newKey && newKey !== '{{ paper.bibtex_key }}'" x-cloak class="text-xs text-gray-700">
+                <span class="font-mono bg-gray-100 px-1 py-0.5 rounded">{{ paper.bibtex_key }}</span>
+                → <span class="font-mono bg-orange-100 px-1 py-0.5 rounded" x-text="newKey"></span>
+            </span>
+            <span x-show="newKey && newKey === '{{ paper.bibtex_key }}'" x-cloak class="text-xs text-gray-500">Key unchanged</span>
+            <button type="button" x-show="newKey && newKey !== '{{ paper.bibtex_key }}'" x-cloak
+                @click="newKey = ''"
+                class="text-xs text-gray-400 hover:text-red-500">&times; cancel</button>
+        </div>
+        {% endif %}
         <div>
             <label class="block text-xs font-medium text-gray-700">Entry Type (BibTeX)</label>
             <div class="flex items-center gap-2">

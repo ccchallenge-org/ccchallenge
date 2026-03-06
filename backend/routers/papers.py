@@ -215,6 +215,14 @@ async def update_paper(
     update_data = data.model_dump(exclude_unset=True)
     if "exclusion_reason" in update_data and not user.is_superuser:
         update_data.pop("exclusion_reason")
+    # Only admins can rename bibtex_key
+    if "bibtex_key" in update_data:
+        if not user.is_superuser:
+            update_data.pop("bibtex_key")
+        elif update_data["bibtex_key"] != bibtex_key:
+            existing = await session.execute(select(Paper).where(Paper.bibtex_key == update_data["bibtex_key"]))
+            if existing.scalar_one_or_none():
+                raise HTTPException(status_code=409, detail=f"Paper with key '{update_data['bibtex_key']}' already exists")
     # Capture old values for diff
     old_values = {key: getattr(paper, key) for key in update_data}
     for key, value in update_data.items():
