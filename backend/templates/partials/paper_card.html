@@ -72,12 +72,12 @@
         <div class="flex gap-2">
             <button onclick="cardToggle(this, 'details', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab=reviews{% if rc_count == 0 %}&add=true{% endif %}')"
                 class="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-medium rounded transition-colors border border-indigo-200 cursor-pointer">
-                <span id="rc-text-{{ paper.bibtex_key }}">{% if rc_count %}{{ rc_count }} review{{ 's' if rc_count != 1 else '' }}{% else %}Add review{% endif %}</span>
+                <span id="rc-text-{{ paper.bibtex_key }}">{% if rc_count %}See reviews ({{ rc_count }}){% else %}Add review{% endif %}</span>
             </button>
             <button data-fc-btn
                 onclick="cardToggle(this, 'details', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab=formalisations{% if fc_count == 0 %}&add=true{% endif %}')"
                 class="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-medium rounded transition-colors border border-purple-200 cursor-pointer">
-                <span id="fc-text-{{ paper.bibtex_key }}">{% if fc_count %}{{ fc_count }} formalisation{{ 's' if fc_count != 1 else '' }}{% else %}Add formalisation{% endif %}</span>
+                <span id="fc-text-{{ paper.bibtex_key }}">{% if fc_count %}See formalisations ({{ fc_count }}){% else %}Add formalisation{% endif %}</span>
             </button>
         </div>
 
