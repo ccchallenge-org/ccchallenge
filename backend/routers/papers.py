@@ -183,6 +183,18 @@ async def create_paper_from_bibtex(
     return _paper_to_read(paper)
 
 
+@router.post("/parse-bibtex")
+async def parse_bibtex(
+    data: PaperBibtexCreate,
+    user: User = Depends(current_active_user),
+):
+    try:
+        parsed = parse_single_bibtex(data.raw_bibtex)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return parsed
+
+
 @router.get("/{bibtex_key}")
 async def get_paper(bibtex_key: str, session: AsyncSession = Depends(get_async_session)):
     paper = await _get_paper_or_404(bibtex_key, session)
@@ -203,6 +215,8 @@ async def update_paper(
     update_data = data.model_dump(exclude_unset=True)
     if "exclusion_reason" in update_data and not user.is_superuser:
         update_data.pop("exclusion_reason")
+    # Capture old values for diff
+    old_values = {key: getattr(paper, key) for key in update_data}
     for key, value in update_data.items():
         setattr(paper, key, value)
     await session.commit()
@@ -215,8 +229,28 @@ async def update_paper(
     elif old_exclusion and not new_exclusion:
         notify("Paper re-included in goal", f"**{paper.bibtex_key}**", user_name=user.username, url=paper_url, color=COLOR_STATUS)
     else:
-        changed = ", ".join(update_data.keys())
-        notify("Paper updated", f"**{paper.bibtex_key}** — changed: {changed}", user_name=user.username, url=paper_url, color=COLOR_UPDATE)
+        # Build detailed diff of actually changed fields
+        diff_lines = []
+        for key in update_data:
+            old_val = old_values[key]
+            new_val = getattr(paper, key)
+            # Normalize for comparison (treat None and "" as equivalent)
+            old_norm = old_val if old_val else ""
+            new_norm = new_val if new_val else ""
+            if str(old_norm) != str(new_norm):
+                # Truncate long values for readability
+                old_disp = str(old_val or "—")
+                new_disp = str(new_val or "—")
+                if len(old_disp) > 60:
+                    old_disp = old_disp[:57] + "..."
+                if len(new_disp) > 60:
+                    new_disp = new_disp[:57] + "..."
+                diff_lines.append(f"**{key}**: {old_disp} → {new_disp}")
+        if diff_lines:
+            desc = f"**{paper.bibtex_key}**\n" + "\n".join(diff_lines)
+        else:
+            desc = f"**{paper.bibtex_key}** — no effective changes"
+        notify("Paper updated", desc, user_name=user.username, url=paper_url, color=COLOR_UPDATE)
 
     return _paper_to_read(paper)
 

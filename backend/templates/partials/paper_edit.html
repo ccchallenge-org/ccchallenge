@@ -32,6 +32,37 @@
         if (d.extra_fields) this.extras = Object.entries(d.extra_fields).map(([k, v]) => ({ key: k, value: String(v) }));
         if (d.exclusion_reason) { this.excluded = true; this.exclusionReason = d.exclusion_reason; }
     },
+    showBibtex: false,
+    rawBibtex: '',
+    bibtexError: '',
+    bibtexParsing: false,
+    parseBibtex() {
+        if (!this.rawBibtex.trim()) return;
+        this.bibtexError = '';
+        this.bibtexParsing = true;
+        fetch('/api/papers/parse-bibtex', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({raw_bibtex: this.rawBibtex})
+        }).then(r => r.json().then(d => {
+            this.bibtexParsing = false;
+            if (!r.ok) { this.bibtexError = d.detail || 'Parse error'; return; }
+            const fields = ['entry_type','title','authors','year','journal','booktitle','publisher','volume','number','pages','doi','url','abstract','note'];
+            fields.forEach(f => {
+                let key = f === 'authors' ? 'authors' : f;
+                let val = f === 'authors' ? d['authors'] : d[f];
+                if (val !== undefined && val !== null) this.fd[key] = val;
+                else this.fd[key] = '';
+            });
+            if (d.extra_fields) {
+                this.extras = Object.entries(d.extra_fields).map(([k, v]) => ({ key: k, value: String(v) }));
+            }
+            this.entrySelect = this.knownTypes.includes(this.fd.entry_type) ? this.fd.entry_type : '__other__';
+            this.customType = this.entrySelect === '__other__' ? this.fd.entry_type : '';
+            this.showBibtex = false;
+            this.rawBibtex = '';
+        }));
+    },
     syncEntryType() {
         this.fd.entry_type = this.entrySelect === '__other__' ? this.customType : this.entrySelect;
     }
@@ -133,6 +164,23 @@
             </template>
         </div>
         {% endif %}
+        <div class="bg-blue-50 border border-blue-200 rounded p-3">
+            <button type="button" @click="showBibtex = !showBibtex" class="text-xs font-medium text-blue-700 hover:underline">
+                <span x-text="showBibtex ? '▾ Hide' : '▸ Parse from BibTeX'"></span>
+            </button>
+            <div x-show="showBibtex" x-cloak class="mt-2 space-y-2">
+                <textarea x-model="rawBibtex" rows="5" placeholder="Paste a BibTeX entry here to fill all fields..."
+                    class="w-full rounded border-blue-300 text-gray-900 text-xs p-2 border font-mono"></textarea>
+                <div class="flex items-center gap-2">
+                    <button type="button" @click="parseBibtex()" :disabled="bibtexParsing"
+                        class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors disabled:opacity-50">
+                        <span x-show="!bibtexParsing">Parse &amp; Fill Fields</span>
+                        <span x-show="bibtexParsing">Parsing...</span>
+                    </button>
+                    <span x-show="bibtexError" x-text="bibtexError" class="text-xs text-red-600"></span>
+                </div>
+            </div>
+        </div>
         <div>
             <label class="block text-xs font-medium text-gray-700">Title</label>
             <input type="text" x-model="fd.title" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
