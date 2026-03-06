@@ -104,6 +104,6 @@
 </div>
 
 <!-- OOB: update card button counts -->
-<span id="rc-text-{{ paper.bibtex_key }}" hx-swap-oob="true">{% if reviews|length %}{{ reviews|length }} review{{ 's' if reviews|length != 1 else '' }}{% else %}Add review{% endif %}</span>
-<span id="fc-text-{{ paper.bibtex_key }}" hx-swap-oob="true">{% if formalisations|length %}{{ formalisations|length }} formalisation{{ 's' if formalisations|length != 1 else '' }}{% else %}Add formalisation{% endif %}</span>
+<span id="rc-text-{{ paper.bibtex_key }}" hx-swap-oob="true">{% if reviews|length %}See reviews ({{ reviews|length }}){% else %}Add review{% endif %}</span>
+<span id="fc-text-{{ paper.bibtex_key }}" hx-swap-oob="true">{% if formalisations|length %}See formalisations ({{ formalisations|length }}){% else %}Add formalisation{% endif %}</span>
 {% endif %}
