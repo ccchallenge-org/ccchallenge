@@ -136,6 +136,10 @@
         {% endblock %}
     </main>
 
+    <footer class="text-center py-6 text-blue-300/50 text-xs">
+        <a href="/privacy" class="hover:text-blue-200 transition-colors">Privacy</a>
+    </footer>
+
     <!-- Auth Modal -->
     {% if not user %}
     {% include "partials/forms/login.html" %}

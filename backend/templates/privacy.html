@@ -1,0 +1,69 @@
+{% extends "_layout.html" %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-8">
+
+    <h1 class="text-3xl font-bold mb-6">Privacy Notice</h1>
+
+    <div class="space-y-6 text-blue-100 text-sm leading-relaxed">
+
+        <div>
+            <h2 class="text-lg font-semibold text-white mb-2">What we collect</h2>
+            <ul class="list-disc pl-6 space-y-1">
+                <li>Email address and username (at registration)</li>
+                <li>OAuth profile information if you sign in via GitHub or Discord (username, email, account ID)</li>
+                <li>Content you submit: paper metadata, formalisation links, review links, audit reports</li>
+            </ul>
+        </div>
+
+        <div>
+            <h2 class="text-lg font-semibold text-white mb-2">Why we collect it</h2>
+            <ul class="list-disc pl-6 space-y-1">
+                <li>Email: account creation and verification</li>
+                <li>Username: public attribution of contributions</li>
+                <li>Submitted content: to operate the platform</li>
+            </ul>
+        </div>
+
+        <div>
+            <h2 class="text-lg font-semibold text-white mb-2">Who can see your data</h2>
+            <ul class="list-disc pl-6 space-y-1">
+                <li>Your email is visible only to <a href="/story#admins" class="text-white underline hover:text-blue-200">admins</a> and is never displayed publicly</li>
+                <li>Your username and contributions are public</li>
+                <li>We do not sell or share personal data with third parties</li>
+            </ul>
+        </div>
+
+        <div>
+            <h2 class="text-lg font-semibold text-white mb-2">Third-party services</h2>
+            <ul class="list-disc pl-6 space-y-1">
+                <li><a href="https://resend.com/privacy" target="_blank" class="text-white underline hover:text-blue-200">Resend</a> for sending verification emails</li>
+                <li><a href="https://plausible.io/privacy-focused-web-analytics" target="_blank" class="text-white underline hover:text-blue-200">Plausible Analytics</a> for privacy-friendly, cookieless website analytics (no personal data collected)</li>
+                <li>GitHub and Discord OAuth if you choose to sign in with those providers</li>
+            </ul>
+        </div>
+
+        <div>
+            <h2 class="text-lg font-semibold text-white mb-2">Cookies</h2>
+            <p>We use a single authentication cookie to keep you logged in. It is functional only and not used for tracking.</p>
+        </div>
+
+        <div>
+            <h2 class="text-lg font-semibold text-white mb-2">Data retention</h2>
+            <p>Your data is kept as long as your account exists. Contributions (formalisations, reviews, audit reports) remain on the platform after account deletion as they are part of the collaborative record.</p>
+        </div>
+
+        <div>
+            <h2 class="text-lg font-semibold text-white mb-2">Your rights</h2>
+            <p>You can request access to, correction of, or deletion of your personal data by contacting us on <a href="https://discord.gg/NJYYYMFBjA" class="text-white underline hover:text-blue-200">Discord</a> or via <a href="https://github.com/orgs/ccchallenge-org/discussions" class="text-white underline hover:text-blue-200">GitHub Discussions</a>.</p>
+        </div>
+
+        <div>
+            <h2 class="text-lg font-semibold text-white mb-2">Changes</h2>
+            <p>We may update this notice. Significant changes will be announced on Discord.</p>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

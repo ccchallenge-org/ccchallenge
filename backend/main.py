@@ -169,6 +169,14 @@ async def contribute_page(
     return templates.TemplateResponse("contribute.html", {"request": request, "user": user, "active_nav": "contribute"})
 
 
+@app.get("/privacy")
+async def privacy_page(
+    request: Request,
+    user: User | None = Depends(current_optional_user),
+):
+    return templates.TemplateResponse("privacy.html", {"request": request, "user": user})
+
+
 @app.get("/story")
 async def story_page(
     request: Request,
