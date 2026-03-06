@@ -124,7 +124,7 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({status: 'waiting_to_be_audited'})
             }).then(r => {
-                if(r.ok) { htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab={{ current_tab }}', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'}); htmx.ajax('GET', '/htmx/paper-card/{{ paper.bibtex_key }}', {target: '#{{ paper.bibtex_key }}', swap: 'outerHTML'}); }
+                if(r.ok) { htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab={{ current_tab }}', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'}); htmx.ajax('GET', '/htmx/paper-card/{{ paper.bibtex_key }}', {target: '#{{ paper.bibtex_key }}', swap: 'outerHTML'}); refreshStats(); }
                 else r.json().then(d => alert(d.detail || 'Error'));
             })"
             class="text-xs bg-teal-600 text-white px-3 py-1.5 rounded hover:bg-teal-700 transition-colors font-medium">
@@ -148,7 +148,7 @@
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify(rd)
                     }).then(r => {
-                        if(r.ok) { htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab={{ current_tab }}', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'}); htmx.ajax('GET', '/htmx/paper-card/{{ paper.bibtex_key }}', {target: '#{{ paper.bibtex_key }}', swap: 'outerHTML'}); }
+                        if(r.ok) { htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab={{ current_tab }}', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'}); htmx.ajax('GET', '/htmx/paper-card/{{ paper.bibtex_key }}', {target: '#{{ paper.bibtex_key }}', swap: 'outerHTML'}); refreshStats(); }
                         else return r.json().then(d => alert(d.detail || 'Error'));
                     })
                   "
@@ -176,7 +176,7 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({status: 'audited'})
             }).then(r => {
-                if(r.ok) { htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab={{ current_tab }}', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'}); htmx.ajax('GET', '/htmx/paper-card/{{ paper.bibtex_key }}', {target: '#{{ paper.bibtex_key }}', swap: 'outerHTML'}); }
+                if(r.ok) { htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab={{ current_tab }}', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'}); htmx.ajax('GET', '/htmx/paper-card/{{ paper.bibtex_key }}', {target: '#{{ paper.bibtex_key }}', swap: 'outerHTML'}); refreshStats(); }
                 else r.json().then(d => alert(d.detail || 'Error'));
             })"
             class="text-xs bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 transition-colors font-medium">

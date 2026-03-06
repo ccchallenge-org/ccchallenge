@@ -325,6 +325,11 @@
                 });
         }
 
+        function refreshStats() {
+            var el = document.getElementById('stats-cards');
+            if (el) htmx.ajax('GET', '/htmx/stats-cards', {target: el, swap: 'innerHTML'});
+        }
+
         function toggleWishlist(bibtexKey, paperId) {
             fetch('/api/papers/' + bibtexKey + '/wishlist', { method: 'POST' })
                 .then(r => {

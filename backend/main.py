@@ -453,6 +453,19 @@ async def htmx_paper_detail(
     )
 
 
+@app.get("/htmx/stats-cards")
+async def htmx_stats_cards(
+    request: Request,
+    session: AsyncSession = Depends(get_async_session),
+):
+    goal_total = (await session.execute(select(func.count(Paper.id)).where(Paper.exclusion_reason.is_(None)))).scalar() or 0
+    counts = await _compute_stats(session)
+    return templates.TemplateResponse(
+        "partials/stats_cards.html",
+        {"request": request, "goal_total": goal_total, "stats": counts},
+    )
+
+
 @app.get("/htmx/stats")
 async def htmx_stats(
     request: Request,

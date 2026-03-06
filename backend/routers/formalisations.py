@@ -202,10 +202,17 @@ async def change_formalisation_status(
     await session.commit()
     await session.refresh(formalisation)
 
+    status_labels = {
+        "not_started": "not started",
+        "formalising": "formalising",
+        "waiting_to_be_audited": "ready to be audited",
+        "auditing": "being audited",
+        "audited": "audited",
+    }
     reason_text = f"\nReason: {data.reason}" if data.reason else ""
     notify(
         "Formalisation status changed",
-        f"**{bibtex_key}** — {old_status.value} → {data.status.value}{reason_text}",
+        f"**{bibtex_key}** — {status_labels.get(old_status.value, old_status.value)} → {status_labels.get(data.status.value, data.status.value)}{reason_text}",
         user_name=user.username,
         url=f"{settings.base_url}/#{bibtex_key}",
         color=COLOR_STATUS,

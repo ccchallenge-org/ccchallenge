@@ -23,27 +23,8 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="max-w-3xl mx-auto mb-8">
-        <button @click="document.querySelector('#filter-bar select[name=status]').value = ''; htmx.trigger(document.querySelector('#filter-bar select[name=status]'), 'change');"
-            class="bg-white/10 hover:bg-white/20 rounded-lg p-5 text-center transition-colors cursor-pointer mx-auto block">
-            <div class="text-xs font-semibold uppercase tracking-wide text-blue-200 mb-1">Goal</div>
-            <div class="text-4xl font-bold">{{ stats.get('audited', 0) }}/{{ goal_total }}</div>
-            <div class="text-sm text-blue-200">papers formalised</div>
-        </button>
-        <div class="flex justify-center gap-6 mt-3 text-sm flex-wrap">
-            <button @click="document.querySelector('#filter-bar select[name=status]').value = 'formalising'; htmx.trigger(document.querySelector('#filter-bar select[name=status]'), 'change');"
-                class="text-yellow-200 hover:text-yellow-100 transition-colors cursor-pointer">
-                <span class="font-semibold">{{ stats.get('formalising', 0) }}</span> {{ "paper" if stats.get('formalising', 0) == 1 else "papers" }} being formalised
-            </button>
-            <button @click="document.querySelector('#filter-bar select[name=status]').value = 'waiting_to_be_audited'; htmx.trigger(document.querySelector('#filter-bar select[name=status]'), 'change');"
-                class="text-teal-200 hover:text-teal-100 transition-colors cursor-pointer">
-                <span class="font-semibold">{{ stats.get('waiting_to_be_audited', 0) }}</span> ready to be audited
-            </button>
-            <button @click="document.querySelector('#filter-bar select[name=status]').value = 'auditing'; htmx.trigger(document.querySelector('#filter-bar select[name=status]'), 'change');"
-                class="text-blue-200 hover:text-blue-100 transition-colors cursor-pointer">
-                <span class="font-semibold">{{ stats.get('auditing', 0) }}</span> {{ "formalisation" if stats.get('auditing', 0) == 1 else "formalisations" }} being audited
-            </button>
-        </div>
+    <div id="stats-cards" class="max-w-3xl mx-auto mb-8">
+        {% include "partials/stats_cards.html" %}
     </div>
 
     <!-- Filter Bar -->
