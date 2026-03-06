@@ -115,12 +115,13 @@ async def _compute_stats(session: AsyncSession) -> dict:
     included_filter = Paper.exclusion_reason.is_(None)
     total = (await session.execute(select(func.count(Paper.id)).where(included_filter))).scalar() or 0
 
-    # Compute max status priority per paper: audited(3) > auditing(2) > formalising(1)
+    # Compute max status priority per paper: audited(4) > auditing(3) > waiting(2) > formalising(1)
     # Only for papers not excluded from the goal
     included_paper_ids = select(Paper.id).where(included_filter)
     status_priority = case(
-        (Formalisation.status == FormalisationStatus.audited, 3),
-        (Formalisation.status == FormalisationStatus.auditing, 2),
+        (Formalisation.status == FormalisationStatus.audited, 4),
+        (Formalisation.status == FormalisationStatus.auditing, 3),
+        (Formalisation.status == FormalisationStatus.waiting_to_be_audited, 2),
         else_=1,
     )
     max_status_subq = (
@@ -145,8 +146,9 @@ async def _compute_stats(session: AsyncSession) -> dict:
     return {
         "not_started": total - papers_with_formalisations,
         "formalising": bucket.get(1, 0),
-        "auditing": bucket.get(2, 0),
-        "audited": bucket.get(3, 0),
+        "waiting_to_be_audited": bucket.get(2, 0),
+        "auditing": bucket.get(3, 0),
+        "audited": bucket.get(4, 0),
         "reviews": reviews,
     }
 

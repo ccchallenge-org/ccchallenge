@@ -23,6 +23,7 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
 class FormalisationStatus(str, enum.Enum):
     not_started = "not_started"
     formalising = "formalising"
+    waiting_to_be_audited = "waiting_to_be_audited"
     auditing = "auditing"
     audited = "audited"
 
@@ -61,8 +62,9 @@ class Paper(Base):
         if not self.formalisations:
             return FormalisationStatus.not_started
         priority = {
-            FormalisationStatus.audited: 3,
-            FormalisationStatus.auditing: 2,
+            FormalisationStatus.audited: 4,
+            FormalisationStatus.auditing: 3,
+            FormalisationStatus.waiting_to_be_audited: 2,
             FormalisationStatus.formalising: 1,
         }
         return max(self.formalisations, key=lambda f: priority.get(f.status, 0)).status

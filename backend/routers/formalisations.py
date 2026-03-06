@@ -179,8 +179,14 @@ async def change_formalisation_status(
     if not formalisation:
         raise HTTPException(status_code=404, detail="Formalisation not found")
 
-    if not user.is_superuser and not user.is_maintainer:
-        raise HTTPException(status_code=403, detail="Only maintainers can change formalisation status")
+    # Owner can set waiting_to_be_audited; maintainers/admins can set any status
+    is_owner = formalisation.user_id == user.id
+    is_privileged = user.is_superuser or user.is_maintainer
+    if not is_privileged:
+        if is_owner and data.status == FormalisationStatus.waiting_to_be_audited:
+            pass  # allowed
+        else:
+            raise HTTPException(status_code=403, detail="Only maintainers can change formalisation status")
 
     old_status = formalisation.status
 
@@ -278,8 +284,8 @@ async def create_audit_report(
     )
     session.add(report)
 
-    # Auto-transition from formalising to auditing
-    if formalisation.status == FormalisationStatus.formalising:
+    # Auto-transition to auditing when audit report is added
+    if formalisation.status in (FormalisationStatus.formalising, FormalisationStatus.waiting_to_be_audited):
         change = StatusChange(
             formalisation_id=formalisation.id,
             changed_by_id=user.id,

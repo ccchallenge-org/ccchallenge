@@ -175,6 +175,7 @@ class StatsRead(BaseModel):
     total: int
     not_started: int
     formalising: int
+    waiting_to_be_audited: int
     auditing: int
     audited: int
     reviews: int

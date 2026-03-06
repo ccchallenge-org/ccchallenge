@@ -6,6 +6,8 @@
         </span>
         {% if f.status.value == 'formalising' %}
         <span class="inline-block bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded">Being formalised</span>
+        {% elif f.status.value == 'waiting_to_be_audited' %}
+        <span class="inline-block bg-orange-100 text-orange-800 text-xs font-medium px-2 py-0.5 rounded">Waiting to be audited</span>
         {% elif f.status.value == 'audited' %}
         <span class="inline-block bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded">Formalised</span>
         {% endif %}
@@ -70,7 +72,7 @@
     </div>
 
     <!-- Audit Reports -->
-    {% if f.status.value in ('auditing', 'audited') and f._audit_reports %}
+    {% if f.status.value in ('waiting_to_be_audited', 'auditing', 'audited') and f._audit_reports %}
     <div class="mt-2 space-y-1">
         {% if f.status.value == 'audited' %}
         <p class="text-xs font-medium text-gray-700">Audit report{{ 's' if f._audit_reports|length > 1 else '' }}:</p>
@@ -114,7 +116,7 @@
     {% endif %}
 
     <!-- Add Audit Link (formalising or auditing) -->
-    {% if user and f.status.value in ('formalising', 'auditing') %}
+    {% if user and f.status.value in ('formalising', 'waiting_to_be_audited', 'auditing') %}
     <div x-data="{ showAuditForm: false }" class="mt-2">
         <button @click="showAuditForm = !showAuditForm"
             class="text-xs text-blue-600 hover:text-blue-800 font-medium">
@@ -144,6 +146,24 @@
                 </button>
             </form>
         </div>
+    </div>
+    {% endif %}
+
+    <!-- Mark as waiting to be audited (owner or admin, when formalising) -->
+    {% if user and f.status.value == 'formalising' and (user.is_superuser or user.is_maintainer or user.id == f.user_id) %}
+    <div class="mt-2">
+        <button
+            @click="if(confirm('Mark this formalisation as waiting to be audited?')) fetch('/api/papers/{{ paper.bibtex_key }}/formalisations/{{ f.id }}/status', {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({status: 'waiting_to_be_audited'})
+            }).then(r => {
+                if(r.ok) { htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab={{ current_tab }}', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'}); htmx.ajax('GET', '/htmx/paper-card/{{ paper.bibtex_key }}', {target: '#{{ paper.bibtex_key }}', swap: 'outerHTML'}); }
+                else r.json().then(d => alert(d.detail || 'Error'));
+            })"
+            class="text-xs bg-orange-600 text-white px-3 py-1.5 rounded hover:bg-orange-700 transition-colors font-medium">
+            Mark as Waiting to be Audited
+        </button>
     </div>
     {% endif %}
 

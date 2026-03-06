@@ -4,6 +4,7 @@
     <div class="flex h-4 rounded-full overflow-hidden">
         {% set ns_pct = ((stats.get('not_started', 0) / total) * 100)|round(1) %}
         {% set f_pct = ((stats.get('formalising', 0) / total) * 100)|round(1) %}
+        {% set w_pct = ((stats.get('waiting_to_be_audited', 0) / total) * 100)|round(1) %}
         {% set a_pct = ((stats.get('auditing', 0) / total) * 100)|round(1) %}
         {% set ac_pct = ((stats.get('audited', 0) / total) * 100)|round(1) %}
         {% if ns_pct > 0 %}
@@ -11,6 +12,9 @@
         {% endif %}
         {% if f_pct > 0 %}
         <div class="bg-yellow-400" style="width: {{ f_pct }}%" title="Being formalised: {{ stats.get('formalising', 0) }}"></div>
+        {% endif %}
+        {% if w_pct > 0 %}
+        <div class="bg-orange-400" style="width: {{ w_pct }}%" title="Waiting to be audited: {{ stats.get('waiting_to_be_audited', 0) }}"></div>
         {% endif %}
         {% if a_pct > 0 %}
         <div class="bg-blue-400" style="width: {{ a_pct }}%" title="Being audited: {{ stats.get('auditing', 0) }}"></div>
@@ -21,8 +25,9 @@
     </div>
     <div class="flex justify-between text-xs text-blue-200 mt-1">
         <span>Not started: {{ stats.get('not_started', 0) }}</span>
-        <span>Being formalised: {{ stats.get('formalising', 0) }}</span>
-        <span>Being audited: {{ stats.get('auditing', 0) }}</span>
+        <span>Formalising: {{ stats.get('formalising', 0) }}</span>
+        <span>Waiting: {{ stats.get('waiting_to_be_audited', 0) }}</span>
+        <span>Auditing: {{ stats.get('auditing', 0) }}</span>
         <span>Formalised: {{ stats.get('audited', 0) }}</span>
     </div>
 </div>
