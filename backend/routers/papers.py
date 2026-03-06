@@ -309,6 +309,14 @@ async def reject_exclusion_suggestion(
         raise HTTPException(status_code=404, detail="Suggestion not found")
     suggestion.resolved = True
     await session.commit()
+    paper_url = f"{settings.base_url}/#{bibtex_key}"
+    notify(
+        "Exclusion suggestion rejected",
+        f"**{bibtex_key}** — {suggestion.reason}",
+        user_name=user.username,
+        url=paper_url,
+        color=COLOR_DELETE,
+    )
     return {"ok": True}
 
 
