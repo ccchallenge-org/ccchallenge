@@ -36,8 +36,8 @@
                 <span class="font-semibold">{{ stats.get('formalising', 0) }}</span> {{ "paper" if stats.get('formalising', 0) == 1 else "papers" }} being formalised
             </button>
             <button @click="document.querySelector('#filter-bar select[name=status]').value = 'waiting_to_be_audited'; htmx.trigger(document.querySelector('#filter-bar select[name=status]'), 'change');"
-                class="text-orange-200 hover:text-orange-100 transition-colors cursor-pointer">
-                <span class="font-semibold">{{ stats.get('waiting_to_be_audited', 0) }}</span> waiting to be audited
+                class="text-teal-200 hover:text-teal-100 transition-colors cursor-pointer">
+                <span class="font-semibold">{{ stats.get('waiting_to_be_audited', 0) }}</span> ready to be audited
             </button>
             <button @click="document.querySelector('#filter-bar select[name=status]').value = 'auditing'; htmx.trigger(document.querySelector('#filter-bar select[name=status]'), 'change');"
                 class="text-blue-200 hover:text-blue-100 transition-colors cursor-pointer">
@@ -54,7 +54,7 @@
             <option value="">All papers</option>
             <option value="not_started">Not formalised</option>
             <option value="formalising">Being formalised</option>
-            <option value="waiting_to_be_audited">Waiting to be audited</option>
+            <option value="waiting_to_be_audited">Ready to be audited</option>
             <option value="auditing">Being audited</option>
             <option value="audited">Formalised</option>
             <option value="ai_assisted">Formalised by AI</option>

@@ -15,7 +15,7 @@
             {% if paper.computed_status.value == 'formalising' %}
             <span class="inline-block bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded">Being formalised</span>
             {% elif paper.computed_status.value == 'waiting_to_be_audited' %}
-            <span class="inline-block bg-orange-100 text-orange-800 text-xs font-medium px-2 py-0.5 rounded">Waiting to be audited</span>
+            <span class="inline-block bg-teal-100 text-teal-800 text-xs font-medium px-2 py-0.5 rounded">Ready to be audited</span>
             {% elif paper.computed_status.value == 'auditing' %}
             <span class="inline-block bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">Being audited</span>
             {% elif paper.computed_status.value == 'audited' %}

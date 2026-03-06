@@ -14,7 +14,7 @@
         <div class="bg-yellow-400" style="width: {{ f_pct }}%" title="Being formalised: {{ stats.get('formalising', 0) }}"></div>
         {% endif %}
         {% if w_pct > 0 %}
-        <div class="bg-orange-400" style="width: {{ w_pct }}%" title="Waiting to be audited: {{ stats.get('waiting_to_be_audited', 0) }}"></div>
+        <div class="bg-teal-400" style="width: {{ w_pct }}%" title="Ready to be audited: {{ stats.get('waiting_to_be_audited', 0) }}"></div>
         {% endif %}
         {% if a_pct > 0 %}
         <div class="bg-blue-400" style="width: {{ a_pct }}%" title="Being audited: {{ stats.get('auditing', 0) }}"></div>
@@ -26,7 +26,7 @@
     <div class="flex justify-between text-xs text-blue-200 mt-1">
         <span>Not started: {{ stats.get('not_started', 0) }}</span>
         <span>Formalising: {{ stats.get('formalising', 0) }}</span>
-        <span>Waiting: {{ stats.get('waiting_to_be_audited', 0) }}</span>
+        <span>Ready: {{ stats.get('waiting_to_be_audited', 0) }}</span>
         <span>Auditing: {{ stats.get('auditing', 0) }}</span>
         <span>Formalised: {{ stats.get('audited', 0) }}</span>
     </div>
