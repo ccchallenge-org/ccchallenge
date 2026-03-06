@@ -200,8 +200,16 @@ function addPaperForm() {
             var y = this.formData.year.trim();
             if (!a || !y) { this.formData.bibtex_key = ''; return; }
             var names = a.split(/\s+and\s+/).map(function(n) {
-                var words = n.trim().split(/\s+/);
-                var last = words[words.length - 1];
+                n = n.trim();
+                var last;
+                if (n.indexOf(',') !== -1) {
+                    // "Last, First" format
+                    last = n.split(',')[0].trim().split(/\s+/).pop();
+                } else {
+                    // "First Last" format
+                    var words = n.split(/\s+/);
+                    last = words[words.length - 1];
+                }
                 return last.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z]/g, '');
             }).filter(function(n) { return n; });
             this.formData.bibtex_key = names.map(function(n) { return n.charAt(0).toUpperCase() + n.slice(1); }).join('') + y;
