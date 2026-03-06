@@ -3,7 +3,10 @@
     knownTypes: ['article','inproceedings','incollection','book','phdthesis','mastersthesis','techreport','misc','unpublished'],
     entrySelect: '',
     customType: '',
-    fd: { entry_type: '', title: '', authors: '', year: '', journal: '', booktitle: '', publisher: '', volume: '', number: '', pages: '', doi: '', url: '', abstract: '', note: '', extra_fields: null },
+    fd: { entry_type: '', title: '', authors: '', year: '', journal: '', booktitle: '', publisher: '', volume: '', number: '', pages: '', doi: '', abstract: '', note: '', extra_fields: null },
+    urls: [''],
+    addUrl() { this.urls.push(''); },
+    removeUrl(i) { this.urls.splice(i, 1); if (!this.urls.length) this.urls.push(''); },
     excluded: false,
     exclusionReason: '',
     suggestExclusion: false,
@@ -18,7 +21,10 @@
         let ef = {};
         this.extras.forEach(e => { if(e.key.trim()) ef[e.key.trim()] = e.value; });
         this.fd.extra_fields = Object.keys(ef).length ? ef : null;
+        let filtered = this.urls.map(u => u.trim()).filter(u => u);
         let payload = {...this.fd};
+        payload.url = filtered.length ? filtered[0] : '';
+        payload.extra_urls = filtered.length > 1 ? filtered.slice(1) : null;
         {% if user and user.is_superuser %}
         payload.exclusion_reason = this.excluded ? this.exclusionReason : null;
         {% endif %}
@@ -27,6 +33,10 @@
     init() {
         const d = JSON.parse(this.$el.querySelector('[data-paper-json]').textContent);
         Object.keys(this.fd).forEach(k => { if (d[k] !== undefined && d[k] !== null) this.fd[k] = d[k]; });
+        let allUrls = [];
+        if (d.url) allUrls.push(d.url);
+        if (d.extra_urls) allUrls = allUrls.concat(d.extra_urls);
+        this.urls = allUrls.length ? allUrls : [''];
         this.entrySelect = this.knownTypes.includes(this.fd.entry_type) ? this.fd.entry_type : '__other__';
         this.customType = this.entrySelect === '__other__' ? this.fd.entry_type : '';
         if (d.extra_fields) this.extras = Object.entries(d.extra_fields).map(([k, v]) => ({ key: k, value: String(v) }));
@@ -47,13 +57,13 @@
         }).then(r => r.json().then(d => {
             this.bibtexParsing = false;
             if (!r.ok) { this.bibtexError = d.detail || 'Parse error'; return; }
-            const fields = ['entry_type','title','authors','year','journal','booktitle','publisher','volume','number','pages','doi','url','abstract','note'];
+            const fields = ['entry_type','title','authors','year','journal','booktitle','publisher','volume','number','pages','doi','abstract','note'];
             fields.forEach(f => {
-                let key = f === 'authors' ? 'authors' : f;
-                let val = f === 'authors' ? d['authors'] : d[f];
-                if (val !== undefined && val !== null) this.fd[key] = val;
-                else this.fd[key] = '';
+                let val = d[f];
+                if (val !== undefined && val !== null) this.fd[f] = val;
+                else this.fd[f] = '';
             });
+            this.urls = d.url ? [d.url] : [''];
             if (d.extra_fields) {
                 this.extras = Object.entries(d.extra_fields).map(([k, v]) => ({ key: k, value: String(v) }));
             }
@@ -81,6 +91,7 @@
         "pages": {{ (paper.pages or '')|tojson }},
         "doi": {{ (paper.doi or '')|tojson }},
         "url": {{ (paper.url or '')|tojson }},
+        "extra_urls": {{ paper.extra_urls|tojson }},
         "abstract": {{ (paper.abstract or '')|tojson }},
         "note": {{ (paper.note or '')|tojson }},
         "extra_fields": {{ paper.extra_fields|tojson }},
@@ -245,10 +256,18 @@
                 <label class="block text-xs font-medium text-gray-700">DOI</label>
                 <input type="text" x-model="fd.doi" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
             </div>
-            <div>
-                <label class="block text-xs font-medium text-gray-700">URL</label>
-                <input type="text" x-model="fd.url" class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
-            </div>
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-gray-700">URLs</label>
+            <template x-for="(u, i) in urls" :key="i">
+                <div class="flex gap-2 mb-1">
+                    <input type="text" x-model="urls[i]" placeholder="https://..."
+                        class="flex-1 rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                    <button type="button" @click="removeUrl(i)" class="text-red-400 hover:text-red-600 text-sm px-1">&times;</button>
+                </div>
+            </template>
+            <button type="button" @click="addUrl()"
+                class="text-xs text-blue-600 hover:underline">+ Add URL</button>
         </div>
         <div>
             <label class="block text-xs font-medium text-gray-700">Abstract</label>

@@ -24,6 +24,7 @@ class PaperCreate(BaseModel):
     pages: Optional[str] = None
     doi: Optional[str] = None
     url: Optional[str] = None
+    extra_urls: Optional[list[str]] = None
     abstract: Optional[str] = None
     note: Optional[str] = None
     extra_fields: Optional[dict] = None
@@ -43,6 +44,7 @@ class PaperUpdate(BaseModel):
     pages: Optional[str] = None
     doi: Optional[str] = None
     url: Optional[str] = None
+    extra_urls: Optional[list[str]] = None
     abstract: Optional[str] = None
     note: Optional[str] = None
     extra_fields: Optional[dict] = None
@@ -64,6 +66,7 @@ class PaperRead(BaseModel):
     pages: Optional[str]
     doi: Optional[str]
     url: Optional[str]
+    extra_urls: Optional[list[str]] = None
     abstract: Optional[str]
     note: Optional[str]
     formalisation_status: FormalisationStatus

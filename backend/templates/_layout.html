@@ -304,10 +304,18 @@
             menu.classList.toggle('hidden');
         }
 
-        // Close bib menus on outside click
+        function toggleUrlMenu(btn) {
+            const menu = btn.nextElementSibling;
+            menu.classList.toggle('hidden');
+        }
+
+        // Close bib/url menus on outside click
         document.addEventListener('click', function (e) {
             if (!e.target.closest('.bib-menu') && !e.target.closest('[onclick*="toggleBibMenu"]')) {
                 document.querySelectorAll('.bib-menu:not(.hidden)').forEach(m => m.classList.add('hidden'));
+            }
+            if (!e.target.closest('.url-menu') && !e.target.closest('[onclick*="toggleUrlMenu"]')) {
+                document.querySelectorAll('.url-menu:not(.hidden)').forEach(m => m.classList.add('hidden'));
             }
         });
 

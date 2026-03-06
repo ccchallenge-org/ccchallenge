@@ -92,17 +92,22 @@
                             class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">DOI</label>
-                        <input type="text" x-model="formData.doi"
-                            class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">URL</label>
-                        <input type="url" x-model="formData.url"
-                            class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
-                    </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">DOI</label>
+                    <input type="text" x-model="formData.doi"
+                        class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">URLs</label>
+                    <template x-for="(u, i) in paperUrls" :key="i">
+                        <div class="flex gap-2 mb-1">
+                            <input type="url" x-model="paperUrls[i]" placeholder="https://..."
+                                class="flex-1 rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
+                            <button type="button" @click="removeUrl(i)" class="text-red-400 hover:text-red-600 text-sm px-1">&times;</button>
+                        </div>
+                    </template>
+                    <button type="button" @click="paperUrls.push('')"
+                        class="text-xs text-blue-600 hover:underline">+ Add URL</button>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Abstract</label>
@@ -181,7 +186,8 @@
 {% raw %}<script>
 function addPaperForm() {
     return {
-        formData: { bibtex_key: '', entry_type: 'article', title: '', authors: '', year: '', journal: '', booktitle: '', publisher: '', volume: '', number: '', pages: '', doi: '', url: '', abstract: '', note: '', extra_fields: null },
+        formData: { bibtex_key: '', entry_type: 'article', title: '', authors: '', year: '', journal: '', booktitle: '', publisher: '', volume: '', number: '', pages: '', doi: '', abstract: '', note: '', extra_fields: null },
+        paperUrls: [''],
         knownTypes: ['article','inproceedings','incollection','book','phdthesis','mastersthesis','techreport','misc','unpublished'],
         entrySelect: 'article',
         customType: '',
@@ -190,6 +196,7 @@ function addPaperForm() {
         showBibtexParse: false,
         bibtexRaw: '',
         extras: [],
+        removeUrl(i) { this.paperUrls.splice(i, 1); if (!this.paperUrls.length) this.paperUrls.push(''); },
 
         syncEntryType() {
             this.formData.entry_type = this.entrySelect === '__other__' ? this.customType : this.entrySelect;
@@ -259,7 +266,8 @@ function addPaperForm() {
             if (fields.author) { fields.authors = fields.author; delete fields.author; }
 
             // Populate known form fields
-            var knownFields = ['title','authors','year','journal','booktitle','publisher','volume','number','pages','doi','url','abstract','note'];
+            if (fields.url) { this.paperUrls = [fields.url]; delete fields.url; }
+            var knownFields = ['title','authors','year','journal','booktitle','publisher','volume','number','pages','doi','abstract','note'];
             var self = this;
             knownFields.forEach(function(k) { if (fields[k] !== undefined) self.formData[k] = fields[k]; });
 
@@ -274,7 +282,7 @@ function addPaperForm() {
             }
 
             // Remaining fields -> extras
-            var allKnown = new Set(knownFields.concat(['author']));
+            var allKnown = new Set(knownFields.concat(['author', 'url']));
             this.extras = [];
             Object.entries(fields).forEach(function(entry) {
                 if (!allKnown.has(entry[0])) self.extras.push({ key: entry[0], value: entry[1] });
@@ -294,7 +302,10 @@ function addPaperForm() {
             var ef = {};
             this.extras.forEach(function(e) { if (e.key.trim()) ef[e.key.trim()] = e.value; });
             this.formData.extra_fields = Object.keys(ef).length ? ef : null;
+            var filtered = this.paperUrls.map(function(u) { return u.trim(); }).filter(function(u) { return u; });
             var payload = Object.assign({}, this.formData);
+            payload.url = filtered.length ? filtered[0] : '';
+            payload.extra_urls = filtered.length > 1 ? filtered.slice(1) : null;
             payload.exclusion_reason = this.excluded ? this.exclusionReason : null;
             return payload;
         }

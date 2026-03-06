@@ -45,6 +45,7 @@ class Paper(Base):
     pages = Column(String(50), nullable=True)
     doi = Column(String(512), nullable=True)
     url = Column(Text, nullable=True)
+    extra_urls = Column(JSON, nullable=True)
     abstract = Column(Text, nullable=True)
     note = Column(Text, nullable=True)
     extra_fields = Column(JSON, nullable=True)
