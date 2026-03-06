@@ -159,8 +159,9 @@
             + Add Audit Link
         </button>
         <div x-show="showAuditForm" x-cloak class="mt-2 bg-white rounded p-3 border border-gray-200">
-            <form x-data="{ rd: { external_url: '' } }"
+            <form x-data="{ rd: { external_url: '' }, accountable: false }"
                   @submit.prevent="
+                    if (!accountable) { alert('You must confirm that humans are accountable for this report.'); return; }
                     fetch('/api/papers/{{ paper.bibtex_key }}/formalisations/{{ f.id }}/audit-reports', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
@@ -176,10 +177,16 @@
                     <input type="url" x-model="rd.external_url" required placeholder="https://..."
                         class="w-full rounded border-gray-300 text-gray-900 text-xs p-1.5 border">
                 </div>
-                <button type="submit"
-                    class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors">
-                    Add Link
-                </button>
+                <div class="flex items-center gap-2">
+                    <button type="submit"
+                        class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors">
+                        Add Link
+                    </button>
+                    <label class="flex items-center gap-1.5 text-xs text-gray-700 cursor-pointer select-none">
+                        <input type="checkbox" x-model="accountable" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        The authors are accountable for the content of this report
+                    </label>
+                </div>
             </form>
         </div>
     </div>
