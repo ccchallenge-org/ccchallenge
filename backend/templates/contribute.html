@@ -73,6 +73,14 @@
             </p>
         </div>
 
+        <!-- Wishlist -->
+        <div class="bg-white/10 rounded-lg p-5">
+            <h2 class="text-lg font-semibold mb-1">Wishlist a paper</h2>
+            <p class="text-blue-100 text-sm">
+                Vote on which papers should be formalised next by clicking the star button on any paper card. Papers with more votes appear higher in the list.
+            </p>
+        </div>
+
         <!-- Participate in discussions -->
         <div class="bg-white/10 rounded-lg p-5">
             <h2 class="text-lg font-semibold mb-1">Join the discussion</h2>
@@ -84,33 +92,94 @@
             </p>
         </div>
 
+        <!-- Spread the word -->
+        <div class="bg-white/10 rounded-lg p-5">
+            <h2 class="text-lg font-semibold mb-1">Spread the word</h2>
+            <p class="text-blue-100 text-sm">
+                Share the project with mathematicians, proof assistant users, and AI researchers.
+            </p>
+        </div>
+
     </div>
 
     <!-- Q&A -->
     <h2 class="text-2xl font-bold mt-12 mb-6">Q&amp;A</h2>
 
-    <div class="space-y-6">
+    <div class="space-y-2">
 
-        <div class="bg-white/10 rounded-lg p-5">
-            <h3 class="text-lg font-semibold mb-1">Can I use AI?</h3>
-            <p class="text-blue-100 text-sm">
-                Yes. For formalisations, you may use AI tools partially or fully (e.g. autoformalisation), but you must disclose their use and specify which model(s) you used.
-                For audit reports, you may also use AI to assist, but the human authors of the report must be 100% accountable for its content. Admins will assess this criterion before accepting the formalisation.
-            </p>
+        <div class="bg-white/10 rounded-lg" x-data="{ open: false }">
+            <button @click="open = !open" class="w-full text-left p-5 flex justify-between items-center cursor-pointer">
+                <h3 class="text-lg font-semibold">Can I use AI?</h3>
+                <span class="text-blue-200 text-xl transition-transform" :class="open ? 'rotate-180' : ''">&#9662;</span>
+            </button>
+            <div x-show="open" x-cloak class="px-5 pb-5">
+                <p class="text-blue-100 text-sm">
+                    Yes. For formalisations, you may use AI tools partially or fully (e.g. autoformalisation), but you must disclose their use and specify which model(s) you used.
+                    For audit reports, you may also use AI to assist, but the human authors of the report must be 100% accountable for its content. Admins will assess this criterion before accepting the formalisation.
+                </p>
+            </div>
         </div>
 
-        <div class="bg-white/10 rounded-lg p-5">
-            <h3 class="text-lg font-semibold mb-1">Can I add my own paper?</h3>
-            <p class="text-blue-100 text-sm">
-                Yes.
-            </p>
+        <div class="bg-white/10 rounded-lg" x-data="{ open: false }">
+            <button @click="open = !open" class="w-full text-left p-5 flex justify-between items-center cursor-pointer">
+                <h3 class="text-lg font-semibold">Can I add my own paper?</h3>
+                <span class="text-blue-200 text-xl transition-transform" :class="open ? 'rotate-180' : ''">&#9662;</span>
+            </button>
+            <div x-show="open" x-cloak class="px-5 pb-5">
+                <p class="text-blue-100 text-sm">Yes.</p>
+            </div>
         </div>
 
-        <div class="bg-white/10 rounded-lg p-5">
-            <h3 class="text-lg font-semibold mb-1">What if a paper is incorrect?</h3>
-            <p class="text-blue-100 text-sm">
-                This can be flagged by writing a review, or discovered during formalisation and/or auditing. If no results from the paper can be salvaged, it will be removed from the formalisation goal.
-            </p>
+        <div class="bg-white/10 rounded-lg" x-data="{ open: false }">
+            <button @click="open = !open" class="w-full text-left p-5 flex justify-between items-center cursor-pointer">
+                <h3 class="text-lg font-semibold">What if a paper is incorrect?</h3>
+                <span class="text-blue-200 text-xl transition-transform" :class="open ? 'rotate-180' : ''">&#9662;</span>
+            </button>
+            <div x-show="open" x-cloak class="px-5 pb-5">
+                <p class="text-blue-100 text-sm">
+                    This can be flagged by writing a review, or discovered during formalisation and/or auditing. If no results from the paper can be salvaged, it will be removed from the formalisation goal.
+                </p>
+            </div>
+        </div>
+
+        <div class="bg-white/10 rounded-lg" x-data="{ open: false }">
+            <button @click="open = !open" class="w-full text-left p-5 flex justify-between items-center cursor-pointer">
+                <h3 class="text-lg font-semibold">Do I need to formalise an entire paper?</h3>
+                <span class="text-blue-200 text-xl transition-transform" :class="open ? 'rotate-180' : ''">&#9662;</span>
+            </button>
+            <div x-show="open" x-cloak class="px-5 pb-5">
+                <p class="text-blue-100 text-sm">No. Partial formalisations are welcome. You can formalise specific theorems or lemmas.</p>
+            </div>
+        </div>
+
+        <div class="bg-white/10 rounded-lg" x-data="{ open: false }">
+            <button @click="open = !open" class="w-full text-left p-5 flex justify-between items-center cursor-pointer">
+                <h3 class="text-lg font-semibold">Which proof assistant should I use?</h3>
+                <span class="text-blue-200 text-xl transition-transform" :class="open ? 'rotate-180' : ''">&#9662;</span>
+            </button>
+            <div x-show="open" x-cloak class="px-5 pb-5">
+                <p class="text-blue-100 text-sm">Whichever you prefer. The project is proof-assistant agnostic.</p>
+            </div>
+        </div>
+
+        <div class="bg-white/10 rounded-lg" x-data="{ open: false }">
+            <button @click="open = !open" class="w-full text-left p-5 flex justify-between items-center cursor-pointer">
+                <h3 class="text-lg font-semibold">Can multiple people formalise the same paper?</h3>
+                <span class="text-blue-200 text-xl transition-transform" :class="open ? 'rotate-180' : ''">&#9662;</span>
+            </button>
+            <div x-show="open" x-cloak class="px-5 pb-5">
+                <p class="text-blue-100 text-sm">Yes. Different formalisations, possibly in different proof assistants, can coexist.</p>
+            </div>
+        </div>
+
+        <div class="bg-white/10 rounded-lg" x-data="{ open: false }">
+            <button @click="open = !open" class="w-full text-left p-5 flex justify-between items-center cursor-pointer">
+                <h3 class="text-lg font-semibold">How do I get started?</h3>
+                <span class="text-blue-200 text-xl transition-transform" :class="open ? 'rotate-180' : ''">&#9662;</span>
+            </button>
+            <div x-show="open" x-cloak class="px-5 pb-5">
+                <p class="text-blue-100 text-sm">Create an account, browse the paper list, pick one that interests you, and add a formalisation link.</p>
+            </div>
         </div>
 
     </div>
