@@ -197,6 +197,10 @@ async def parse_bibtex(
 
 @router.get("/redirect/{old_key}")
 async def get_redirect(old_key: str, session: AsyncSession = Depends(get_async_session)):
+    # If a paper with this key actually exists, no redirect
+    paper = (await session.execute(select(Paper).where(Paper.bibtex_key == old_key))).scalar_one_or_none()
+    if paper:
+        raise HTTPException(status_code=404, detail="No redirect found")
     result = await session.execute(select(KeyRedirect).where(KeyRedirect.old_key == old_key))
     redirect = result.scalar_one_or_none()
     if not redirect:
