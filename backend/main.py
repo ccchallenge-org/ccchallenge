@@ -381,9 +381,18 @@ async def htmx_paper_edit(
     paper = result.scalar_one_or_none()
     if not paper:
         return Response(status_code=404)
+    suggestions = []
+    if user.is_superuser:
+        from backend.models import ExclusionSuggestion
+        res = await session.execute(
+            select(ExclusionSuggestion)
+            .where(ExclusionSuggestion.paper_id == paper.id, ExclusionSuggestion.resolved == False)
+            .options(selectinload(ExclusionSuggestion.user))
+        )
+        suggestions = res.scalars().all()
     return templates.TemplateResponse(
         "partials/paper_edit.html",
-        {"request": request, "user": user, "paper": paper},
+        {"request": request, "user": user, "paper": paper, "suggestions": suggestions},
     )
 
 

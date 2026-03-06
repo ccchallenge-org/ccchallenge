@@ -260,6 +260,58 @@ async def suggest_exclusion(
     return {"ok": True}
 
 
+@router.post("/{bibtex_key}/suggestions/{suggestion_id}/accept")
+async def accept_exclusion_suggestion(
+    bibtex_key: str,
+    suggestion_id: int,
+    session: AsyncSession = Depends(get_async_session),
+    user: User = Depends(current_superuser),
+):
+    paper = await _get_paper_or_404(bibtex_key, session)
+    result = await session.execute(
+        select(ExclusionSuggestion).where(ExclusionSuggestion.id == suggestion_id)
+    )
+    suggestion = result.scalar_one_or_none()
+    if not suggestion:
+        raise HTTPException(status_code=404, detail="Suggestion not found")
+    paper.exclusion_reason = suggestion.reason
+    suggestion.resolved = True
+    # Resolve all other pending suggestions for this paper
+    await session.execute(
+        ExclusionSuggestion.__table__.update()
+        .where(ExclusionSuggestion.paper_id == paper.id, ExclusionSuggestion.resolved == False)
+        .values(resolved=True)
+    )
+    await session.commit()
+    paper_url = f"{settings.base_url}/#{paper.bibtex_key}"
+    notify(
+        "Paper excluded from goal",
+        f"**{paper.bibtex_key}** — {suggestion.reason}",
+        user_name=user.username,
+        url=paper_url,
+        color=COLOR_STATUS,
+    )
+    return {"ok": True}
+
+
+@router.post("/{bibtex_key}/suggestions/{suggestion_id}/reject")
+async def reject_exclusion_suggestion(
+    bibtex_key: str,
+    suggestion_id: int,
+    session: AsyncSession = Depends(get_async_session),
+    user: User = Depends(current_superuser),
+):
+    result = await session.execute(
+        select(ExclusionSuggestion).where(ExclusionSuggestion.id == suggestion_id)
+    )
+    suggestion = result.scalar_one_or_none()
+    if not suggestion:
+        raise HTTPException(status_code=404, detail="Suggestion not found")
+    suggestion.resolved = True
+    await session.commit()
+    return {"ok": True}
+
+
 @router.get("/{bibtex_key}/bibtex")
 async def get_paper_bibtex(bibtex_key: str, session: AsyncSession = Depends(get_async_session)):
     paper = await _get_paper_or_404(bibtex_key, session)
