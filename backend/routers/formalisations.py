@@ -179,11 +179,12 @@ async def change_formalisation_status(
     if not formalisation:
         raise HTTPException(status_code=404, detail="Formalisation not found")
 
-    # Owner can set waiting_to_be_audited; maintainers/admins can set any status
+    # Owner can toggle between formalising and waiting_to_be_audited; maintainers/admins can set any status
     is_owner = formalisation.user_id == user.id
     is_privileged = user.is_superuser or user.is_maintainer
+    owner_allowed = {FormalisationStatus.waiting_to_be_audited, FormalisationStatus.formalising}
     if not is_privileged:
-        if is_owner and data.status == FormalisationStatus.waiting_to_be_audited:
+        if is_owner and data.status in owner_allowed:
             pass  # allowed
         else:
             raise HTTPException(status_code=403, detail="Only maintainers can change formalisation status")

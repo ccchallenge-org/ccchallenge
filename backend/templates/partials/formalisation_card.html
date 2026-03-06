@@ -133,6 +133,24 @@
     </div>
     {% endif %}
 
+    <!-- Demote back to formalising (owner or admin, when ready to be audited) -->
+    {% if user and f.status.value == 'waiting_to_be_audited' and (user.is_superuser or user.is_maintainer or user.id == f.user_id) %}
+    <div class="mt-2">
+        <button
+            @click="if(confirm('Move this formalisation back to formalising?')) fetch('/api/papers/{{ paper.bibtex_key }}/formalisations/{{ f.id }}/status', {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({status: 'formalising'})
+            }).then(r => {
+                if(r.ok) { htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab={{ current_tab }}', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'}); htmx.ajax('GET', '/htmx/paper-card/{{ paper.bibtex_key }}', {target: '#{{ paper.bibtex_key }}', swap: 'outerHTML'}); refreshStats(); }
+                else r.json().then(d => alert(d.detail || 'Error'));
+            })"
+            class="text-xs text-gray-600 hover:text-gray-800 font-medium underline">
+            Back to formalising
+        </button>
+    </div>
+    {% endif %}
+
     <!-- Add Audit Link (formalising or auditing) -->
     {% if user and f.status.value in ('formalising', 'waiting_to_be_audited', 'auditing') %}
     <div x-data="{ showAuditForm: false }" class="mt-2">
