@@ -161,6 +161,15 @@ class Wishlist(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
+class KeyRedirect(Base):
+    __tablename__ = "key_redirect"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    old_key = Column(String(255), unique=True, nullable=False, index=True)
+    new_key = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 class ExclusionSuggestion(Base):
     __tablename__ = "exclusion_suggestion"
 

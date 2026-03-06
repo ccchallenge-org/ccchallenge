@@ -319,6 +319,24 @@
             }
         });
 
+        // Redirect old bibtex keys to new ones
+        (function() {
+            var hash = window.location.hash.replace('#', '');
+            if (!hash) return;
+            // If the element exists on the page, no redirect needed
+            if (document.getElementById(hash)) return;
+            fetch('/api/papers/redirect/' + encodeURIComponent(hash))
+                .then(function(r) { if (r.ok) return r.json(); })
+                .then(function(d) {
+                    if (d && d.new_key) {
+                        window.location.hash = d.new_key;
+                        // Scroll to element if it exists (same page), otherwise reload
+                        var el = document.getElementById(d.new_key);
+                        if (el) el.scrollIntoView({behavior: 'smooth'});
+                    }
+                });
+        })();
+
         function openForumThread(btn, bibtexKey) {
             var orig = btn.textContent;
             btn.textContent = 'Loading...';

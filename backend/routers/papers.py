@@ -5,7 +5,7 @@ from sqlalchemy.orm import selectinload
 
 from backend.auth.users import current_active_user, current_superuser
 from backend.database import get_async_session
-from backend.models import ExclusionSuggestion, Formalisation, FormalisationStatus, Paper, Review, User
+from backend.models import ExclusionSuggestion, Formalisation, FormalisationStatus, KeyRedirect, Paper, Review, User
 from backend.schemas import (
     ExclusionSuggestionCreate,
     PaperBibtexCreate,
@@ -195,6 +195,15 @@ async def parse_bibtex(
     return parsed
 
 
+@router.get("/redirect/{old_key}")
+async def get_redirect(old_key: str, session: AsyncSession = Depends(get_async_session)):
+    result = await session.execute(select(KeyRedirect).where(KeyRedirect.old_key == old_key))
+    redirect = result.scalar_one_or_none()
+    if not redirect:
+        raise HTTPException(status_code=404, detail="No redirect found")
+    return {"new_key": redirect.new_key}
+
+
 @router.get("/{bibtex_key}")
 async def get_paper(bibtex_key: str, session: AsyncSession = Depends(get_async_session)):
     paper = await _get_paper_or_404(bibtex_key, session)
@@ -225,8 +234,26 @@ async def update_paper(
                 raise HTTPException(status_code=409, detail=f"Paper with key '{update_data['bibtex_key']}' already exists")
     # Capture old values for diff
     old_values = {key: getattr(paper, key) for key in update_data}
+    old_bibtex_key = paper.bibtex_key
     for key, value in update_data.items():
         setattr(paper, key, value)
+    # Create redirect if bibtex_key changed
+    if paper.bibtex_key != old_bibtex_key:
+        new_key = paper.bibtex_key
+        # Upsert redirect for the old key
+        existing_redirect = (await session.execute(
+            select(KeyRedirect).where(KeyRedirect.old_key == old_bibtex_key)
+        )).scalar_one_or_none()
+        if existing_redirect:
+            existing_redirect.new_key = new_key
+        else:
+            session.add(KeyRedirect(old_key=old_bibtex_key, new_key=new_key))
+        # Update any existing redirects that pointed to the old key (chain resolution)
+        await session.execute(
+            KeyRedirect.__table__.update()
+            .where(KeyRedirect.new_key == old_bibtex_key)
+            .values(new_key=new_key)
+        )
     await session.commit()
     await session.refresh(paper)
 
