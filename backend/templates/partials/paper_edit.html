@@ -6,6 +6,10 @@
     fd: { entry_type: '', title: '', authors: '', year: '', journal: '', booktitle: '', publisher: '', volume: '', number: '', pages: '', doi: '', url: '', abstract: '', note: '', extra_fields: null },
     excluded: false,
     exclusionReason: '',
+    suggestExclusion: false,
+    suggestReason: '',
+    suggestSubmitted: false,
+    suggestError: '',
     extras: [],
     addExtra() { this.extras.push({ key: '', value: '' }); },
     removeExtra(i) { this.extras.splice(i, 1); },
@@ -72,6 +76,37 @@
                 <input type="text" x-model="exclusionReason" placeholder="Reason for exclusion (e.g. duplicate, off-topic)"
                     class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border">
             </div>
+        </div>
+        {% else %}
+        <div class="bg-gray-50 border border-gray-200 rounded p-3 space-y-2">
+            <template x-if="!suggestSubmitted">
+                <div>
+                    <label class="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer">
+                        <input type="checkbox" x-model="suggestExclusion" class="rounded border-gray-300 text-gray-600 focus:ring-gray-500">
+                        Suggest removing from formalisation goal
+                    </label>
+                    <div x-show="suggestExclusion" x-cloak class="mt-2 flex gap-2">
+                        <input type="text" x-model="suggestReason" placeholder="Reason (e.g. duplicate, off-topic, not about Collatz)"
+                            class="flex-1 rounded border-gray-300 text-gray-900 text-sm p-2 border">
+                        <button type="button" @click="
+                            if (!suggestReason.trim()) return;
+                            suggestError = '';
+                            fetch('/api/papers/{{ paper.bibtex_key }}/suggest-exclusion', {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify({reason: suggestReason})
+                            }).then(r => {
+                                if (r.ok) { suggestSubmitted = true; }
+                                else r.json().then(d => { suggestError = d.detail || 'Error'; });
+                            })
+                        " class="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-xs font-medium rounded transition-colors whitespace-nowrap">Submit</button>
+                    </div>
+                    <p x-show="suggestError" x-text="suggestError" class="text-xs text-red-500 mt-1"></p>
+                </div>
+            </template>
+            <template x-if="suggestSubmitted">
+                <p class="text-xs text-green-600 font-medium">Suggestion submitted — admins will be notified. Thank you!</p>
+            </template>
         </div>
         {% endif %}
         <div>

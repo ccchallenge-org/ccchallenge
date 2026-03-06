@@ -5,8 +5,9 @@ from sqlalchemy.orm import selectinload
 
 from backend.auth.users import current_active_user, current_superuser
 from backend.database import get_async_session
-from backend.models import Formalisation, FormalisationStatus, Paper, Review, User
+from backend.models import ExclusionSuggestion, Formalisation, FormalisationStatus, Paper, Review, User
 from backend.schemas import (
+    ExclusionSuggestionCreate,
     PaperBibtexCreate,
     PaperCreate,
     PaperRead,
@@ -231,6 +232,32 @@ async def delete_paper(
     await session.delete(paper)
     await session.commit()
     notify("Paper deleted", f"**{bibtex_key}** — {title}", user_name=user.username, color=COLOR_DELETE)
+
+
+@router.post("/{bibtex_key}/suggest-exclusion", status_code=201)
+async def suggest_exclusion(
+    bibtex_key: str,
+    data: ExclusionSuggestionCreate,
+    session: AsyncSession = Depends(get_async_session),
+    user: User = Depends(current_active_user),
+):
+    paper = await _get_paper_or_404(bibtex_key, session)
+    suggestion = ExclusionSuggestion(
+        paper_id=paper.id,
+        user_id=user.id,
+        reason=data.reason,
+    )
+    session.add(suggestion)
+    await session.commit()
+    paper_url = f"{settings.base_url}/#{paper.bibtex_key}"
+    notify(
+        "Exclusion suggested",
+        f"**{paper.bibtex_key}** — {data.reason}",
+        user_name=user.username,
+        url=paper_url,
+        color=COLOR_STATUS,
+    )
+    return {"ok": True}
 
 
 @router.get("/{bibtex_key}/bibtex")

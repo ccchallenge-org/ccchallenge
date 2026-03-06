@@ -156,3 +156,17 @@ class Wishlist(Base):
     paper_id = Column(Integer, ForeignKey("paper.id"), nullable=False)
     user_id = Column(ForeignKey("user.id"), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ExclusionSuggestion(Base):
+    __tablename__ = "exclusion_suggestion"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    paper_id = Column(Integer, ForeignKey("paper.id"), nullable=False)
+    user_id = Column(ForeignKey("user.id"), nullable=False)
+    reason = Column(Text, nullable=False)
+    resolved = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    paper = relationship("Paper")
+    user = relationship("User")

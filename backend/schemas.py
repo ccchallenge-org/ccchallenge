@@ -161,6 +161,13 @@ class ReviewRead(BaseModel):
 
 
 
+# ── Exclusion Suggestions ──────────────────────────────────────────────────
+
+
+class ExclusionSuggestionCreate(BaseModel):
+    reason: str
+
+
 # ── Stats ───────────────────────────────────────────────────────────────────
 
 
