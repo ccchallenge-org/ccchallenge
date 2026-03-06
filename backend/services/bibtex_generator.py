@@ -34,6 +34,11 @@ def generate_bibtex(paper) -> str:
         if value:
             lines.append(f"  {key:<10}= {{{{{value}}}}},")
 
+    # Include extra URLs
+    extra_urls = get("extra_urls")
+    if extra_urls:
+        lines.append(f"  {'extra_urls':<10}= {{{{{', '.join(extra_urls)}}}}},")
+
     # Include extra fields
     extra = get("extra_fields")
     if extra:
