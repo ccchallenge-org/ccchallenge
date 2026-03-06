@@ -158,7 +158,7 @@ async def method_page(
     request: Request,
     user: User | None = Depends(current_optional_user),
 ):
-    return templates.TemplateResponse("method.html", {"request": request, "user": user})
+    return templates.TemplateResponse("method.html", {"request": request, "user": user, "active_nav": "method"})
 
 
 @app.get("/contribute")
@@ -166,7 +166,7 @@ async def contribute_page(
     request: Request,
     user: User | None = Depends(current_optional_user),
 ):
-    return templates.TemplateResponse("contribute.html", {"request": request, "user": user})
+    return templates.TemplateResponse("contribute.html", {"request": request, "user": user, "active_nav": "contribute"})
 
 
 @app.get("/story")
@@ -174,7 +174,7 @@ async def story_page(
     request: Request,
     user: User | None = Depends(current_optional_user),
 ):
-    return templates.TemplateResponse("story.html", {"request": request, "user": user})
+    return templates.TemplateResponse("story.html", {"request": request, "user": user, "active_nav": "story"})
 
 
 @app.get("/verify")
