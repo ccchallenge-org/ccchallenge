@@ -66,18 +66,18 @@
 
 <body class="bg-[#0c63bb] text-[#faf8f6] antialiased" x-data="authState()">
 <nav class="shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="max-w-7xl mx-auto px-2 sm:px-6">
             <div class="flex justify-between items-center h-16">
-                <a href="/" class="text-white text-sm sm:text-xl font-semibold hover:text-gray-300 transition-colors shrink-0">
+                <a href="/" class="text-white text-base sm:text-xl font-semibold hover:text-gray-300 transition-colors shrink-0 mr-2">
                     <span class="hidden sm:inline">The Collatz Conjecture Challenge</span>
                     <span class="sm:hidden">ccchallenge</span>
                 </a>
-                <ul class="flex space-x-1 sm:space-x-2 items-center text-xs sm:text-base">
-                    <li><a href="/story" class="px-1.5 sm:px-3 py-2 rounded-md font-medium transition-colors cursor-default {% if active_nav == 'story' %}text-white bg-white/20{% else %}text-white hover:text-gray-300{% endif %}">Story</a></li>
-                    <li><a href="/method" class="px-1.5 sm:px-3 py-2 rounded-md font-medium transition-colors cursor-default {% if active_nav == 'method' %}text-white bg-white/20{% else %}text-white hover:text-gray-300{% endif %}">Method</a></li>
-                    <li><a href="/contribute" class="px-1.5 sm:px-3 py-2 rounded-md font-medium transition-colors cursor-default {% if active_nav == 'contribute' %}text-white bg-white/20{% else %}text-white hover:text-gray-300{% endif %}">Contribute</a></li>
-                    <li><a href="https://github.com/orgs/ccchallenge-org/discussions" class="text-white hover:text-gray-300 px-1.5 sm:px-3 py-2 rounded-md font-medium transition-colors cursor-default">Forum</a></li>
-                    <div class="flex items-center space-x-1.5 sm:space-x-3">
+                <ul class="flex items-center gap-0 sm:gap-2 text-xs sm:text-base">
+                    <li><a href="/story" class="px-1 sm:px-3 py-2 rounded-md font-medium transition-colors cursor-default {% if active_nav == 'story' %}text-white bg-white/20{% else %}text-white hover:text-gray-300{% endif %}">Story</a></li>
+                    <li><a href="/method" class="px-1 sm:px-3 py-2 rounded-md font-medium transition-colors cursor-default {% if active_nav == 'method' %}text-white bg-white/20{% else %}text-white hover:text-gray-300{% endif %}">Method</a></li>
+                    <li><a href="/contribute" class="px-1 sm:px-3 py-2 rounded-md font-medium transition-colors cursor-default {% if active_nav == 'contribute' %}text-white bg-white/20{% else %}text-white hover:text-gray-300{% endif %}">Contribute</a></li>
+                    <li><a href="https://github.com/orgs/ccchallenge-org/discussions" class="text-white hover:text-gray-300 px-1 sm:px-3 py-2 rounded-md font-medium transition-colors cursor-default">Forum</a></li>
+                    <div class="hidden sm:flex items-center space-x-3">
                         <li>
                             <a href="https://github.com/orgs/ccchallenge-org/repositories" class="cursor-pointer"><img
                                     class="w-[23px] lg:w-[26px]" src="/static/GitHub-Mark-Light-32px.png"
@@ -90,7 +90,7 @@
                         </li>
                     </div>
                     <!-- Auth buttons -->
-                    <li class="pl-1 sm:pl-3">
+                    <li class="pl-0.5 sm:pl-3">
                         {% if user %}
                         <div class="relative flex items-center space-x-2" x-data="{ showMenu: false }">
                             <button @click="showMenu = !showMenu"
@@ -117,7 +117,7 @@
                         </div>
                         {% else %}
                         <button @click="showAuthModal = true"
-                            class="text-white text-sm font-medium px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
+                            class="text-white text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 sm:py-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
                             Log in
                         </button>
                         {% endif %}
