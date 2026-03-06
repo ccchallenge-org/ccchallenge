@@ -53,7 +53,46 @@ async def custom_login(
     return response
 
 
-# Default auth router (login route shadowed by custom_login above, logout still works)
+# Custom register — returns minimal response (no email/UUID) and hides enumeration
+@router.post("/auth/register", status_code=201)
+async def custom_register(
+    request: Request,
+    data: UserCreate,
+    user_manager=Depends(get_user_manager),
+):
+    from fastapi_users import exceptions as fu_exceptions
+
+    try:
+        await user_manager.create(data, safe=True, request=request)
+    except fu_exceptions.UserAlreadyExists:
+        pass  # Don't reveal whether email/username exists
+    except fu_exceptions.InvalidPasswordException as e:
+        raise HTTPException(status_code=400, detail={
+            "code": "REGISTER_INVALID_PASSWORD",
+            "reason": e.reason,
+        })
+    return {"status": "ok"}
+
+
+# Custom verify — returns minimal response (no email/UUID)
+@router.post("/auth/verify")
+async def custom_verify(
+    request: Request,
+    data: dict,
+    user_manager=Depends(get_user_manager),
+):
+    from fastapi_users import exceptions as fu_exceptions
+
+    try:
+        await user_manager.verify(data.get("token", ""), request)
+    except (fu_exceptions.InvalidVerifyToken, fu_exceptions.UserNotExists):
+        raise HTTPException(status_code=400, detail="VERIFY_USER_BAD_TOKEN")
+    except fu_exceptions.UserAlreadyVerified:
+        pass  # Already verified is fine
+    return {"status": "ok"}
+
+
+# Default auth router (login/register/verify shadowed by custom routes above, logout still works)
 router.include_router(fastapi_users.get_auth_router(auth_backend), prefix="/auth")
 router.include_router(
     fastapi_users.get_register_router(UserRead, UserCreate),

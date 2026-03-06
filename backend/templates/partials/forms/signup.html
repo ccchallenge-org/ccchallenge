@@ -10,7 +10,10 @@
             loading = false;
             if(r.ok) {
                 success = true;
-            } else r.json().then(d => { error = d.detail || 'Registration failed'; });
+            } else r.json().then(d => {
+                if (d.detail && d.detail.reason) error = d.detail.reason;
+                else error = d.detail || 'Registration failed';
+            });
         }).catch(() => { loading = false; error = 'Something went wrong.'; })
       "
       class="space-y-3">
