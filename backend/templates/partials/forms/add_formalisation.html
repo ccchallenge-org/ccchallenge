@@ -21,7 +21,14 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(payload)
                 }).then(r => {
-                    if(r.ok) htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab=formalisations', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'});
+                    if(r.ok) {
+                        htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab=formalisations', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'});
+                        // Update the button count (OOB may not fire from htmx.ajax)
+                        fetch('/api/papers/{{ paper.bibtex_key }}').then(r2 => r2.json()).then(function(p) {
+                            var el = document.getElementById('fc-text-{{ paper.bibtex_key }}');
+                            if (el) el.textContent = p.formalisations_count ? 'See formalisations (' + p.formalisations_count + ')' : 'Add formalisation';
+                        });
+                    }
                     else return r.json().then(d => alert(d.detail || 'Error'));
                 })
               "

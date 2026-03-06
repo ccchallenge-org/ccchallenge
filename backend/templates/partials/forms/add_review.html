@@ -15,7 +15,13 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(payload)
                 }).then(r => {
-                    if(r.ok) htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'});
+                    if(r.ok) {
+                        htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab=reviews', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'});
+                        fetch('/api/papers/{{ paper.bibtex_key }}').then(r2 => r2.json()).then(function(p) {
+                            var el = document.getElementById('rc-text-{{ paper.bibtex_key }}');
+                            if (el) el.textContent = p.reviews_count ? 'See reviews (' + p.reviews_count + ')' : 'Add review';
+                        });
+                    }
                     else return r.json().then(d => alert(d.detail || 'Error'));
                 })
               "

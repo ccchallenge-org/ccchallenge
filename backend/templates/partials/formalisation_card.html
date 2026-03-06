@@ -22,7 +22,7 @@
                 {% if user and (user.is_superuser or user.id == f.user_id) %}
                 <button @click="editing = true" class="text-gray-400 hover:text-gray-600 text-xs">edit</button>
                 <button
-                    @click="if(confirm('Delete this formalisation?')) fetch('/api/papers/{{ paper.bibtex_key }}/formalisations/{{ f.id }}', {method:'DELETE'}).then(r => { if(r.ok) htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab={{ current_tab }}', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'}); })"
+                    @click="if(confirm('Delete this formalisation?')) fetch('/api/papers/{{ paper.bibtex_key }}/formalisations/{{ f.id }}', {method:'DELETE'}).then(r => { if(r.ok) { htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab={{ current_tab }}', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'}); fetch('/api/papers/{{ paper.bibtex_key }}').then(r2=>r2.json()).then(function(p){ var el=document.getElementById('fc-text-{{ paper.bibtex_key }}'); if(el) el.textContent=p.formalisations_count?'See formalisations ('+p.formalisations_count+')':'Add formalisation'; }); } })"
                     class="text-red-400 hover:text-red-600 text-xs">delete</button>
                 {% endif %}
             </span>

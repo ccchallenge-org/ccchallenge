@@ -54,7 +54,7 @@
                             {% if user and (user.is_superuser or user.id == r.user_id) %}
                             <button @click="editingReview = true" class="text-gray-400 hover:text-gray-600 text-xs">edit</button>
                             <button
-                                @click="if(confirm('Delete this review?')) fetch('/api/papers/{{ paper.bibtex_key }}/reviews/{{ r.id }}', {method:'DELETE'}).then(resp => { if(resp.ok) htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab=reviews', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'}); })"
+                                @click="if(confirm('Delete this review?')) fetch('/api/papers/{{ paper.bibtex_key }}/reviews/{{ r.id }}', {method:'DELETE'}).then(resp => { if(resp.ok) { htmx.ajax('GET', '/htmx/paper-detail/{{ paper.bibtex_key }}?tab=reviews', {target: '#detail-{{ paper.bibtex_key }}', swap: 'innerHTML'}); fetch('/api/papers/{{ paper.bibtex_key }}').then(r2=>r2.json()).then(function(p){ var el=document.getElementById('rc-text-{{ paper.bibtex_key }}'); if(el) el.textContent=p.reviews_count?'See reviews ('+p.reviews_count+')':'Add review'; }); } })"
                                 class="text-red-400 hover:text-red-600 text-xs">delete</button>
                             {% endif %}
                         </span>
