@@ -88,6 +88,12 @@
     document.body.addEventListener('htmx:afterRequest', function(e) {
         if (e.detail.target && e.detail.target.id === 'paper-list') {
             document.getElementById('list-spinner').classList.add('hidden');
+            if (window._autoExpandFormalisations) {
+                window._autoExpandFormalisations = false;
+                setTimeout(function() {
+                    document.querySelectorAll('#paper-list [data-fc-btn]').forEach(function(btn) { btn.click(); });
+                }, 50);
+            }
         }
     });
 </script>
