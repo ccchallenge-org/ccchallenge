@@ -153,6 +153,22 @@ async def _compute_stats(session: AsyncSession) -> dict:
     }
 
 
+@app.get("/method")
+async def method_page(
+    request: Request,
+    user: User | None = Depends(current_optional_user),
+):
+    return templates.TemplateResponse("method.html", {"request": request, "user": user})
+
+
+@app.get("/contribute")
+async def contribute_page(
+    request: Request,
+    user: User | None = Depends(current_optional_user),
+):
+    return templates.TemplateResponse("contribute.html", {"request": request, "user": user})
+
+
 @app.get("/story")
 async def story_page(
     request: Request,

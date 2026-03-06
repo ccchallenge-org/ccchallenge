@@ -1,0 +1,89 @@
+{% extends "_layout.html" %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-8">
+
+    <h1 class="text-3xl font-bold mb-2">Contribute</h1>
+    <p class="text-blue-100 mb-8">There are many ways to help formalise the Collatz literature. Here is what you can do.</p>
+
+    <div class="space-y-6">
+
+        <!-- Add a paper -->
+        <div class="bg-white/10 rounded-lg p-5">
+            <h2 class="text-lg font-semibold mb-1">Add a paper</h2>
+            <p class="text-blue-100 text-sm">
+                Add papers to the database by entering their BibTeX or filling in the metadata manually.
+                Newly added papers are included in the formalisation goal by default.
+            </p>
+        </div>
+
+        <!-- Edit paper info -->
+        <div class="bg-white/10 rounded-lg p-5">
+            <h2 class="text-lg font-semibold mb-1">Edit paper metadata</h2>
+            <p class="text-blue-100 text-sm">
+                Help curate the bibliography by correcting titles, authors, DOIs, abstracts, and other BibTeX fields.
+                Every paper has an Edit button.
+            </p>
+        </div>
+
+        <!-- Suggest exclusion -->
+        <div class="bg-white/10 rounded-lg p-5">
+            <h2 class="text-lg font-semibold mb-1">Suggest removing a paper from the goal</h2>
+            <p class="text-blue-100 text-sm">
+                If you think a paper should not be part of the formalisation goal (e.g. duplicate, off-topic, not about the Collatz conjecture), you can suggest its exclusion and provide a reason. Admins will review and decide.
+            </p>
+        </div>
+
+        <!-- Write a formalisation -->
+        <div class="bg-white/10 rounded-lg p-5">
+            <h2 class="text-lg font-semibold mb-1">Write a formalisation</h2>
+            <p class="text-blue-100 text-sm">
+                Pick a paper and formalise its results in the proof assistant of your choice &mdash; we are proof-assistant agnostic (Lean, Rocq, Isabelle, Agda, etc.).
+                You may use AI tools partially or fully (e.g. autoformalisation), but you must disclose their use and specify which model(s) you used.
+                Once your formalisation is ready, you can mark it as "ready to be audited."
+            </p>
+        </div>
+
+        <!-- Write a review -->
+        <div class="bg-white/10 rounded-lg p-5">
+            <h2 class="text-lg font-semibold mb-1">Write a review</h2>
+            <p class="text-blue-100 text-sm">
+                Write an informal review of a paper and link it. You can use our
+                <a href="https://github.com/orgs/ccchallenge-org/discussions" class="text-white underline hover:text-blue-200">GitHub Discussions forum</a>
+                to host your review &mdash; each paper has a Forum button that links to its discussion thread.
+            </p>
+        </div>
+
+        <!-- Link existing work -->
+        <div class="bg-white/10 rounded-lg p-5">
+            <h2 class="text-lg font-semibold mb-1">Link existing formalisations and reviews</h2>
+            <p class="text-blue-100 text-sm">
+                If a formalisation or review already exists elsewhere, you can link it to the corresponding paper so that the community can find it.
+            </p>
+        </div>
+
+        <!-- Write an audit report -->
+        <div class="bg-white/10 rounded-lg p-5">
+            <h2 class="text-lg font-semibold mb-1">Write an audit report</h2>
+            <p class="text-blue-100 text-sm">
+                The goal of an audit report is to assess whether a formalisation faithfully captures the content of the original paper &mdash; and if not, to explain why.
+                You may use AI to assist, but the human authors of the report must be 100% accountable for its content.
+                Admins will review the audit report and decide whether to accept the formalisation.
+            </p>
+        </div>
+
+        <!-- Participate in discussions -->
+        <div class="bg-white/10 rounded-lg p-5">
+            <h2 class="text-lg font-semibold mb-1">Join the discussion</h2>
+            <p class="text-blue-100 text-sm">
+                Participate in conversations on the
+                <a href="https://github.com/orgs/ccchallenge-org/discussions" class="text-white underline hover:text-blue-200">GitHub Discussions forum</a>
+                and on
+                <a href="https://discord.gg/NJYYYMFBjA" class="text-white underline hover:text-blue-200">Discord</a>.
+            </p>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

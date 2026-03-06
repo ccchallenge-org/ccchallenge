@@ -1,0 +1,57 @@
+{% extends "_layout.html" %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-8">
+
+    <h1 class="text-3xl font-bold mb-6">Method</h1>
+
+    <p class="text-blue-100 mb-6">
+        The ccchallenge follows a three-stage pipeline to turn informal mathematics into machine-checked proofs.
+    </p>
+
+    <!-- Pipeline -->
+    <div class="space-y-6">
+
+        <!-- Stage 1 -->
+        <div class="bg-white/10 rounded-lg p-5">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-yellow-400 text-yellow-900 font-bold text-sm">1</span>
+                <h2 class="text-xl font-semibold">Formalisation</h2>
+            </div>
+            <p class="text-blue-100">
+                A contributor picks a paper from the literature and writes a formal proof in a proof assistant of their choice (Lean, Rocq, Isabelle, Agda, etc.). The formalisation is hosted in a public repository. AI tools may be used, partially or fully, but their use must be disclosed.
+            </p>
+        </div>
+
+        <!-- Arrow -->
+        <div class="flex justify-center text-2xl text-blue-300">&#8595;</div>
+
+        <!-- Stage 2 -->
+        <div class="bg-white/10 rounded-lg p-5">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-400 text-blue-900 font-bold text-sm">2</span>
+                <h2 class="text-xl font-semibold">Audit</h2>
+            </div>
+            <p class="text-blue-100">
+                Once a formalisation is ready, one or more auditors review it to assess whether it faithfully captures the content of the original paper. Auditors write a report explaining their findings. AI may assist the audit, but the human authors of the report must be fully accountable for its conclusions.
+            </p>
+        </div>
+
+        <!-- Arrow -->
+        <div class="flex justify-center text-2xl text-blue-300">&#8595;</div>
+
+        <!-- Stage 3 -->
+        <div class="bg-white/10 rounded-lg p-5">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-400 text-green-900 font-bold text-sm">3</span>
+                <h2 class="text-xl font-semibold">Accepted</h2>
+            </div>
+            <p class="text-blue-100">
+                Admins review the audit report and, if satisfied, mark the formalisation as accepted. The paper then counts toward the project's formalisation goal.
+            </p>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
