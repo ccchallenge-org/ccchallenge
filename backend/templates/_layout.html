@@ -107,8 +107,11 @@
                         {% if user %}
                         <div class="relative flex items-center space-x-2" x-data="{ showMenu: false }">
                             <button @click="showMenu = !showMenu"
-                                class="text-white text-sm font-medium px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
+                                class="relative text-white text-sm font-medium px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
                                 {{ user.username }}
+                                {% if user.is_superuser %}
+                                <span id="admin-badge-pill" class="hidden absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center"></span>
+                                {% endif %}
                             </button>
                             <div x-show="showMenu" @click.away="showMenu = false" x-cloak
                                 class="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg py-2 w-48 z-50">
@@ -322,10 +325,14 @@
         // Admin badge: show pending suggestions count
         (function() {
             var badge = document.getElementById('admin-badge');
-            if (!badge) return;
+            var pill = document.getElementById('admin-badge-pill');
+            if (!badge && !pill) return;
             fetch('/api/admin/pending-count').then(function(r) { if (r.ok) return r.json(); })
                 .then(function(d) {
-                    if (d && d.count > 0) { badge.textContent = d.count; badge.classList.remove('hidden'); }
+                    if (d && d.count > 0) {
+                        if (badge) { badge.textContent = d.count; badge.classList.remove('hidden'); }
+                        if (pill) { pill.textContent = d.count; pill.classList.remove('hidden'); }
+                    }
                 });
         })();
 
