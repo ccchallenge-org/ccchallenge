@@ -6,7 +6,7 @@
     <!-- Hero Section -->
     <div class="text-center mb-8 pt-4">
         <h1 class="text-4xl font-bold mb-1"><a href="/" class="cursor-pointer hover:text-white/80 transition-colors">The Collatz Conjecture Challenge</a></h1>
-        <p class="text-blue-100 text-lg mb-6">Formalising the Collatz literature using proof assistants</p>
+        <p class="text-blue-100 text-lg mb-6">Formalising the Collatz literature, one paper at a time.</p>
         <div class="grid grid-cols-2 sm:flex sm:justify-center gap-2 sm:gap-4 max-w-xs sm:max-w-none mx-auto">
             <button onclick="document.querySelector('#filter-bar select[name=status]').value=''; document.querySelector('#filter-bar select[name=order]').value='wishlist'; document.querySelector('#filter-bar input[name=q]').value=''; htmx.ajax('GET', '/htmx/paper-list', {target: '#paper-list', swap: 'innerHTML'}); document.getElementById('paper-list').scrollIntoView({behavior: 'smooth'})"
                 class="px-3 py-2 sm:px-5 sm:py-2.5 text-sm sm:text-base bg-white text-blue-700 font-semibold rounded-lg hover:bg-blue-50 transition-colors text-center">
