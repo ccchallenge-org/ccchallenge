@@ -281,7 +281,13 @@ async def htmx_paper_list(
     if has_reviews:
         query = query.where(Paper.id.in_(select(Review.paper_id)))
     elif status:
-        if status == "excluded":
+        if status == "pending_exclusion" and user and user.is_superuser:
+            query = query.where(
+                Paper.id.in_(
+                    select(ExclusionSuggestion.paper_id).where(ExclusionSuggestion.resolved == False)
+                )
+            )
+        elif status == "excluded":
             query = query.where(Paper.exclusion_reason.isnot(None))
         elif status == FormalisationStatus.not_started.value:
             query = query.where(~Paper.id.in_(select(Formalisation.paper_id)), Paper.exclusion_reason.is_(None))

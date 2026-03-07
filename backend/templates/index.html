@@ -45,6 +45,9 @@
             <option value="audited">Formalised</option>
             <option value="ai_assisted">Formalised by AI</option>
             <option value="excluded">Not in formalisation goal</option>
+            {% if user and user.is_superuser %}
+            <option value="pending_exclusion">Pending exclusion review</option>
+            {% endif %}
         </select>
         <select name="order"
             hx-get="/htmx/paper-list" hx-target="#paper-list" hx-include="#filter-bar" hx-swap="innerHTML"
