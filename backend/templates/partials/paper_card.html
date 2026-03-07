@@ -53,7 +53,7 @@
     <h3 class="text-lg font-semibold text-gray-900 leading-tight math-content">{{ paper.title|latex_quotes }}</h3>
 
     <!-- Authors -->
-    <p class="text-sm text-gray-600">
+    <p class="text-sm text-gray-600 {% if not paper.venue %}mb-4{% endif %}">
         <span class="font-medium">Authors:</span> {{ paper.authors }}
     </p>
 
