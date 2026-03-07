@@ -1,6 +1,25 @@
 {% extends "_layout.html" %}
 
 {% block content %}
+{% if suggestions %}
+<div class="bg-white rounded-lg shadow-xl p-6 text-gray-900 mb-6">
+    <h1 class="text-2xl font-bold mb-4">Pending Exclusion Suggestions <span class="text-base font-normal text-gray-500">({{ suggestions|length }})</span></h1>
+    <div class="space-y-2">
+        {% for s in suggestions %}
+        <div class="flex items-center justify-between gap-3 bg-amber-50 border border-amber-200 rounded p-3">
+            <div class="text-sm">
+                <a href="/#{{ s.paper.bibtex_key }}" class="font-mono font-medium text-blue-600 hover:underline">{{ s.paper.bibtex_key }}</a>
+                <span class="text-gray-500">—</span>
+                <span class="text-gray-700">{{ s.reason }}</span>
+                <span class="text-gray-400 text-xs ml-2">by {{ s.user.username }}{% if s.created_at %}, {{ s.created_at.strftime('%Y-%m-%d') }}{% endif %}</span>
+            </div>
+            <a href="/#{{ s.paper.bibtex_key }}" class="text-xs text-blue-600 hover:underline whitespace-nowrap">Review &rarr;</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
 <div class="bg-white rounded-lg shadow-xl p-6 text-gray-900">
     <h1 class="text-2xl font-bold mb-4">User Administration</h1>
     <div class="overflow-x-auto">

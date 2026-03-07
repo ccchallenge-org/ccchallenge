@@ -117,9 +117,9 @@
                                     Profile
                                 </button>
                                 {% if user.is_superuser %}
-                                <a href="/admin"
+                                <a href="/admin" id="admin-nav-link"
                                     class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    Admin
+                                    Admin <span id="admin-badge" class="hidden ml-1 px-1.5 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full"></span>
                                 </a>
                                 {% endif %}
                                 <button @click="fetch('/api/auth/logout', {method:'POST'}).then(() => window.location.href = '/')"
@@ -318,6 +318,16 @@
                 document.querySelectorAll('.url-menu:not(.hidden)').forEach(m => m.classList.add('hidden'));
             }
         });
+
+        // Admin badge: show pending suggestions count
+        (function() {
+            var badge = document.getElementById('admin-badge');
+            if (!badge) return;
+            fetch('/api/admin/pending-count').then(function(r) { if (r.ok) return r.json(); })
+                .then(function(d) {
+                    if (d && d.count > 0) { badge.textContent = d.count; badge.classList.remove('hidden'); }
+                });
+        })();
 
         // Redirect old bibtex keys to new ones
         (function() {

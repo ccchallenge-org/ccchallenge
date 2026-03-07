@@ -525,10 +525,30 @@ async def admin_page(
 ):
     result = await session.execute(select(User).order_by(User.username))
     users = result.unique().scalars().all()
+    suggestions = (await session.execute(
+        select(ExclusionSuggestion)
+        .where(ExclusionSuggestion.resolved == False)
+        .options(
+            selectinload(ExclusionSuggestion.user),
+            selectinload(ExclusionSuggestion.paper),
+        )
+        .order_by(ExclusionSuggestion.created_at.desc())
+    )).scalars().all()
     return templates.TemplateResponse(
         "admin.html",
-        {"request": request, "user": user, "users": users},
+        {"request": request, "user": user, "users": users, "suggestions": suggestions},
     )
+
+
+@app.get("/api/admin/pending-count")
+async def admin_pending_count(
+    session: AsyncSession = Depends(get_async_session),
+    user: User = Depends(current_superuser),
+):
+    count = (await session.execute(
+        select(func.count()).where(ExclusionSuggestion.resolved == False)
+    )).scalar() or 0
+    return {"count": count}
 
 
 @app.delete("/api/admin/users/{user_id}")
