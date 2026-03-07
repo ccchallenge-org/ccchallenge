@@ -123,7 +123,18 @@
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(buildPayload())
         }).then(r => {
-            if(r.ok) r.json().then(d => { window.location.hash = d.bibtex_key || '{{ paper.bibtex_key }}'; window.location.reload(); });
+            if(r.ok) r.json().then(d => {
+                var newKey = d.bibtex_key || '{{ paper.bibtex_key }}';
+                fetch('/htmx/paper-card/' + encodeURIComponent(newKey)).then(r2 => r2.text()).then(function(html) {
+                    var card = document.getElementById('{{ paper.bibtex_key }}');
+                    if (card) {
+                        card.outerHTML = html;
+                        delete _cardState['{{ paper.bibtex_key }}'];
+                        var newCard = document.getElementById(newKey);
+                        if (newCard) newCard.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+                    }
+                });
+            });
             else r.json().then(d => alert(d.detail || 'Error'));
         })
     " class="space-y-2">
@@ -327,7 +338,8 @@
         <div class="flex gap-2 items-center">
             <button type="submit" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors">Save</button>
             <button type="button" onclick="
-                var card = this.closest('[id]');
+                var card = document.getElementById('{{ paper.bibtex_key }}');
+                if (!card) return;
                 card.querySelector('[data-panel=detail-target]').innerHTML = '';
                 delete _cardState[card.id];
                 var editBtn = card.querySelector('[data-panel-btn=edit]');

@@ -381,6 +381,14 @@ async def htmx_paper_card(
 
     fc = (await session.execute(select(func.count()).where(Formalisation.paper_id == paper.id))).scalar() or 0
     rc = (await session.execute(select(func.count()).where(Review.paper_id == paper.id))).scalar() or 0
+    wl = (await session.execute(select(func.count()).where(Wishlist.paper_id == paper.id))).scalar() or 0
+    user_wl = set()
+    if user:
+        is_wl = (await session.execute(
+            select(Wishlist.paper_id).where(Wishlist.user_id == user.id, Wishlist.paper_id == paper.id)
+        )).scalar()
+        if is_wl:
+            user_wl.add(paper.id)
 
     return templates.TemplateResponse(
         "partials/paper_card.html",
@@ -390,6 +398,8 @@ async def htmx_paper_card(
             "paper": paper,
             "fc_map": {paper.id: fc},
             "rc_map": {paper.id: rc},
+            "wl_map": {paper.id: wl},
+            "user_wl": user_wl,
         },
     )
 
