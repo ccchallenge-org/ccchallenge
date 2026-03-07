@@ -11,7 +11,7 @@
     </button>
     <button @click="window._autoExpandFormalisations = true; document.querySelector('#filter-bar select[name=status]').value = 'waiting_to_be_audited'; htmx.trigger(document.querySelector('#filter-bar select[name=status]'), 'change');"
         class="text-teal-200 hover:text-teal-100 transition-colors cursor-pointer">
-        <span class="font-semibold">{{ stats.get('waiting_to_be_audited', 0) }}</span> ready to be audited
+        <span class="font-semibold">{{ stats.get('waiting_to_be_audited', 0) }}</span> {{ "formalisation" if stats.get('waiting_to_be_audited', 0) == 1 else "formalisations" }} ready to be audited
     </button>
     <button @click="window._autoExpandFormalisations = true; document.querySelector('#filter-bar select[name=status]').value = 'auditing'; htmx.trigger(document.querySelector('#filter-bar select[name=status]'), 'change');"
         class="text-blue-200 hover:text-blue-100 transition-colors cursor-pointer">
