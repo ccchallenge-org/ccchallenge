@@ -6,101 +6,18 @@
     <h1 class="text-3xl font-bold mb-2">Contribute</h1>
     <p class="text-blue-100 mb-8">There are many ways to ccchallenge. Here are things you can do:</p>
 
-    <div class="space-y-6">
-
-        <!-- Wishlist -->
-        <div class="bg-white/10 rounded-lg p-5">
-            <h2 class="text-lg font-semibold mb-1">Wishlist a paper</h2>
-            <p class="text-blue-100 text-sm">
-                Vote on which papers should be formalised next by clicking the star button on any paper card. Papers with more votes appear higher in the list.
-            </p>
-        </div>
-
-        <!-- Add a paper -->
-        <div class="bg-white/10 rounded-lg p-5">
-            <h2 class="text-lg font-semibold mb-1">Add a paper</h2>
-            <p class="text-blue-100 text-sm">
-                Add papers to the database by entering their BibTeX or filling in the metadata manually.
-                Newly added papers are included in the formalisation goal by default.
-            </p>
-        </div>
-
-        <!-- Edit paper info -->
-        <div class="bg-white/10 rounded-lg p-5">
-            <h2 class="text-lg font-semibold mb-1">Edit paper metadata</h2>
-            <p class="text-blue-100 text-sm">
-                Help curate the bibliography by correcting titles, authors, DOIs, abstracts, and other BibTeX fields.
-                Every paper has an Edit button.
-            </p>
-        </div>
-
-        <!-- Link existing work -->
-        <div class="bg-white/10 rounded-lg p-5">
-            <h2 class="text-lg font-semibold mb-1">Link existing formalisations and reviews</h2>
-            <p class="text-blue-100 text-sm">
-                If a formalisation or review already exists elsewhere, you can link it to the corresponding paper so that the community can find it.
-            </p>
-        </div>
-
-        <!-- Suggest exclusion -->
-        <div class="bg-white/10 rounded-lg p-5">
-            <h2 class="text-lg font-semibold mb-1">Suggest removing a paper from the goal</h2>
-            <p class="text-blue-100 text-sm">
-                If you think a paper should not be part of the formalisation goal (e.g. duplicate, off-topic, not about the Collatz conjecture), you can suggest its exclusion and provide a reason. <a href="/story#admins" class="text-white underline hover:text-blue-200">Admins</a> will review and decide.
-            </p>
-        </div>
-
-        <!-- Write a review -->
-        <div class="bg-white/10 rounded-lg p-5">
-            <h2 class="text-lg font-semibold mb-1">Write a review</h2>
-            <p class="text-blue-100 text-sm">
-                Write an informal review of a paper and link it. You can use our
-                <a href="https://github.com/orgs/ccchallenge-org/discussions" class="text-white underline hover:text-blue-200">GitHub Discussions forum</a>
-                to host your review. Each paper has a Forum button that links to its discussion thread.
-            </p>
-        </div>
-
-        <!-- Write a formalisation -->
-        <div class="bg-white/10 rounded-lg p-5">
-            <h2 class="text-lg font-semibold mb-1">Write a formalisation</h2>
-            <p class="text-blue-100 text-sm">
-                Pick a paper and formalise its results in the proof assistant of your choice. We are proof-assistant agnostic (Lean, Rocq, Isabelle, Agda, etc.).
-                You may use AI tools partially or fully (e.g. autoformalisation), but you must disclose their use and specify which model(s) you used.
-                Once your formalisation is ready, you can mark it as "ready to be audited."
-            </p>
-        </div>
-
-        <!-- Write an audit report -->
-        <div class="bg-white/10 rounded-lg p-5">
-            <h2 class="text-lg font-semibold mb-1">Write an audit report</h2>
-            <p class="text-blue-100 text-sm">
-                The goal of an audit report is to assess whether a formalisation faithfully captures the content of the original paper, and if not, to explain why.
-                Auditors must be different from the formalisation authors, unless the formalisation was essentially done by AI (autoformalisation).
-                You may use AI to assist, but the human authors of the report must be 100% accountable for its content.
-                <a href="/story#admins" class="text-white underline hover:text-blue-200">Admins</a> will assess the human-accountability criterion of the audit report in order to accept the formalisation.
-            </p>
-        </div>
-
-        <!-- Participate in discussions -->
-        <div class="bg-white/10 rounded-lg p-5">
-            <h2 class="text-lg font-semibold mb-1">Join the discussion</h2>
-            <p class="text-blue-100 text-sm">
-                Participate in conversations on the
-                <a href="https://github.com/orgs/ccchallenge-org/discussions" class="text-white underline hover:text-blue-200">GitHub Discussions forum</a>
-                and on
-                <a href="https://discord.gg/NJYYYMFBjA" class="text-white underline hover:text-blue-200">Discord</a>.
-            </p>
-        </div>
-
-        <!-- Spread the word -->
-        <div class="bg-white/10 rounded-lg p-5">
-            <h2 class="text-lg font-semibold mb-1">Spread the word</h2>
-            <p class="text-blue-100 text-sm">
-                Share the project with mathematicians, proof assistant users, and AI researchers.
-            </p>
-        </div>
-
-    </div>
+    <ul class="list-disc list-inside space-y-3 text-sm text-blue-100">
+        <li><span class="font-semibold text-white">Wishlist a paper</span> — Vote on which papers should be formalised next by clicking the star button on any paper card. Papers with more votes appear higher in the list.</li>
+        <li><span class="font-semibold text-white">Add a paper</span> — Add papers to the database by entering their BibTeX or filling in the metadata manually. Newly added papers are included in the formalisation goal by default.</li>
+        <li><span class="font-semibold text-white">Edit paper metadata</span> — Help curate the bibliography by correcting titles, authors, DOIs, abstracts, and other BibTeX fields. Every paper has an Edit button.</li>
+        <li><span class="font-semibold text-white">Link existing formalisations and reviews</span> — If a formalisation or review already exists elsewhere, you can link it to the corresponding paper so that the community can find it.</li>
+        <li><span class="font-semibold text-white">Suggest removing a paper from the goal</span> — If you think a paper should not be part of the formalisation goal (e.g. duplicate, off-topic, not about the Collatz conjecture), you can suggest its exclusion and provide a reason. <a href="/story#admins" class="text-white underline hover:text-blue-200">Admins</a> will review and decide.</li>
+        <li><span class="font-semibold text-white">Write a review</span> — Write an informal review of a paper and link it. You can use our <a href="https://github.com/orgs/ccchallenge-org/discussions" class="text-white underline hover:text-blue-200">GitHub Discussions forum</a> to host your review. Each paper has a Forum button that links to its discussion thread.</li>
+        <li><span class="font-semibold text-white">Write a formalisation</span> — Pick a paper and formalise its results in the proof assistant of your choice. We are proof-assistant agnostic (Lean, Rocq, Isabelle, Agda, etc.). You may use AI tools partially or fully (e.g. autoformalisation), but you must disclose their use and specify which model(s) you used. Once your formalisation is ready, you can mark it as "ready to be audited."</li>
+        <li><span class="font-semibold text-white">Write an audit report</span> — The goal of an audit report is to assess whether a formalisation faithfully captures the content of the original paper, and if not, to explain why. Auditors must be different from the formalisation authors, unless the formalisation was essentially done by AI (autoformalisation). You may use AI to assist, but the human authors of the report must be 100% accountable for its content. <a href="/story#admins" class="text-white underline hover:text-blue-200">Admins</a> will assess the human-accountability criterion of the audit report in order to accept the formalisation.</li>
+        <li><span class="font-semibold text-white">Join the discussion</span> — Participate in conversations on the <a href="https://github.com/orgs/ccchallenge-org/discussions" class="text-white underline hover:text-blue-200">GitHub Discussions forum</a> and on <a href="https://discord.gg/NJYYYMFBjA" class="text-white underline hover:text-blue-200">Discord</a>.</li>
+        <li><span class="font-semibold text-white">Spread the word</span> — Share the project with mathematicians, proof assistant users, and AI researchers.</li>
+    </ul>
 
     <!-- Q&A -->
     <h2 class="text-2xl font-bold mt-12 mb-6">Q&amp;A</h2>
