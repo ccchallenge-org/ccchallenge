@@ -13,7 +13,7 @@ from backend.auth.router import router as auth_router
 from backend.config import settings
 from backend.auth.users import current_active_user, current_optional_user, current_superuser
 from backend.database import engine, get_async_session
-from backend.models import AuditReport, Base, Formalisation, FormalisationStatus, Paper, Review, User, Wishlist
+from backend.models import AuditReport, Base, ExclusionSuggestion, Formalisation, FormalisationStatus, Paper, Review, User, Wishlist
 from backend.routers import formalisations, papers, reviews, stats
 from backend.services.discord_notify import COLOR_CREATE, COLOR_DELETE, notify
 
@@ -419,7 +419,6 @@ async def htmx_paper_edit(
         return Response(status_code=404)
     suggestions = []
     if user.is_superuser:
-        from backend.models import ExclusionSuggestion
         res = await session.execute(
             select(ExclusionSuggestion)
             .where(ExclusionSuggestion.paper_id == paper.id, ExclusionSuggestion.resolved == False)
