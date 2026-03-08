@@ -36,7 +36,7 @@
     <div id="filter-bar" class="max-w-3xl mx-auto mb-4 flex flex-col sm:flex-row gap-3">
         <select name="status"
             hx-get="/htmx/paper-list" hx-target="#paper-list" hx-include="#filter-bar" hx-swap="innerHTML"
-            class="rounded-lg px-3 py-2 bg-white/10 text-white border border-white/20 text-sm">
+            class="rounded-lg px-3 py-2 bg-white/10 text-white border border-white/20 text-sm focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none">
             <option value="">All papers</option>
             <option value="not_started">Not formalised</option>
             <option value="formalising">Being formalised</option>
@@ -51,7 +51,7 @@
         </select>
         <select name="order"
             hx-get="/htmx/paper-list" hx-target="#paper-list" hx-include="#filter-bar" hx-swap="innerHTML"
-            class="rounded-lg px-3 py-2 bg-white/10 text-white border border-white/20 text-sm">
+            class="rounded-lg px-3 py-2 bg-white/10 text-white border border-white/20 text-sm focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none">
             <option value="wishlist">Order by Wishlist count</option>
             <option value="authors">Order by Authors</option>
             <option value="year">Order by Year</option>
@@ -59,7 +59,7 @@
         <input type="text" name="q" placeholder="Search papers..."
             hx-get="/htmx/paper-list" hx-target="#paper-list" hx-include="#filter-bar" hx-swap="innerHTML"
             hx-trigger="input changed delay:300ms"
-            class="flex-1 rounded-lg px-3 py-2 bg-white/10 text-white placeholder-blue-200 border border-white/20 text-sm">
+            class="flex-1 rounded-lg px-3 py-2 bg-white/10 text-white placeholder-blue-200 border border-white/20 text-sm focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none">
     </div>
 
     <!-- Paper List Header + Add Button -->

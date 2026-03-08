@@ -68,7 +68,7 @@
             <div class="flex gap-3 items-center mb-4">
                 <label class="text-sm text-blue-200">Starting number:</label>
                 <input type="number" min="1" x-model.number="input" @keydown.enter="compute()"
-                    class="w-32 rounded-lg px-3 py-1.5 bg-white/10 text-white border border-white/20 text-sm"
+                    class="w-32 rounded-lg px-3 py-1.5 bg-white/10 text-white border border-white/20 text-sm focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none"
                     placeholder="e.g. 45">
                 <button @click="compute()"
                     class="px-4 py-1.5 bg-white/15 hover:bg-white/25 text-white text-sm font-medium rounded-lg transition-colors border border-white/20">
@@ -131,7 +131,7 @@
             <div class="flex gap-3 items-center mb-4">
                 <label class="text-sm text-blue-200">Starting value:</label>
                 <input type="text" x-model="input" @keydown.enter="compute()"
-                    class="w-32 rounded-lg px-3 py-1.5 bg-white/10 text-white border border-white/20 text-sm"
+                    class="w-32 rounded-lg px-3 py-1.5 bg-white/10 text-white border border-white/20 text-sm focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none"
                     placeholder="e.g. -1/23">
                 <button @click="compute()"
                     class="px-4 py-1.5 bg-white/15 hover:bg-white/25 text-white text-sm font-medium rounded-lg transition-colors border border-white/20">
