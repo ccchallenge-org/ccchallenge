@@ -1,3 +1,4 @@
 - Annotations
 - Engagement (chat, wiki, etc.)
 - arxiv trackback
+- wishlists?
