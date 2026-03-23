@@ -75,11 +75,11 @@
                         })
                     ">
                         <div class="flex items-center gap-1">
-                            <input type="url" x-model="reviewUrl" required class="text-xs rounded border-gray-300 p-1 border w-64">
+                            <input type="url" x-model="reviewUrl" required class="text-xs rounded border-gray-300 p-1 border w-64 bg-white text-gray-900">
                             <button type="submit" class="text-green-600 hover:text-green-800 text-xs">save</button>
                             <button type="button" @click="editingReview = false; reviewUrl = '{{ r.external_url }}'; reviewComment = '{{ r.comment|default('', true)|e }}'" class="text-gray-400 hover:text-gray-600 text-xs">cancel</button>
                         </div>
-                        <input type="text" x-model="reviewComment" placeholder="Comment (optional)" class="text-xs rounded border-gray-300 p-1 border w-full">
+                        <input type="text" x-model="reviewComment" placeholder="Comment (optional)" class="text-xs rounded border-gray-300 p-1 border w-full bg-white text-gray-900">
                     </form>
                 </template>
             </div>
