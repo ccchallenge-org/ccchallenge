@@ -44,6 +44,7 @@ app.mount("/static", StaticFiles(directory=BACKEND_DIR / "static"), name="static
 templates = Jinja2Templates(directory=BACKEND_DIR / "templates")
 templates.env.globals["oauth_github"] = bool(settings.github_client_id)
 templates.env.globals["oauth_discord"] = bool(settings.discord_client_id)
+templates.env.globals["base_url"] = settings.base_url
 
 def latex_quotes(s: str) -> str:
     """Convert LaTeX-style quotes to plain double quotes."""
@@ -112,6 +113,36 @@ async def toggle_wishlist(
             color=COLOR_DELETE,
         )
     return {"wishlisted": wishlisted, "count": count}
+
+
+# ── SEO routes ──────────────────────────────────────────────────────────────
+
+
+@app.get("/robots.txt")
+async def robots_txt():
+    from fastapi.responses import PlainTextResponse
+    body = (
+        "User-agent: *\n"
+        "Disallow: /api/\n"
+        "Disallow: /htmx/\n"
+        "Disallow: /admin\n"
+        "Disallow: /verify\n"
+        f"Sitemap: {settings.base_url}/sitemap.xml\n"
+    )
+    return PlainTextResponse(body)
+
+
+@app.get("/sitemap.xml")
+async def sitemap_xml():
+    paths = ["/", "/story", "/method", "/contribute", "/privacy"]
+    urls = "".join(f"  <url><loc>{settings.base_url}{p}</loc></url>\n" for p in paths)
+    body = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f"{urls}"
+        "</urlset>\n"
+    )
+    return Response(content=body, media_type="application/xml")
 
 
 # ── Page routes ─────────────────────────────────────────────────────────────

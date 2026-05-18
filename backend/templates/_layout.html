@@ -6,10 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>The Collatz Conjecture Challenge | Formalising the Collatz literature, one paper at a time.</title>
     <meta name="description" content="The Collatz Conjecture Challenge (ccchallenge) is a collaborative project to formalise results about the Collatz conjecture using proof assistants.">
+    <meta name="keywords" content="Collatz conjecture, 3n+1 problem, Lean 4, Rocq, Isabelle, Agda, formal verification, proof assistant, formalised mathematics, ccchallenge">
+    <meta name="author" content="ccchallenge contributors">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#0c63bb">
+
+    <link rel="canonical" href="{{ base_url }}{{ request.url.path }}">
 
     <!-- OpenGraph / Social previews -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://ccchallenge.org/">
+    <meta property="og:site_name" content="The Collatz Conjecture Challenge">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="{{ base_url }}{{ request.url.path }}">
     <meta property="og:title" content="The Collatz Conjecture Challenge">
     <meta property="og:description" content="Formalising the Collatz literature, one paper at a time.">
     <meta property="og:image" content="https://ccchallenge.org/static/apple-touch-icon.png">
@@ -17,6 +25,36 @@
     <meta name="twitter:title" content="The Collatz Conjecture Challenge">
     <meta name="twitter:description" content="Formalising the Collatz literature, one paper at a time.">
     <meta name="twitter:image" content="https://ccchallenge.org/static/apple-touch-icon.png">
+
+    <!-- Schema.org structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "The Collatz Conjecture Challenge",
+      "alternateName": "ccchallenge",
+      "url": "https://ccchallenge.org",
+      "logo": "https://ccchallenge.org/static/apple-touch-icon.png",
+      "description": "A collaborative project to formalise results about the Collatz conjecture using proof assistants.",
+      "sameAs": [
+        "https://github.com/ccchallenge-org",
+        "https://discord.gg/NJYYYMFBjA"
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "The Collatz Conjecture Challenge",
+      "url": "https://ccchallenge.org",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://ccchallenge.org/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
 
     <!-- Plausible Analytics -->
     <script defer data-domain="ccchallenge.org"
