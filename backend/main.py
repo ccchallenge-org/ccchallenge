@@ -28,7 +28,14 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="ccchallenge", lifespan=lifespan)
+_docs_enabled = not settings.base_url.startswith("https")
+app = FastAPI(
+    title="ccchallenge",
+    lifespan=lifespan,
+    docs_url="/docs" if _docs_enabled else None,
+    redoc_url="/redoc" if _docs_enabled else None,
+    openapi_url="/openapi.json" if _docs_enabled else None,
+)
 
 # Static files
 app.mount("/static", StaticFiles(directory=BACKEND_DIR / "static"), name="static")
