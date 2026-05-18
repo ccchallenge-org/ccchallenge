@@ -44,7 +44,11 @@
         {% if reviews %}
         <div class="space-y-2">
             {% for r in reviews %}
-            <div class="bg-gray-50 rounded p-3 text-sm" x-data="{ editingReview: false, reviewUrl: '{{ r.external_url }}', reviewComment: '{{ r.comment|default('', true)|e }}' }">
+            <div class="bg-gray-50 rounded p-3 text-sm"
+                data-url="{{ r.external_url }}"
+                data-comment="{{ r.comment|default('', true) }}"
+                x-data="{ editingReview: false, reviewUrl: '', reviewComment: '' }"
+                x-init="reviewUrl = $el.dataset.url; reviewComment = $el.dataset.comment">
                 <template x-if="!editingReview">
                     <div>
                         <span class="flex items-center gap-1">
@@ -77,7 +81,7 @@
                         <div class="flex items-center gap-1">
                             <input type="url" x-model="reviewUrl" required class="text-xs rounded border-gray-300 p-1 border w-64 bg-white text-gray-900">
                             <button type="submit" class="text-green-600 hover:text-green-800 text-xs">save</button>
-                            <button type="button" @click="editingReview = false; reviewUrl = '{{ r.external_url }}'; reviewComment = '{{ r.comment|default('', true)|e }}'" class="text-gray-400 hover:text-gray-600 text-xs">cancel</button>
+                            <button type="button" @click="editingReview = false; reviewUrl = $root.dataset.url; reviewComment = $root.dataset.comment" class="text-gray-400 hover:text-gray-600 text-xs">cancel</button>
                         </div>
                         <input type="text" x-model="reviewComment" placeholder="Comment (optional)" class="text-xs rounded border-gray-300 p-1 border w-full bg-white text-gray-900">
                     </form>

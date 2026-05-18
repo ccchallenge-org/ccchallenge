@@ -3,12 +3,13 @@
 {% block content %}
 <div class="flex items-center justify-center min-h-[60vh]">
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-8 text-center"
+         data-token="{{ token }}"
          x-data="{ status: 'loading', message: '', resendUsername: '', resent: false }"
          x-init="
             fetch('/api/auth/verify', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({token: '{{ token }}'})
+                body: JSON.stringify({token: $el.dataset.token})
             }).then(r => {
                 if (r.ok) {
                     status = 'success';

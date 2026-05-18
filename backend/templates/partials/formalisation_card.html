@@ -1,5 +1,9 @@
 {# Renders a single formalisation card. Expects: f, paper, user, current_tab #}
-<div class="bg-gray-50 rounded p-3 text-sm" x-data="{ editing: false, newUrl: '{{ f.repository_url }}', editAiAssisted: {{ 'true' if f.ai_assisted else 'false' }}, editAiModels: '{{ f.ai_models or '' }}' }">
+<div class="bg-gray-50 rounded p-3 text-sm"
+    data-repo-url="{{ f.repository_url }}"
+    data-ai-models="{{ f.ai_models or '' }}"
+    x-data="{ editing: false, newUrl: '', editAiAssisted: {{ 'true' if f.ai_assisted else 'false' }}, editAiModels: '' }"
+    x-init="newUrl = $el.dataset.repoUrl; editAiModels = $el.dataset.aiModels">
     <div class="flex items-center gap-2 mb-1 flex-wrap">
         <span class="inline-block bg-purple-100 text-purple-800 text-xs font-medium px-2 py-0.5 rounded">
             {{ f.proof_assistant.value }}
@@ -65,7 +69,7 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <button type="submit" class="text-green-600 hover:text-green-800 text-xs font-medium">save</button>
-                    <button type="button" @click="editing = false; newUrl = '{{ f.repository_url }}'; editAiAssisted = {{ 'true' if f.ai_assisted else 'false' }}; editAiModels = '{{ f.ai_models or '' }}'" class="text-gray-400 hover:text-gray-600 text-xs">cancel</button>
+                    <button type="button" @click="editing = false; newUrl = $root.dataset.repoUrl; editAiAssisted = {{ 'true' if f.ai_assisted else 'false' }}; editAiModels = $root.dataset.aiModels" class="text-gray-400 hover:text-gray-600 text-xs">cancel</button>
                 </div>
             </form>
         </template>
@@ -80,7 +84,10 @@
         <p class="text-xs font-medium text-gray-700">Pending audit report{{ 's' if f._audit_reports|length > 1 else '' }}:</p>
         {% endif %}
         {% for ar in f._audit_reports %}
-        <div class="bg-white rounded p-2 border border-gray-200 text-xs" x-data="{ editingAr: false, arUrl: '{{ ar.external_url }}' }">
+        <div class="bg-white rounded p-2 border border-gray-200 text-xs"
+            data-ar-url="{{ ar.external_url }}"
+            x-data="{ editingAr: false, arUrl: '' }"
+            x-init="arUrl = $el.dataset.arUrl">
             <template x-if="!editingAr">
                 <span class="flex items-center gap-1">
                     <a href="{{ ar.external_url }}" target="_blank" class="text-blue-600 hover:underline truncate">
@@ -107,7 +114,7 @@
                 ">
                     <input type="url" x-model="arUrl" required class="text-xs text-gray-900 rounded border-gray-300 p-1 border flex-1">
                     <button type="submit" class="text-green-600 hover:text-green-800">save</button>
-                    <button type="button" @click="editingAr = false; arUrl = '{{ ar.external_url }}'" class="text-gray-400 hover:text-gray-600">cancel</button>
+                    <button type="button" @click="editingAr = false; arUrl = $root.dataset.arUrl" class="text-gray-400 hover:text-gray-600">cancel</button>
                 </form>
             </template>
         </div>
