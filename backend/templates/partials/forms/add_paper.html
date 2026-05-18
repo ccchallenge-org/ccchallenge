@@ -14,16 +14,7 @@
         {% if user %}
         <div>
             <form x-data="addPaperForm()"
-                  @submit.prevent="
-                    fetch('/api/papers', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(buildPayload())
-                    }).then(r => {
-                        if(r.status < 400) { showAddModal = false; window.location = '/#' + formData.bibtex_key; window.location.reload(); }
-                        else r.json().catch(() => null).then(d => alert(d?.detail || 'Error adding paper'));
-                    })
-                  "
+                  @submit.prevent="submit()"
                   class="space-y-3">
                 <div>
                     <button type="button" @click="showBibtexParse = !showBibtexParse"
@@ -39,6 +30,30 @@
                     <span x-text="formData.bibtex_key"
                         class="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono text-gray-700 select-all"></span>
                 </div>
+                <div x-show="conflictData" x-cloak class="bg-yellow-50 border border-yellow-300 rounded p-3 space-y-2">
+                    <p class="text-sm font-semibold text-yellow-900">A paper with a similar key already exists.</p>
+                    <p class="text-xs text-yellow-800">Are you sure this paper isn't already in the database? Please review:</p>
+                    <ul class="space-y-2">
+                        <template x-for="p in (conflictData ? conflictData.existing : [])" :key="p.bibtex_key">
+                            <li class="bg-white border border-yellow-200 rounded p-2">
+                                <a :href="'/#' + p.bibtex_key" target="_blank"
+                                    class="text-blue-600 hover:underline text-xs font-mono" x-text="p.bibtex_key"></a>
+                                <div class="text-xs text-gray-900" x-text="p.title"></div>
+                                <div class="text-xs text-gray-600" x-text="p.authors"></div>
+                            </li>
+                        </template>
+                    </ul>
+                    <div class="flex flex-col gap-2 pt-2">
+                        <button type="button" @click="useSuggestedKey()" x-show="conflictData && conflictData.suggested_key"
+                            class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded">
+                            It's a new paper — change key to <span class="font-mono" x-text="conflictData ? conflictData.suggested_key : ''"></span>
+                        </button>
+                        <button type="button" @click="dismissConflict()"
+                            class="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-medium rounded">
+                            Dismiss — keep editing
+                        </button>
+                    </div>
+                </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Title *</label>
                     <input type="text" x-model="formData.title" required
@@ -47,14 +62,14 @@
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Authors * <span class="font-normal text-gray-400">— e.g. Albert Einstein and Kurt Gödel and Alan Turing</span></label>
                     <input type="text" x-model="formData.authors" required placeholder="Albert Einstein and Kurt Gödel and Alan Turing"
-                        @blur="computeKey()"
+                        @blur="computeKey(); checkConflicts(true)"
                         class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Year *</label>
                         <input type="text" x-model="formData.year" required
-                            @blur="computeKey()"
+                            @blur="computeKey(); checkConflicts(true)"
                             class="w-full rounded border-gray-300 text-gray-900 text-sm p-2 border focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
@@ -196,6 +211,9 @@ function addPaperForm() {
         showBibtexParse: false,
         bibtexRaw: '',
         extras: [],
+        conflictData: null,
+        dismissedKey: null,
+        keyLocked: false,
         removeUrl(i) { this.paperUrls.splice(i, 1); if (!this.paperUrls.length) this.paperUrls.push(''); },
 
         syncEntryType() {
@@ -203,6 +221,7 @@ function addPaperForm() {
         },
 
         computeKey() {
+            if (this.keyLocked) return;
             var a = this.formData.authors.trim();
             var y = this.formData.year.trim();
             if (!a || !y) { this.formData.bibtex_key = ''; return; }
@@ -295,6 +314,67 @@ function addPaperForm() {
 
         addExtra() { this.extras.push({ key: '', value: '' }); },
         removeExtra(i) { this.extras.splice(i, 1); },
+
+        async checkConflicts(respectDismissed) {
+            if (this.keyLocked) return false;
+            var key = this.formData.bibtex_key;
+            if (!key) { this.conflictData = null; return false; }
+            if (respectDismissed && key === this.dismissedKey) return false;
+            try {
+                var r = await fetch('/api/papers/check-key?base=' + encodeURIComponent(key));
+                if (r.ok) {
+                    var data = await r.json();
+                    if (data.existing && data.existing.length > 0) {
+                        this.conflictData = data;
+                        return true;
+                    }
+                }
+            } catch (e) { /* network error — ignore */ }
+            this.conflictData = null;
+            return false;
+        },
+
+        dismissConflict() {
+            this.dismissedKey = this.formData.bibtex_key;
+            this.conflictData = null;
+        },
+
+        async submit() {
+            this.syncEntryType();
+            this.computeKey();
+            if (!this.formData.bibtex_key) {
+                alert('Please fill in Authors and Year.');
+                return;
+            }
+            if (await this.checkConflicts(false)) return;
+            this.doSubmit();
+        },
+
+        doSubmit() {
+            var self = this;
+            var payload = this.buildPayload();
+            fetch('/api/papers', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            }).then(function(r) {
+                if (r.status < 400) {
+                    window.location = '/#' + self.formData.bibtex_key;
+                    window.location.reload();
+                } else {
+                    r.json().catch(function() { return null; }).then(function(d) {
+                        alert((d && d.detail) || 'Error adding paper');
+                    });
+                }
+            });
+        },
+
+        useSuggestedKey() {
+            if (!this.conflictData || !this.conflictData.suggested_key) return;
+            this.formData.bibtex_key = this.conflictData.suggested_key;
+            this.keyLocked = true;
+            this.conflictData = null;
+        },
 
         buildPayload() {
             this.syncEntryType();

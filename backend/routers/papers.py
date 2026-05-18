@@ -195,6 +195,53 @@ async def parse_bibtex(
     return parsed
 
 
+@router.get("/check-key")
+async def check_key(base: str, session: AsyncSession = Depends(get_async_session)):
+    """Find papers whose bibtex_key matches `base` exactly or `base` + a single lowercase letter.
+
+    Returns existing matches and a suggested next-suffix key. Convention: the first paper for
+    a given (authors, year) uses no suffix; subsequent ones use 'b', 'c', ... (skipping 'a').
+    """
+    pattern = f"{base}%"
+    result = await session.execute(
+        select(Paper).where(Paper.bibtex_key.like(pattern)).order_by(Paper.bibtex_key)
+    )
+    papers = result.scalars().all()
+    matches = []
+    suffixes = set()
+    for p in papers:
+        rest = p.bibtex_key[len(base):]
+        if rest == "":
+            matches.append(p)
+            suffixes.add("")
+        elif len(rest) == 1 and rest.isalpha() and rest == rest.lower():
+            matches.append(p)
+            suffixes.add(rest)
+
+    suggested: str | None = None
+    if matches:
+        if "" not in suffixes:
+            suggested = base
+        else:
+            for c in "bcdefghijklmnopqrstuvwxyz":
+                if c not in suffixes:
+                    suggested = base + c
+                    break
+
+    return {
+        "existing": [
+            {
+                "bibtex_key": p.bibtex_key,
+                "title": p.title,
+                "authors": p.authors,
+                "year": p.year,
+            }
+            for p in matches
+        ],
+        "suggested_key": suggested,
+    }
+
+
 @router.get("/redirect/{old_key}")
 async def get_redirect(old_key: str, session: AsyncSession = Depends(get_async_session)):
     # If a paper with this key actually exists, no redirect
