@@ -1,4 +1,4 @@
-<button @click="document.querySelector('#filter-bar select[name=status]').value = ''; htmx.trigger(document.querySelector('#filter-bar select[name=status]'), 'change');"
+<button @click="window._autoExpandFormalisations = true; document.querySelector('#filter-bar select[name=status]').value = 'audited'; htmx.trigger(document.querySelector('#filter-bar select[name=status]'), 'change');"
     class="bg-white/10 hover:bg-white/20 rounded-lg p-5 text-center transition-colors cursor-pointer mx-auto block">
     <div class="text-xs font-semibold uppercase tracking-wide text-blue-200 mb-1">Goal</div>
     <div class="text-4xl font-bold">{{ stats.get('audited', 0) }}/{{ goal_total }}</div>
